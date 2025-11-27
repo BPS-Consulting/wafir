@@ -19,10 +19,17 @@
     "nanostores": "^1.1.0"
   },
   "devDependencies": {
-    "tailwindcss": "^4.1.17",
-    "@tailwindcss/vite": "^4.1.17",
-    "daisyui": "^5.5.5",
+    "@size-limit/preset-big-lib": "^11.2.0",
+    "@unocss/preset-wind4": "^66.5.9",
+    "size-limit": "^11.2.0",
     "typescript": "~5.9.3",
+    "unocss": "^66.5.9",
     "vite": "^7.2.4"
-  }
+  },
+  "size-limit": [
+    {
+      "path": "dist/wafir.js",
+      "limit": "10 kB"
+    }
+  ]
 }

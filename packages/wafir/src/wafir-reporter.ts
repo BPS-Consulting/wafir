@@ -1,13 +1,15 @@
 import { LitElement, css, html, unsafeCSS } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-// Assuming this file contains both Tailwind base/utilities AND DaisyUI setup
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
+// Assuming this file contains UnoCSS base/preflight/utilities
 import globalStyles from "./index.css?inline";
+import bugIcon from "./assets/bug.svg?raw";
 
 // Define the valid positions for the widget
 type WidgetPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 
 /**
- * A DaisyUI-styled reporter widget.
+ * An UnoCSS styled reporter widget.
  *
  * @slot - This element has a slot
  * @csspart button - The button
@@ -15,7 +17,7 @@ type WidgetPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 @customElement("wafir-reporter")
 export class MyElement extends LitElement {
   @property({ type: String })
-  buttonText = "Open Form Widget";
+  buttonText = "";
 
   @property({ type: String })
   modalTitle = "Contact Us";
@@ -26,18 +28,24 @@ export class MyElement extends LitElement {
   @property({ type: String })
   position: WidgetPosition = "bottom-right"; // Default position
 
+  /**
+   * The text to display in the tooltip over the button.
+   */
+  @property({ type: String })
+  tooltipText = "Open Issue Reporter";
+
   @state()
   isModalOpen = false;
 
   @state()
   formData = { name: "", email: "" };
 
-  // Inject global styles (including Tailwind/DaisyUI)
-  // AND add custom CSS to handle the fixed positioning of the button.
+  // Inject global styles (UnoCSS preflight/utilities)
+  // AND add custom CSS for fixed positioning and icon sizing.
   static styles = [
-    unsafeCSS(globalStyles),
+    unsafeCSS(globalStyles), // Inject UnoCSS generated styles
     css`
-      /* The host container is hidden by default. We want to style the content inside. */
+      /* === Component-Specific CSS (for Shadow DOM scope) === */
       :host {
         display: block;
       }
@@ -45,13 +53,13 @@ export class MyElement extends LitElement {
       /* Styles for the fixed position container for the trigger button */
       .fixed-trigger {
         position: fixed;
-        z-index: 999; /* Below the modal z-index */
+        z-index: 999;
       }
 
       /* Positioning map based on the 'position' property */
       .bottom-right {
-        bottom: 1.5rem; /* Tailwind equivalent: bottom-6 */
-        right: 1.5rem; /* Tailwind equivalent: right-6 */
+        bottom: 1.5rem;
+        right: 1.5rem;
       }
       .bottom-left {
         bottom: 1.5rem;
@@ -65,15 +73,22 @@ export class MyElement extends LitElement {
         top: 1.5rem;
         left: 1.5rem;
       }
+
+      /* Style for the SVG icon inside the button to ensure it scales correctly */
+      .icon-button-content svg {
+        width: 1.5rem; /* Equivalent to w-6 */
+        height: 1.5rem; /* Equivalent to h-6 */
+        fill: currentColor;
+      }
+
+      @unocss-placeholder;
     `,
   ];
 
-  // Renamed for clarity: this is the action when the *trigger* is clicked
   private _handleTriggerClick() {
     this.isModalOpen = !this.isModalOpen;
   }
 
-  // New explicit function to close the modal
   private _closeModal() {
     this.isModalOpen = false;
   }
@@ -91,7 +106,6 @@ export class MyElement extends LitElement {
     event.preventDefault();
 
     if (!this.formData.name || !this.formData.email) {
-      // Use standard browser alert for simplicity in this example
       alert("Please fill out all fields.");
       return;
     }
@@ -107,7 +121,6 @@ export class MyElement extends LitElement {
     );
 
     const submittedName = this.formData.name;
-    // Use the explicit close function
     this._closeModal();
     this.formData = { name: "", email: "" };
 
@@ -120,60 +133,77 @@ export class MyElement extends LitElement {
     const isFormValid =
       this.formData.name.trim() !== "" && this.formData.email.trim() !== "";
 
-    // Class for positioning the button
     const positionClass = this.position;
 
-    // DaisyUI classes for the submit button
-    const submitButtonClasses = `btn btn-primary btn-block mt-4`;
+    // UnoCSS utility classes for components
+    const submitButtonClasses = `w-full bg-blue-600 text-white p-3 rounded-md mt-4 transition-colors font-semibold cursor-pointer
+      hover:bg-blue-700 disabled:bg-gray-400 disabled:opacity-70 disabled:cursor-not-allowed`;
 
-    // DaisyUI classes for the trigger button, inside the fixed container
-    const triggerButtonClasses = `btn btn-primary`;
+    const triggerButtonClasses = `w-14 h-14 rounded-full bg-blue-600 text-white p-0 flex items-center justify-center 
+      shadow-xl cursor-pointer hover:bg-blue-700 transition-colors border-none`;
 
-    // DaisyUI classes for the form inputs
-    const inputClasses = `input input-bordered w-full`;
+    const inputClasses = `p-3 border border-gray-300 rounded-md text-gray-800 bg-white w-full 
+      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`;
+
+    // UnoCSS/Tailwind classes for the tooltip container (assuming the default UnoCSS behavior)
+    // NOTE: Tailwind/UnoCSS doesn't have a native 'tooltip' component like DaisyUI.
+    // We'll use a simplified utility setup for hover state and position.
+    // For a complex, accessible tooltip, you'd usually use a library or a fully custom CSS class.
+    const tooltipContainerClasses = `relative group`;
+    const tooltipTextClasses = `absolute right-full top-1/2 transform -translate-y-1/2 -mr-3 
+      bg-gray-800 text-white text-sm p-2 rounded-md whitespace-nowrap 
+      invisible opacity-0 transition-opacity group-hover:visible group-hover:opacity-100 z-100`;
 
     return html`
       <!-- Widget Trigger Button Container (Handles fixed positioning) -->
-      <div class="fixed-trigger ${positionClass}" data-theme="light">
-        <button
-          class="${triggerButtonClasses}"
-          @click="${this._handleTriggerClick}"
-          part="button"
-        >
-          ${this.buttonText}
-        </button>
+      <div class="fixed-trigger ${positionClass}">
+        <!-- UnoCSS Tooltip Container -->
+        <div class="${tooltipContainerClasses}">
+          <button
+            class="${triggerButtonClasses}"
+            @click="${this._handleTriggerClick}"
+            part="button"
+            aria-label="${this.tooltipText}"
+          >
+            <!-- Inject the SVG Icon -->
+            <span class="icon-button-content"> ${unsafeHTML(bugIcon)} </span>
+          </button>
+
+          <!-- Tooltip Text -->
+          <div class="${tooltipTextClasses}">${this.tooltipText}</div>
+        </div>
       </div>
 
       <!-- Modal Content (Conditional Rendering) -->
       ${this.isModalOpen
         ? html`
-            <!-- DaisyUI Modal: Use _closeModal for backdrop click -->
+            <!-- Modal Overlay: fixed inset-0 bg-black/60 flex... z-1000 -->
             <div
-              class="modal ${this.isModalOpen ? "modal-open" : ""}"
+              class="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] p-4"
               role="dialog"
               @click="${this._closeModal}"
-              data-theme="light"
+              aria-modal="true"
             >
-              <!-- DaisyUI Modal Box: modal-box provides styling (bg, shadow, padding) -->
+              <!-- Modal Dialog: bg-white p-6 max-w-lg w-full shadow-2xl rounded-xl text-gray-800 -->
               <div
-                class="modal-box max-w-lg relative"
+                class="bg-white/100 p-6 max-w-lg w-full relative shadow-2xl rounded-xl text-gray-800"
                 @click="${(e: Event) => e.stopPropagation()}"
               >
                 <!-- Header -->
                 <div
-                  class="flex justify-between items-center mb-4 pb-4 border-b border-base-200"
+                  class="flex justify-between items-center pb-4 mb-4 border-b border-gray-200"
                 >
                   <!-- Title -->
                   <h3 id="modal-title" class="text-2xl font-bold">
                     ${this.modalTitle}
                   </h3>
-                  <!-- Close Button (DaisyUI style) -->
+                  <!-- Close Button -->
                   <button
-                    class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                    class="absolute right-2 top-2 p-1 text-gray-400 hover:text-gray-600 text-2xl leading-none transition-colors"
                     @click="${this._closeModal}"
                     aria-label="Close modal"
                   >
-                    ✕
+                    &times;
                   </button>
                 </div>
 
@@ -183,10 +213,8 @@ export class MyElement extends LitElement {
                   @submit="${this._handleSubmit}"
                 >
                   <!-- Name Field -->
-                  <div class="form-control w-full">
-                    <label for="name" class="label">
-                      <span class="label-text">Name</span>
-                    </label>
+                  <div class="flex flex-col space-y-1">
+                    <label for="name" class="text-sm font-medium">Name</label>
                     <input
                       type="text"
                       id="name"
@@ -199,10 +227,8 @@ export class MyElement extends LitElement {
                   </div>
 
                   <!-- Email Field -->
-                  <div class="form-control w-full">
-                    <label for="email" class="label">
-                      <span class="label-text">Email</span>
-                    </label>
+                  <div class="flex flex-col space-y-1">
+                    <label for="email" class="text-sm font-medium">Email</label>
                     <input
                       type="email"
                       id="email"
@@ -224,14 +250,6 @@ export class MyElement extends LitElement {
                   </button>
                 </form>
               </div>
-              <!-- Use _closeModal for the modal-backdrop form as well -->
-              <form
-                method="dialog"
-                class="modal-backdrop"
-                @click="${this._closeModal}"
-              >
-                <button>close</button>
-              </form>
             </div>
           `
         : ""}

@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import tailwindcss from "@tailwindcss/vite";
+import UnoCSS from "unocss/vite";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
@@ -10,9 +10,9 @@ export default defineConfig(({ command, mode }) => {
         formats: ["es"],
       },
       rollupOptions: {
-        external: mode === "production" ? "" : /^lit-element/,
+        external: /^lit/,
       },
     },
-    plugins: [tailwindcss()],
+    plugins: [UnoCSS({ mode: "shadow-dom" })],
   };
 });
