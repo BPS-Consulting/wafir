@@ -4,6 +4,7 @@ import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import globalStyles from "./index.css?inline";
 import bugIcon from "./assets/bug.svg?raw";
 import "./wafir-form.js";
+import type { FieldConfig } from "./types.js";
 
 type WidgetPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 
@@ -24,8 +25,24 @@ export class MyElement extends LitElement {
   @state()
   isModalOpen = false;
 
-  @state()
-  formData = { name: "", email: "" };
+  @property({ type: Array })
+  formConfig: FieldConfig[] = [
+    // Default fallback config (Matches your requirements for "Feedback")
+    { id: "title", label: "Title", type: "text", required: true },
+    {
+      id: "description",
+      label: "Description",
+      type: "textarea",
+      required: false,
+    },
+    {
+      id: "type",
+      label: "Type",
+      type: "select",
+      options: ["Bug", "Feature"],
+      required: true,
+    },
+  ];
 
   static styles = [
     unsafeCSS(globalStyles),
@@ -210,42 +227,11 @@ export class MyElement extends LitElement {
 
   private _handleInputChange(event: Event) {
     const target = event.target as HTMLInputElement;
-    const { name, value } = target;
-    this.formData = {
-      ...this.formData,
-      [name]: value,
-    };
   }
 
-  private _handleSubmit(event: Event) {
-    event.preventDefault();
-
-    if (!this.formData.name || !this.formData.email) {
-      alert("Please fill out all fields.");
-      return;
-    }
-
-    console.log("Form Submitted:", this.formData);
-
-    this.dispatchEvent(
-      new CustomEvent("form-submit", {
-        detail: { formData: this.formData },
-        bubbles: true,
-        composed: true,
-      })
-    );
-
-    const submittedName = this.formData.name;
-    this._closeModal();
-    this.formData = { name: "", email: "" };
-
-    alert(`Thank you, ${submittedName}! Your request has been sent.`);
-  }
+  private _handleSubmit(event: Event) {}
 
   render() {
-    const isFormValid =
-      this.formData.name.trim() !== "" && this.formData.email.trim() !== "";
-
     return html`
       <div class="trigger-container ${this.position}">
         <button
@@ -281,7 +267,10 @@ export class MyElement extends LitElement {
                   </button>
                 </div>
 
-                <wafir-form @form-submit="${this._handleSubmit}"></wafir-form>
+                <wafir-form
+                  .fields="${this.formConfig}"
+                  @form-submit="${this._handleSubmit}"
+                ></wafir-form>
               </div>
             </div>
           `
