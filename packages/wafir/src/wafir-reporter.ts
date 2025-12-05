@@ -1,19 +1,11 @@
 import { LitElement, css, html, unsafeCSS } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
-// Assuming this file contains UnoCSS base/preflight/utilities
 import globalStyles from "./index.css?inline";
 import bugIcon from "./assets/bug.svg?raw";
 
-// Define the valid positions for the widget
 type WidgetPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 
-/**
- * An UnoCSS styled reporter widget.
- *
- * @slot - This element has a slot
- * @csspart button - The button
- */
 @customElement("wafir-reporter")
 export class MyElement extends LitElement {
   @property({ type: String })
@@ -22,15 +14,9 @@ export class MyElement extends LitElement {
   @property({ type: String })
   modalTitle = "Contact Us";
 
-  /**
-   * Defines the fixed position of the widget button.
-   */
   @property({ type: String })
-  position: WidgetPosition = "bottom-right"; // Default position
+  position: WidgetPosition = "bottom-right";
 
-  /**
-   * The text to display in the tooltip over the button.
-   */
   @property({ type: String })
   tooltipText = "Open Issue Reporter";
 
@@ -40,48 +26,234 @@ export class MyElement extends LitElement {
   @state()
   formData = { name: "", email: "" };
 
-  // Inject global styles (UnoCSS preflight/utilities)
-  // AND add custom CSS for fixed positioning and icon sizing.
   static styles = [
-    unsafeCSS(globalStyles), // Inject UnoCSS generated styles
+    unsafeCSS(globalStyles),
     css`
-      /* === Component-Specific CSS (for Shadow DOM scope) === */
       :host {
-        display: block;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 14px;
       }
 
-      /* Styles for the fixed position container for the trigger button */
-      .fixed-trigger {
+      /* Trigger button container */
+      .trigger-container {
         position: fixed;
-        z-index: 999;
+        z-index: 9998;
       }
 
-      /* Positioning map based on the 'position' property */
-      .bottom-right {
-        bottom: 1.5rem;
-        right: 1.5rem;
-      }
-      .bottom-left {
-        bottom: 1.5rem;
-        left: 1.5rem;
-      }
-      .top-right {
-        top: 1.5rem;
-        right: 1.5rem;
-      }
-      .top-left {
-        top: 1.5rem;
-        left: 1.5rem;
+      .trigger-container.bottom-right {
+        bottom: 20px;
+        right: 20px;
       }
 
-      /* Style for the SVG icon inside the button to ensure it scales correctly */
-      .icon-button-content svg {
-        width: 1.5rem; /* Equivalent to w-6 */
-        height: 1.5rem; /* Equivalent to h-6 */
-        fill: currentColor;
+      .trigger-container.bottom-left {
+        bottom: 20px;
+        left: 20px;
       }
 
-      @unocss-placeholder;
+      .trigger-container.top-right {
+        top: 20px;
+        right: 20px;
+      }
+
+      .trigger-container.top-left {
+        top: 20px;
+        left: 20px;
+      }
+
+      /* Button */
+      button[part="button"] {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: #2563eb;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transition: all 0.2s ease;
+      }
+
+      button[part="button"]:hover {
+        background: #1d4ed8;
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+      }
+
+      button[part="button"] span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+      }
+
+      button[part="button"] svg {
+        width: 24px;
+        height: 24px;
+        stroke: white;
+      }
+
+      /* Tooltip */
+      .tooltip {
+        position: absolute;
+        bottom: 60px;
+        right: 0;
+        background: #1f2937;
+        color: white;
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+      }
+
+      .trigger-container:hover .tooltip {
+        opacity: 1;
+      }
+
+      /* Modal backdrop */
+      .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        animation: fadeIn 0.2s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      /* Modal content */
+      .modal-content {
+        background: white;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 400px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.3s ease;
+      }
+
+      @keyframes slideUp {
+        from {
+          transform: translateY(20px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      /* Modal header */
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .modal-header h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #111827;
+      }
+
+      .close-button {
+        background: none;
+        border: none;
+        font-size: 28px;
+        color: #6b7280;
+        cursor: pointer;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+      }
+
+      .close-button:hover {
+        background: #f3f4f6;
+        color: #111827;
+      }
+
+      /* Form */
+      form {
+        padding: 20px;
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 500;
+        color: #374151;
+        font-size: 13px;
+      }
+
+      input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.2s ease;
+        box-sizing: border-box;
+      }
+
+      input:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+
+      /* Submit button */
+      .submit-button {
+        width: 100%;
+        padding: 10px;
+        background: #2563eb;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-top: 8px;
+      }
+
+      .submit-button:hover:not(:disabled) {
+        background: #1d4ed8;
+      }
+
+      .submit-button:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
     `,
   ];
 
@@ -127,79 +299,38 @@ export class MyElement extends LitElement {
     alert(`Thank you, ${submittedName}! Your request has been sent.`);
   }
 
-  // --- Template (HTML) ---
-
   render() {
     const isFormValid =
       this.formData.name.trim() !== "" && this.formData.email.trim() !== "";
 
-    const positionClass = this.position;
-
-    // UnoCSS utility classes for components
-    const submitButtonClasses = `w-full bg-blue-600 text-white p-3 rounded-md mt-4 transition-colors font-semibold cursor-pointer
-      hover:bg-blue-700 disabled:bg-gray-400 disabled:opacity-70 disabled:cursor-not-allowed`;
-
-    const triggerButtonClasses = `w-14 h-14 rounded-full bg-blue-600 text-white p-0 flex items-center justify-center 
-      shadow-xl cursor-pointer hover:bg-blue-700 transition-colors border-none`;
-
-    const inputClasses = `p-3 border border-gray-300 rounded-md text-gray-800 bg-white w-full 
-      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`;
-
-    // UnoCSS/Tailwind classes for the tooltip container (assuming the default UnoCSS behavior)
-    // NOTE: Tailwind/UnoCSS doesn't have a native 'tooltip' component like DaisyUI.
-    // We'll use a simplified utility setup for hover state and position.
-    // For a complex, accessible tooltip, you'd usually use a library or a fully custom CSS class.
-    const tooltipContainerClasses = `relative group`;
-    const tooltipTextClasses = `absolute right-full top-1/2 transform -translate-y-1/2 -mr-3 
-      bg-gray-800 text-white text-sm p-2 rounded-md whitespace-nowrap 
-      invisible opacity-0 transition-opacity group-hover:visible group-hover:opacity-100 z-100`;
-
     return html`
-      <!-- Widget Trigger Button Container (Handles fixed positioning) -->
-      <div class="fixed-trigger ${positionClass}">
-        <!-- UnoCSS Tooltip Container -->
-        <div class="${tooltipContainerClasses}">
-          <button
-            class="${triggerButtonClasses}"
-            @click="${this._handleTriggerClick}"
-            part="button"
-            aria-label="${this.tooltipText}"
-          >
-            <!-- Inject the SVG Icon -->
-            <span class="icon-button-content"> ${unsafeHTML(bugIcon)} </span>
-          </button>
-
-          <!-- Tooltip Text -->
-          <div class="${tooltipTextClasses}">${this.tooltipText}</div>
-        </div>
+      <div class="trigger-container ${this.position}">
+        <button
+          @click="${this._handleTriggerClick}"
+          part="button"
+          aria-label="${this.tooltipText}"
+        >
+          <span>${unsafeHTML(bugIcon)}</span>
+        </button>
+        <div class="tooltip">${this.tooltipText}</div>
       </div>
 
-      <!-- Modal Content (Conditional Rendering) -->
       ${this.isModalOpen
         ? html`
-            <!-- Modal Overlay: fixed inset-0 bg-black/60 flex... z-1000 -->
             <div
-              class="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] p-4"
-              role="dialog"
+              class="modal-backdrop"
               @click="${this._closeModal}"
+              role="dialog"
               aria-modal="true"
             >
-              <!-- Modal Dialog: bg-white p-6 max-w-lg w-full shadow-2xl rounded-xl text-gray-800 -->
               <div
-                class="bg-white/100 p-6 max-w-lg w-full relative shadow-2xl rounded-xl text-gray-800"
+                class="modal-content"
                 @click="${(e: Event) => e.stopPropagation()}"
               >
-                <!-- Header -->
-                <div
-                  class="flex justify-between items-center pb-4 mb-4 border-b border-gray-200"
-                >
-                  <!-- Title -->
-                  <h3 id="modal-title" class="text-2xl font-bold">
-                    ${this.modalTitle}
-                  </h3>
-                  <!-- Close Button -->
+                <div class="modal-header">
+                  <h3 id="modal-title">${this.modalTitle}</h3>
                   <button
-                    class="absolute right-2 top-2 p-1 text-gray-400 hover:text-gray-600 text-2xl leading-none transition-colors"
+                    class="close-button"
                     @click="${this._closeModal}"
                     aria-label="Close modal"
                   >
@@ -207,43 +338,34 @@ export class MyElement extends LitElement {
                   </button>
                 </div>
 
-                <!-- Form -->
-                <form
-                  class="flex flex-col space-y-4"
-                  @submit="${this._handleSubmit}"
-                >
-                  <!-- Name Field -->
-                  <div class="flex flex-col space-y-1">
-                    <label for="name" class="text-sm font-medium">Name</label>
+                <form @submit="${this._handleSubmit}">
+                  <div class="form-group">
+                    <label for="name">Name</label>
                     <input
                       type="text"
                       id="name"
                       name="name"
-                      class="${inputClasses}"
                       .value="${this.formData.name}"
                       @input="${this._handleInputChange}"
                       required
                     />
                   </div>
 
-                  <!-- Email Field -->
-                  <div class="flex flex-col space-y-1">
-                    <label for="email" class="text-sm font-medium">Email</label>
+                  <div class="form-group">
+                    <label for="email">Email</label>
                     <input
                       type="email"
                       id="email"
                       name="email"
-                      class="${inputClasses}"
                       .value="${this.formData.email}"
                       @input="${this._handleInputChange}"
                       required
                     />
                   </div>
 
-                  <!-- Submit Button -->
                   <button
+                    class="submit-button"
                     type="submit"
-                    class="${submitButtonClasses}"
                     .disabled="${!isFormValid}"
                   >
                     Send Message

@@ -1,5 +1,4 @@
 import { defineConfig } from "vite";
-import UnoCSS from "unocss/vite";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
@@ -13,6 +12,5 @@ export default defineConfig(({ command, mode }) => {
         external: /^lit/,
       },
     },
-    plugins: [UnoCSS({ mode: "shadow-dom" })],
   };
 });

@@ -15,15 +15,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@picocss/pico": "^2.1.1",
     "lit": "^3.3.1",
     "nanostores": "^1.1.0"
   },
   "devDependencies": {
     "@size-limit/preset-big-lib": "^11.2.0",
-    "@unocss/preset-wind4": "^66.5.9",
     "size-limit": "^11.2.0",
     "typescript": "~5.9.3",
-    "unocss": "^66.5.9",
     "vite": "^7.2.4"
   },
   "size-limit": [
