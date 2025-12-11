@@ -1,8 +1,15 @@
 // src/index.ts
-import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { GithubClient } from "./github";
 import { SnapStore } from "./s3";
+
+// --- OpenAPI Integration Imports ---
+import { z } from "zod";
+import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
+import { swaggerUI } from "@hono/swagger-ui";
+// --- Node.js Handler Import ---
+import { serve } from "@hono/node-server";
+// -----------------------------------
 
 type Bindings = {
   GITHUB_PAT: string;
@@ -12,7 +19,8 @@ type Bindings = {
   ALLOWED_ORIGIN: string;
 };
 
-const app = new Hono<{ Bindings: Bindings }>();
+// Change Hono to OpenAPIHono
+const app = new OpenAPIHono<{ Bindings: Bindings }>();
 
 // 1. CORS Middleware (Critical for widget usage)
 app.use("*", async (c, next) => {
@@ -23,11 +31,60 @@ app.use("*", async (c, next) => {
   return corsMiddleware(c, next);
 });
 
+// --- ROUTE DEFINITIONS WITH OPENAPI SCHEMA ---
+
 // 2. Health Check
-app.get("/", (c) => c.json({ status: "WAFIR Bridge Operational" }));
+const healthCheckRoute = createRoute({
+  method: "get",
+  path: "/",
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: z.object({ status: z.literal("WAFIR Bridge Operational") }),
+        },
+      },
+      description: "Health Check",
+    },
+  },
+});
+app.openapi(healthCheckRoute, (c) =>
+  c.json({ status: "WAFIR Bridge Operational" })
+);
 
 // 3. Get Config (Optional: If you want the widget to load config from GitHub)
-app.get("/config/:owner/:repo", async (c) => {
+const getConfigRoute = createRoute({
+  method: "get",
+  path: "/config/{owner}/{repo}",
+  request: {
+    params: z.object({
+      owner: z.string().openapi({ example: "honojs" }),
+      repo: z.string().openapi({ example: "hono" }),
+    }),
+  },
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: z.object({ config: z.string().nullable() }).openapi({
+            description:
+              "Configuration content, typically YAML parsed to JSON.",
+          }),
+        },
+      },
+      description: "Successful retrieval of config.",
+    },
+    500: {
+      content: {
+        "application/json": {
+          schema: z.object({ error: z.string() }),
+        },
+      },
+      description: "Error fetching config.",
+    },
+  },
+});
+app.openapi(getConfigRoute, async (c) => {
   const { owner, repo } = c.req.param();
   const gh = new GithubClient(c.env);
 
@@ -41,7 +98,70 @@ app.get("/config/:owner/:repo", async (c) => {
 });
 
 // 4. Submit Feedback/Issue
-app.post("/submit", async (c) => {
+const submitRoute = createRoute({
+  method: "post",
+  path: "/submit",
+  request: {
+    body: {
+      content: {
+        "multipart/form-data": {
+          schema: z.object({
+            owner: z.string().openapi({ example: "owner-org" }),
+            repo: z.string().openapi({ example: "repo-name" }),
+            data: z.string().openapi({
+              description:
+                "JSON string of form data (e.g., title, description, userAgent).",
+              example: JSON.stringify({
+                title: "Bug Report: Button not working",
+                description: "The main login button is unresponsive.",
+                url: "https://app.example.com",
+              }),
+            }),
+            screenshot: z.instanceof(File).optional().openapi({
+              description: "Optional screenshot file.",
+              type: "string", // OpenAPI type for file upload
+              format: "binary",
+            }),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.literal(true),
+            issue_url: z.string().url(),
+            issue_number: z.number(),
+          }),
+        },
+      },
+      description: "Issue submitted successfully.",
+    },
+    400: {
+      content: {
+        "application/json": {
+          schema: z.object({ error: z.string() }),
+        },
+      },
+      description: "Missing required fields.",
+    },
+    500: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.literal(false).optional(),
+            error: z.string(),
+          }),
+        },
+      },
+      description: "Internal server error.",
+    },
+  },
+});
+app.openapi(submitRoute, async (c) => {
   try {
     const gh = new GithubClient(c.env);
     const s3 = new SnapStore(c.env);
@@ -117,4 +237,48 @@ app.post("/submit", async (c) => {
   }
 });
 
+// --- OPENAPI DOCS AND SWAGGER UI ---
+
+// Expose the OpenAPI specification
+app.get("/openapi", (c) => {
+  return c.json(
+    app.getOpenAPIDocument({
+      openapi: "3.0.0",
+      info: {
+        title: "WAFIR Bridge API",
+        version: "v1",
+        description:
+          "API for submitting user feedback and issues to GitHub (via Multipart Form Data).",
+      },
+      servers: [{ url: "/", description: "Current Environment" }],
+    })
+  );
+});
+
+// Add the interactive Swagger UI
+app.get(
+  "/swagger",
+  swaggerUI({
+    url: "/openapi",
+  })
+);
+
+// Keep the default export for Worker/Edge environments
 export default app;
+
+// --- NODE.JS HANDLER ---
+const PORT = 3000;
+
+// This block uses the @hono/node-server adapter to run the Hono app in a Node.js environment.
+serve(
+  {
+    fetch: app.fetch, // Hono's main handler
+    port: PORT,
+  },
+  (info) => {
+    console.log(`Server is running at http://localhost:${info.port}`);
+    console.log(
+      `Swagger UI available at http://localhost:${info.port}/swagger`
+    );
+  }
+);
