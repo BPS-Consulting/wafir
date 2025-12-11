@@ -91,9 +91,13 @@ app.openapi(getConfigRoute, async (c) => {
   try {
     const config = await gh.getConfig(owner, repo);
     // You might want to parse YAML to JSON here using 'js-yaml'
-    return c.json({ config });
+    return c.json({ config }, 200);
   } catch (e: any) {
-    return c.json({ error: e.message }, 500);
+    if (e.message) {
+      console.error(e.message);
+      return c.json({ error: e.message }, 500);
+    }
+    return c.json({ error: JSON.stringify(e) }, 500);
   }
 });
 
@@ -226,11 +230,14 @@ app.openapi(submitRoute, async (c) => {
 
     const result = await gh.createIssue(owner, repo, issuePayload);
 
-    return c.json({
-      success: true,
-      issue_url: result.html_url,
-      issue_number: result.number,
-    });
+    return c.json(
+      {
+        success: true,
+        issue_url: result.html_url,
+        issue_number: result.number,
+      },
+      200
+    );
   } catch (e: any) {
     console.error(e);
     return c.json({ success: false, error: e.message }, 500);
