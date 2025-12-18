@@ -34,40 +34,33 @@ export const submitIssue = async (
   repo: string,
   title: string,
   body: string,
-  labels?: string[]
+  labels?: string[],
+  screenshot?: Blob
 ) => {
-  const { data, error } = await apiClient.POST("/submit", {
-    body: {
-      installationId,
-      owner,
-      repo,
-      title,
-      body,
-      labels,
-    },
-  });
-
-  if (error) {
-    throw new Error("Failed to submit issue");
+  const formData = new FormData();
+  formData.append("installationId", String(installationId));
+  formData.append("owner", owner);
+  formData.append("repo", repo);
+  formData.append("title", title);
+  formData.append("body", body);
+  if (labels) {
+    formData.append("labels", JSON.stringify(labels));
+  }
+  if (screenshot) {
+    formData.append("screenshot", screenshot, "screenshot.png");
   }
 
-  return data;
-};
-
-export const getUploadUrl = async (contentType: string) => {
-  const { data, error } = await apiClient.GET("/upload-url", {
-    params: {
-      query: {
-        contentType,
-      },
-    },
+  const response = await fetch("http://localhost:3000/submit", {
+    method: "POST",
+    body: formData,
   });
 
-  if (error) {
-    throw new Error("Failed to get upload URL");
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to submit issue");
   }
 
-  return data;
+  return response.json();
 };
 
 export default apiClient;

@@ -7,18 +7,27 @@ import {
   setCapturedImage,
   formData,
   setFormData,
+  browserInfo,
+  consoleLogs,
 } from "./store";
 import { takeFullPageScreenshot } from "./utils/screenshot";
 import type { FieldConfig } from "./types";
 
 @customElement("wafir-form")
 export class WafirForm extends LitElement {
-  // Receive the configuration from the parent
   @property({ type: Array })
   fields: FieldConfig[] = [];
 
+  @property({ type: Boolean })
+  showBrowserInfo = false;
+
+  @property({ type: Boolean })
+  showConsoleLog = false;
+
   private _capturedImageController = new StoreController(this, capturedImage);
   private _formDataController = new StoreController(this, formData);
+  private _browserInfoController = new StoreController(this, browserInfo);
+  private _consoleLogsController = new StoreController(this, consoleLogs);
 
   static styles = css`
     :host {
@@ -173,6 +182,58 @@ export class WafirForm extends LitElement {
 
     .screenshot-actions .highlight-btn:hover {
       background: #dbeafe;
+    }
+
+    .telemetry-section {
+      margin-top: 16px;
+      padding: 12px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #4b5563;
+    }
+
+    .telemetry-section h4 {
+      margin: 0 0 8px 0;
+      font-size: 13px;
+      color: #374151;
+      font-weight: 600;
+    }
+
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 4px 12px;
+    }
+
+    .telemetry-label {
+      font-weight: 500;
+      color: #6b7280;
+    }
+
+    .logs-container {
+      max-height: 150px;
+      overflow-y: auto;
+      font-family:
+        ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+      background: #111827;
+      color: #f3f4f6;
+      padding: 8px;
+      border-radius: 4px;
+    }
+
+    .log-item {
+      margin-bottom: 4px;
+      word-break: break-all;
+    }
+
+    .log-warn {
+      color: #fde047;
+    }
+    .log-error {
+      color: #f87171;
     }
   `;
 
@@ -381,6 +442,48 @@ export class WafirForm extends LitElement {
         })}
 
         <button class="submit-button" type="submit">Submit</button>
+
+        ${this.showBrowserInfo && this._browserInfoController.value
+          ? html`
+              <div class="telemetry-section">
+                <h4>Browser Information</h4>
+                <div class="telemetry-grid">
+                  <span class="telemetry-label">URL:</span>
+                  <span>${this._browserInfoController.value.url}</span>
+                  <span class="telemetry-label">Viewport:</span>
+                  <span
+                    >${this._browserInfoController.value.viewportWidth}x${this
+                      ._browserInfoController.value.viewportHeight}</span
+                  >
+                  <span class="telemetry-label">UA:</span>
+                  <span style="font-size: 10px;"
+                    >${this._browserInfoController.value.userAgent}</span
+                  >
+                </div>
+              </div>
+            `
+          : ""}
+        ${this.showConsoleLog && this._consoleLogsController.value.length > 0
+          ? html`
+              <div class="telemetry-section">
+                <h4>Recent Console Logs</h4>
+                <div class="logs-container">
+                  ${this._consoleLogsController.value.map(
+                    (log) => html`
+                      <div
+                        class="log-item ${log.type === "warn"
+                          ? "log-warn"
+                          : "log-error"}"
+                      >
+                        [${log.timestamp.split("T")[1].split(".")[0]}]
+                        ${log.message}
+                      </div>
+                    `
+                  )}
+                </div>
+              </div>
+            `
+          : ""}
       </form>
     `;
   }

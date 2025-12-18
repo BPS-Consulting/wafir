@@ -115,66 +115,11 @@ export interface paths {
         put?: never;
         /**
          * Submit Feedback/Issue
-         * @description Creates a new issue in the target GitHub repository.
+         * @description Creates a new issue in the target GitHub repository. Supports multipart/form-data for screenshots.
          */
         post: {
             parameters: {
                 query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        installationId: number;
-                        owner: string;
-                        repo: string;
-                        title: string;
-                        body: string;
-                        labels?: string[];
-                    };
-                };
-            };
-            responses: {
-                /** @description Default Response */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            success?: boolean;
-                            issueUrl?: string;
-                            issueNumber?: number;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/upload-url": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get SnapStore Upload URL
-         * @description Generates a temporary S3 Presigned URL. The Widget should PUT the image to this URL.
-         */
-        get: {
-            parameters: {
-                query: {
-                    /** @description MIME type of the image (e.g., image/png) */
-                    contentType: string;
-                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -186,19 +131,10 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            uploadUrl?: string;
-                            /** @description The final URL of the image after upload */
-                            publicUrl?: string;
-                            expiresIn?: number;
-                        };
-                    };
+                    content?: never;
                 };
             };
         };
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;

@@ -10,9 +10,16 @@ import {
   isCapturing,
   capturedImage,
   resetState,
+  setBrowserInfo,
+  setConsoleLogs,
+  browserInfo,
+  consoleLogs,
 } from "./store.js";
 import { StoreController } from "@nanostores/lit";
 import type { FieldConfig } from "./types.js";
+import { dataURLtoBlob } from "./utils/file.js";
+import type { ConsoleLog } from "./utils/telemetry.js";
+import { getBrowserInfo, consoleInterceptor } from "./utils/telemetry.js";
 
 type WidgetPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 
@@ -43,6 +50,9 @@ export class MyElement extends LitElement {
   @state()
   configFetchError: string | null = null;
 
+  @state()
+  private _remoteConfig: any = null;
+
   @property({ type: Array })
   formConfig: FieldConfig[] = [
     // Default fallback config (Matches your requirements for "Feedback")
@@ -69,6 +79,7 @@ export class MyElement extends LitElement {
         font-family:
           -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         font-size: 14px;
+        text-align: left;
       }
 
       /* Trigger button container */
@@ -181,7 +192,7 @@ export class MyElement extends LitElement {
         background: white;
         border-radius: 12px;
         width: 90%;
-        max-width: 400px;
+        max-width: 800px;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         animation: slideUp 0.3s ease;
       }
@@ -238,6 +249,8 @@ export class MyElement extends LitElement {
   private async _handleTriggerClick() {
     this.isModalOpen = !this.isModalOpen;
     if (this.isModalOpen) {
+      setBrowserInfo(getBrowserInfo());
+      setConsoleLogs(consoleInterceptor.getLogs());
       await this._fetchConfig();
     }
   }
@@ -257,6 +270,7 @@ export class MyElement extends LitElement {
       );
 
       if (config && config.fields) {
+        this._remoteConfig = config;
         // Map bridge fields to widget fields (name -> id)
         this.formConfig = config.fields.map((field: any) => ({
           id: field.name,
@@ -312,11 +326,9 @@ export class MyElement extends LitElement {
   private async _handleSubmit(event: CustomEvent) {
     const formData = event.detail.formData;
 
-    // Add screenshot to body if present
+    // We no longer manually append the screenshot to the body here.
+    // The bridge will handle it if we pass the screenshot separately.
     let finalBody = formData.description || "";
-    if (this._capturedImageController.value) {
-      finalBody += `\n\n![Screenshot](${this._capturedImageController.value})`;
-    }
 
     // Config validation
     if (!this.installationId || !this.owner || !this.repo) {
@@ -340,13 +352,35 @@ export class MyElement extends LitElement {
 
       const { submitIssue } = await import("./api/client.js");
 
+      const screenshotDataUrl = this._capturedImageController.value;
+      const screenshotBlob = screenshotDataUrl
+        ? dataURLtoBlob(screenshotDataUrl)
+        : undefined;
+
+      // Append telemetry to body
+      if (this._remoteConfig?.issue?.browserInfo && browserInfo.get()) {
+        const info = browserInfo.get()!;
+        finalBody += `\n\n### Browser Info\n| Field | Value |\n| :--- | :--- |\n| URL | ${info.url} |\n| User Agent | \`${info.userAgent}\` |\n| Viewport | ${info.viewportWidth}x${info.viewportHeight} |\n| Language | ${info.language} |`;
+      }
+
+      if (
+        this._remoteConfig?.issue?.consoleLog &&
+        consoleLogs.get().length > 0
+      ) {
+        const logs = consoleLogs.get();
+        finalBody += `\n\n### Console Logs\n\`\`\`\n${logs
+          .map((l: ConsoleLog) => `[${l.type.toUpperCase()}] ${l.message}`)
+          .join("\n")}\n\`\`\``;
+      }
+
       await submitIssue(
         this.installationId,
         this.owner,
         this.repo,
         title,
         finalBody,
-        labels
+        labels,
+        screenshotBlob
       );
 
       // Success handling
@@ -412,6 +446,10 @@ export class MyElement extends LitElement {
                   : html`
                       <wafir-form
                         .fields="${this.formConfig}"
+                        .showBrowserInfo="${!!this._remoteConfig?.issue
+                          ?.browserInfo}"
+                        .showConsoleLog="${!!this._remoteConfig?.issue
+                          ?.consoleLog}"
                         @form-submit="${this._handleSubmit}"
                       ></wafir-form>
                     `}
