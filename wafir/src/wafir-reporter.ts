@@ -225,11 +225,60 @@ export class MyElement extends LitElement {
     this.isModalOpen = false;
   }
 
-  private _handleInputChange(event: Event) {
-    const target = event.target as HTMLInputElement;
-  }
+  @property({ type: Number })
+  installationId = 0;
 
-  private _handleSubmit(event: Event) {}
+  @property({ type: String })
+  owner = "";
+
+  @property({ type: String })
+  repo = "";
+
+  private async _handleSubmit(event: CustomEvent) {
+    const formData = event.detail.formData;
+
+    // Config validation
+    if (!this.installationId || !this.owner || !this.repo) {
+      console.error(
+        "Wafir: Missing configuration (installationId, owner, or repo)"
+      );
+      alert("Widget configuration error");
+      return;
+    }
+
+    try {
+      // Map form data to API payload
+      // Assuming formData has 'title', 'description', and 'type' based on default config
+      const title = formData.title || "No Title";
+      const description = formData.description || "";
+      const type = formData.type; // "Bug" or "Feature"
+
+      const labels = ["feedback"];
+      if (type) {
+        labels.push(type.toLowerCase());
+      }
+
+      const { submitIssue } = await import("./api/client.js");
+
+      await submitIssue(
+        this.installationId,
+        this.owner,
+        this.repo,
+        title,
+        description,
+        labels
+      );
+
+      // Success handling
+      alert("Feedback submitted successfully!");
+      this._closeModal();
+
+      // Optional: Reset form? Not easily possible with current architecture without forcing re-render of child
+    } catch (error) {
+      console.error("Wafir: Submit failed", error);
+      alert("Failed to submit feedback. Please try again.");
+    }
+  }
 
   render() {
     return html`
