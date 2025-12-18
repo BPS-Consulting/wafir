@@ -4,6 +4,14 @@ import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import globalStyles from "./index.css?inline";
 import bugIcon from "./assets/bug.svg?raw";
 import "./wafir-form.js";
+import "./wafir-highlighter.js";
+import {
+  isSelecting,
+  isCapturing,
+  capturedImage,
+  setCapturedImage,
+} from "./store.js";
+import { StoreController } from "@nanostores/lit";
 import type { FieldConfig } from "./types.js";
 
 type WidgetPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
@@ -21,6 +29,10 @@ export class MyElement extends LitElement {
 
   @property({ type: String })
   tooltipText = "Open Issue Reporter";
+
+  private _isSelectingController = new StoreController(this, isSelecting);
+  private _isCapturingController = new StoreController(this, isCapturing);
+  private _capturedImageController = new StoreController(this, capturedImage);
 
   @state()
   isModalOpen = false;
@@ -253,6 +265,13 @@ export class MyElement extends LitElement {
           required: field.required,
           options: field.options,
         }));
+
+        if (config.issue && config.issue.screenshot) {
+          this.formConfig = [
+            ...this.formConfig,
+            { id: "screenshot", label: "Screenshot", type: "screenshot" },
+          ];
+        }
       }
 
       if (config && config.feedback && config.feedback.title) {
@@ -273,6 +292,13 @@ export class MyElement extends LitElement {
     this.isModalOpen = false;
   }
 
+  // Effect to reopen modal after selection
+  updated(changedProperties: Map<string, any>) {
+    if (changedProperties.has("_isSelectingController")) {
+      // Logic handled by the fact that we check isSelecting in render
+    }
+  }
+
   @property({ type: Number })
   installationId = 0;
 
@@ -284,6 +310,12 @@ export class MyElement extends LitElement {
 
   private async _handleSubmit(event: CustomEvent) {
     const formData = event.detail.formData;
+
+    // Add screenshot to body if present
+    let finalBody = formData.description || "";
+    if (this._capturedImageController.value) {
+      finalBody += `\n\n![Screenshot](${this._capturedImageController.value})`;
+    }
 
     // Config validation
     if (!this.installationId || !this.owner || !this.repo) {
@@ -298,7 +330,6 @@ export class MyElement extends LitElement {
       // Map form data to API payload
       // Assuming formData has 'title', 'description', and 'type' based on default config
       const title = formData.title || "No Title";
-      const description = formData.description || "";
       const type = formData.type; // "Bug" or "Feature"
 
       const labels = ["feedback"];
@@ -313,12 +344,13 @@ export class MyElement extends LitElement {
         this.owner,
         this.repo,
         title,
-        description,
+        finalBody,
         labels
       );
 
       // Success handling
       alert("Feedback submitted successfully!");
+      setCapturedImage(null);
       this._closeModal();
 
       // Optional: Reset form? Not easily possible with current architecture without forcing re-render of child
@@ -329,6 +361,14 @@ export class MyElement extends LitElement {
   }
 
   render() {
+    if (this._isCapturingController.value) {
+      return html``;
+    }
+
+    if (this._isSelectingController.value) {
+      return html`<wafir-highlighter></wafir-highlighter>`;
+    }
+
     return html`
       <div class="trigger-container ${this.position}">
         <button
@@ -378,6 +418,8 @@ export class MyElement extends LitElement {
             </div>
           `
         : ""}
+
+      <wafir-highlighter></wafir-highlighter>
     `;
   }
 }

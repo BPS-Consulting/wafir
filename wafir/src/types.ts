@@ -1,4 +1,10 @@
-export type FieldType = "text" | "email" | "textarea" | "select" | "checkbox";
+export type FieldType =
+  | "text"
+  | "email"
+  | "textarea"
+  | "select"
+  | "checkbox"
+  | "screenshot";
 
 export interface FieldConfig {
   id: string; // The key for the data (e.g., 'description', 'browser_info')

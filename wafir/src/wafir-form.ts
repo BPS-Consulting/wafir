@@ -1,6 +1,9 @@
 import { LitElement, css, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import type { FieldConfig } from "./types"; // Assuming you saved the interface above
+import { StoreController } from "@nanostores/lit";
+import { startSelection, capturedImage, setCapturedImage } from "./store";
+import { takeFullPageScreenshot } from "./utils/screenshot";
+import type { FieldConfig } from "./types";
 
 @customElement("wafir-form")
 export class WafirForm extends LitElement {
@@ -10,6 +13,8 @@ export class WafirForm extends LitElement {
 
   @state()
   formData: Record<string, any> = {};
+
+  private _capturedImageController = new StoreController(this, capturedImage);
 
   static styles = css`
     :host {
@@ -74,6 +79,96 @@ export class WafirForm extends LitElement {
     .submit-button:disabled {
       background: #9ca3af;
       cursor: not-allowed;
+    }
+
+    .screenshot-preview {
+      margin-top: 8px;
+      position: relative;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      overflow: hidden;
+      max-height: 200px;
+      display: flex;
+      justify-content: center;
+      background: #f9fafb;
+    }
+
+    .screenshot-preview img {
+      max-width: 100%;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .screenshot-clear {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .capture-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 8px;
+      background: #f3f4f6;
+      border: 1px dashed #d1d5db;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      color: #374151;
+      transition: all 0.2s;
+    }
+
+    .capture-button:hover {
+      background: #e5e7eb;
+      border-color: #9ca3af;
+    }
+
+    .screenshot-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .screenshot-actions button {
+      flex: 1;
+      padding: 6px;
+      font-size: 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border: 1px solid #d1d5db;
+      background: #f9fafb;
+    }
+
+    .screenshot-actions button:hover {
+      background: #f3f4f6;
+    }
+
+    .screenshot-actions .highlight-btn {
+      color: #2563eb;
+      border-color: #2563eb;
+      background: #eff6ff;
+    }
+
+    .screenshot-actions .highlight-btn:hover {
+      background: #dbeafe;
     }
   `;
 
@@ -154,6 +249,86 @@ export class WafirForm extends LitElement {
               @change="${(e: Event) => this._handleInputChange(e, field.id)}"
             />
             <label for="${field.id}">${field.label}</label>
+          </div>
+        `;
+
+      case "screenshot":
+        return html`
+          <div>
+            ${this._capturedImageController.value
+              ? html`
+                  <div class="screenshot-preview">
+                    <img
+                      src="${this._capturedImageController.value}"
+                      alt="Captured screenshot"
+                    />
+                    <button
+                      type="button"
+                      class="screenshot-clear"
+                      @click="${() => setCapturedImage(null)}"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                  <div class="screenshot-actions">
+                    <button
+                      type="button"
+                      @click="${() => takeFullPageScreenshot()}"
+                    >
+                      Retake
+                    </button>
+                    <button
+                      type="button"
+                      class="highlight-btn"
+                      @click="${() => startSelection()}"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                        />
+                      </svg>
+                      Highlight
+                    </button>
+                  </div>
+                `
+              : html`
+                  <button
+                    type="button"
+                    class="capture-button"
+                    @click="${() => takeFullPageScreenshot()}"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                      />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                    Take Screenshot
+                  </button>
+                `}
           </div>
         `;
 

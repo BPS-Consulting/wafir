@@ -16,9 +16,10 @@
     "generate:api": "openapi-typescript ../bridge/swagger.json -o src/api/schema.d.ts"
   },
   "dependencies": {
-    "@picocss/pico": "^2.1.1",
+    "@nanostores/lit": "^0.2.3",
     "@standard-schema/spec": "^1.0.0",
     "lit": "^3.3.1",
+    "modern-screenshot": "^4.6.7",
     "nanostores": "^1.1.0",
     "openapi-fetch": "^0.15.0"
   },
@@ -32,7 +33,7 @@
   "size-limit": [
     {
       "path": "dist/wafir.js",
-      "limit": "10 kB"
+      "limit": "20 kB"
     }
   ]
 }
