@@ -1,135 +1,105 @@
-# Turborepo starter
+# Wafir
 
-This Turborepo starter is maintained by the Turborepo core team.
+Wafir is a powerful, lightweight feedback and bug reporting widget designed to bridge the gap between user feedback and your development workflow. It captures high-fidelity screenshots, collects console logs, and gathers essential browser telemetry to make debugging effortless.
 
-## Using this example
+## 🚀 Tech Stack
 
-Run the following command:
+### Wafir (Widget)
 
-```sh
-npx create-turbo@latest
+<p align="left">
+  <img src="https://img.shields.io/badge/Lit-324FFF?style=for-the-badge&logo=lit&logoColor=white" alt="Lit" />
+  <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Nanostores-000000?style=for-the-badge&logo=nanostores&logoColor=white" alt="Nanostores" />
+</p>
+
+- **Lit**: Simple, fast Web Components.
+- **Nanostores**: A tiny state manager for React, Preact, Vue, Svelte, and vanilla JS.
+- **Modern Screenshot**: Accurate DOM-to-Canvas rendering for feedback context.
+- **OpenAPI Fetch**: Type-safe API fetching.
+
+### Bridge (Backend/API)
+
+<p align="left">
+  <img src="https://img.shields.io/badge/Fastify-000000?style=for-the-badge&logo=fastify&logoColor=white" alt="Fastify" />
+  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/Amazon_S3-569A31?style=for-the-badge&logo=amazons3&logoColor=white" alt="AWS S3" />
+  <img src="https://img.shields.io/badge/Octokit-24292E?style=for-the-badge&logo=github&logoColor=white" alt="Octokit" />
+</p>
+
+- **Fastify**: Fast and low overhead web framework for Node.js.
+- **AWS S3**: Secure storage for screenshots and assets.
+- **Octokit**: Integration with GitHub for automated issue creation.
+- **Swagger/OpenAPI**: Automated API documentation.
+
+### Monorepo Tooling
+
+<p align="left">
+  <img src="https://img.shields.io/badge/Turborepo-EF4444?style=for-the-badge&logo=turborepo&logoColor=white" alt="Turborepo" />
+  <img src="https://img.shields.io/badge/pnpm-F69220?style=for-the-badge&logo=pnpm&logoColor=white" alt="pnpm" />
+</p>
+
+## 📂 Project Structure
+
+- **`wafir/`**: The client-side widget built with Lit. It's designed to be embedded in any web application.
+- **`bridge/`**: The backend server built with Fastify. It handles submissions, file uploads (to S3), and integrations (like GitHub).
+- **`react-consumer/`**: A sample React application demonstrating how to integrate the Wafir widget.
+
+## 🛠️ Installation
+
+This project is a monorepo managed by **pnpm** and **Turborepo**.
+
+1.  **Clone the repository:**
+
+    ```bash
+    git clone https://github.com/BPS-Consulting/wafir.git
+    cd wafir
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    pnpm install
+    ```
+
+## 🏃‍♂️ Running Locally
+
+To start the development environment for all packages (Widget, Bridge, and Consumer):
+
+```bash
+pnpm dev
 ```
 
-## What's inside?
+This command runs `turbo run dev`, which spins up:
 
-This Turborepo includes the following packages/apps:
+- The **Wafir Widget** in watch mode.
+- The **Bridge API** server.
+- The **React Consumer** app to test the integration.
 
-### Apps and Packages
+## 🏗️ Building
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+To build all packages for production:
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+```bash
+pnpm build
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## 🔧 Configuration
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+### Bridge Environment Variables
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+Create a `.env` file in the `bridge/` directory based on the usage requirements. You typically need:
 
-### Develop
+- `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`: For S3 access.
+- `GITHUB_TOKEN`: For GitHub issue creation integration.
 
-To develop all apps and packages, run the following command:
+### Widget Configuration
 
-```
-cd my-turborepo
+The widget can be configured via attributes or JavaScript initialization. See the `wafir/` directory for specific implementation details.
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+## 🤝 Contributing
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+1.  Fork the repo
+2.  Create your feature branch (`git checkout -b feature/amazing-feature`)
+3.  Commit your changes (`git commit -m 'Add some amazing feature'`)
+4.  Push to the branch (`git push origin feature/amazing-feature`)
+5.  Open a Pull Request
