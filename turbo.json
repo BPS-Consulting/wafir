@@ -16,6 +16,15 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "generate:swagger": {
+      "outputs": ["swagger.json"],
+      "cache": true
+    },
+    "generate:api": {
+      "dependsOn": ["bridge#generate:swagger"],
+      "outputs": ["src/api/index.ts"],
+      "cache": true
     }
   }
 }

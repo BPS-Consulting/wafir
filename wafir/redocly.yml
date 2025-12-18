@@ -1,0 +1,5 @@
+apis:
+  core@v1:
+    root: ../bridge/swagger.json
+    x-openapi-ts:
+      output: ./src/api/index.ts

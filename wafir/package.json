@@ -12,16 +12,19 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate:api": "openapi-typescript"
   },
   "dependencies": {
     "@picocss/pico": "^2.1.1",
     "@standard-schema/spec": "^1.0.0",
     "lit": "^3.3.1",
-    "nanostores": "^1.1.0"
+    "nanostores": "^1.1.0",
+    "openapi-fetch": "^0.15.0"
   },
   "devDependencies": {
     "@size-limit/preset-big-lib": "^11.2.0",
+    "openapi-typescript": "^7.10.1",
     "size-limit": "^11.2.0",
     "typescript": "~5.9.3",
     "vite": "^7.2.4"
