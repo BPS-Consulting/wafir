@@ -35,7 +35,50 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            [key: string]: unknown;
+                            storage?: {
+                                /**
+                                 * @default issue
+                                 * @enum {string}
+                                 */
+                                type: "issue" | "project" | "both";
+                                owner?: string;
+                                repo?: string;
+                                projectId?: number;
+                            };
+                            feedback?: {
+                                /** @default Feedback */
+                                title: string;
+                                /**
+                                 * @default [
+                                 *       "feedback"
+                                 *     ]
+                                 */
+                                labels: string[];
+                            };
+                            issue?: {
+                                /** @default false */
+                                screenshot: boolean;
+                                /** @default false */
+                                browserInfo: boolean;
+                                /** @default false */
+                                consoleLog: boolean;
+                                /**
+                                 * @default [
+                                 *       "bug"
+                                 *     ]
+                                 */
+                                labels: string[];
+                            };
+                            fields?: {
+                                name: string;
+                                label: string;
+                                /** @enum {string} */
+                                type: "text" | "textarea" | "select" | "checkbox";
+                                /** @default false */
+                                required: boolean;
+                                /** @description Options for select type */
+                                options?: string[];
+                            }[];
                         };
                     };
                 };
@@ -50,39 +93,6 @@ export interface paths {
                             message?: string;
                         };
                     };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
                 };
             };
         };

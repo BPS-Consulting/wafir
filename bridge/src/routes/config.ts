@@ -1,5 +1,6 @@
 import { FastifyPluginAsync } from "fastify";
 import yaml from "js-yaml";
+import { wafirConfigSchema } from "../schemas/wafir-config.js";
 
 interface ConfigQuery {
   installationId: number;
@@ -29,10 +30,7 @@ const configRoute: FastifyPluginAsync = async (
           },
         },
         response: {
-          200: {
-            type: "object",
-            additionalProperties: true, // Returns the arbitrary JSON from the YAML
-          },
+          200: wafirConfigSchema,
           404: {
             type: "object",
             properties: {
@@ -70,19 +68,15 @@ const configRoute: FastifyPluginAsync = async (
       } catch (error: any) {
         request.log.error(error);
         if (error.status === 404) {
-          return reply
-            .code(404)
-            .send({
-              error: "Config Not Found",
-              message: "No .github/wafir.yaml found in repo",
-            });
-        }
-        return reply
-          .code(500)
-          .send({
-            error: "Internal Server Error",
-            message: "Failed to fetch config",
+          return reply.code(404).send({
+            error: "Config Not Found",
+            message: "No .github/wafir.yaml found in repo",
           });
+        }
+        return reply.code(500).send({
+          error: "Internal Server Error",
+          message: "Failed to fetch config",
+        });
       }
     }
   );

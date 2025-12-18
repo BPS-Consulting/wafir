@@ -13,7 +13,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "generate:api": "openapi-typescript"
+    "generate:api": "openapi-typescript ../bridge/swagger.json -o src/api/schema.d.ts"
   },
   "dependencies": {
     "@picocss/pico": "^2.1.1",
