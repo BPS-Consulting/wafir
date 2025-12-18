@@ -9,7 +9,7 @@ import {
   isSelecting,
   isCapturing,
   capturedImage,
-  setCapturedImage,
+  resetState,
 } from "./store.js";
 import { StoreController } from "@nanostores/lit";
 import type { FieldConfig } from "./types.js";
@@ -290,6 +290,7 @@ export class MyElement extends LitElement {
 
   private _closeModal() {
     this.isModalOpen = false;
+    resetState();
   }
 
   // Effect to reopen modal after selection
@@ -350,8 +351,8 @@ export class MyElement extends LitElement {
 
       // Success handling
       alert("Feedback submitted successfully!");
-      setCapturedImage(null);
-      this._closeModal();
+      resetState();
+      this.isModalOpen = false;
 
       // Optional: Reset form? Not easily possible with current architecture without forcing re-render of child
     } catch (error) {

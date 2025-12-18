@@ -1,7 +1,13 @@
 import { LitElement, css, html } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement, property } from "lit/decorators.js";
 import { StoreController } from "@nanostores/lit";
-import { startSelection, capturedImage, setCapturedImage } from "./store";
+import {
+  startSelection,
+  capturedImage,
+  setCapturedImage,
+  formData,
+  setFormData,
+} from "./store";
 import { takeFullPageScreenshot } from "./utils/screenshot";
 import type { FieldConfig } from "./types";
 
@@ -11,10 +17,8 @@ export class WafirForm extends LitElement {
   @property({ type: Array })
   fields: FieldConfig[] = [];
 
-  @state()
-  formData: Record<string, any> = {};
-
   private _capturedImageController = new StoreController(this, capturedImage);
+  private _formDataController = new StoreController(this, formData);
 
   static styles = css`
     :host {
@@ -172,14 +176,22 @@ export class WafirForm extends LitElement {
     }
   `;
 
-  // Initialize default values when fields are loaded
   willUpdate(changedProperties: Map<string, any>) {
     if (changedProperties.has("fields")) {
+      const currentData = formData.get();
+      let hasChanges = false;
+      const newData = { ...currentData };
+
       this.fields.forEach((field) => {
-        if (field.defaultValue && !this.formData[field.id]) {
-          this.formData[field.id] = field.defaultValue;
+        if (field.defaultValue && !newData[field.id]) {
+          newData[field.id] = field.defaultValue;
+          hasChanges = true;
         }
       });
+
+      if (hasChanges) {
+        setFormData(newData);
+      }
     }
   }
 
@@ -193,15 +205,14 @@ export class WafirForm extends LitElement {
         ? (target as HTMLInputElement).checked
         : target.value;
 
-    this.formData = { ...this.formData, [fieldId]: value };
-    this.requestUpdate(); // Force re-render to check validation state
+    setFormData({ ...formData.get(), [fieldId]: value });
   }
 
   private _handleSubmit(event: Event) {
     event.preventDefault();
     this.dispatchEvent(
       new CustomEvent("form-submit", {
-        detail: { formData: this.formData },
+        detail: { formData: formData.get() },
         bubbles: true,
         composed: true,
       })
@@ -210,7 +221,7 @@ export class WafirForm extends LitElement {
 
   // Helper to render specific input types
   private _renderFieldInput(field: FieldConfig) {
-    const value = this.formData[field.id] || "";
+    const value = this._formDataController.value[field.id] || "";
 
     switch (field.type) {
       case "textarea":
