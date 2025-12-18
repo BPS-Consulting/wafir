@@ -1,10 +1,9 @@
 import fp from "fastify-plugin";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
-import { AppOptions } from "../app";
 
 // Use fp (fastify-plugin) for better encapsulation
-export default fp<AppOptions>(async (fastify, opts) => {
+export default fp(async (fastify, opts) => {
   // Only register Swagger/Swagger UI if running in a local development environment
   const isLocalDev = process.env.NODE_ENV === "development";
 

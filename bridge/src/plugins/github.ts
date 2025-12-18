@@ -24,6 +24,7 @@ export default fp(async (fastify, opts) => {
   const app = new App({
     appId: appId,
     privateKey: privateKey.replace(/\\n/g, "\n"), // Handle newlines if passed via single-line env var
+    Octokit,
   });
 
   // Decorator: Exchanges the Installation ID for an authenticated Octokit client
