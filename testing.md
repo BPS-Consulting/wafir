@@ -86,7 +86,13 @@ function App() {
 }
 ```
 
-## 6. S3 Setup (Optional)
+## 6. Dynamic Configuration
+
+WAFIR fetches `.github/wafir.yaml` from your repo.
+You can use the example file provided at [.github/wafir.yaml](file:///home/alvin/git/wafir/.github/wafir.yaml) as a starting point.
+Push this file to your repository and the widget will update its fields automatically next time it's opened.
+
+## 7. S3 Setup (Optional)
 
 If you want to test screenshots, you'll need an S3 bucket and provide AWS credentials in `bridge/.env`.
 The bridge currently uses these for generating upload URLs in `upload.ts`.

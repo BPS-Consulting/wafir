@@ -25,6 +25,12 @@ export class MyElement extends LitElement {
   @state()
   isModalOpen = false;
 
+  @state()
+  isConfigLoading = false;
+
+  @state()
+  configFetchError: string | null = null;
+
   @property({ type: Array })
   formConfig: FieldConfig[] = [
     // Default fallback config (Matches your requirements for "Feedback")
@@ -217,8 +223,50 @@ export class MyElement extends LitElement {
     `,
   ];
 
-  private _handleTriggerClick() {
+  private async _handleTriggerClick() {
     this.isModalOpen = !this.isModalOpen;
+    if (this.isModalOpen) {
+      await this._fetchConfig();
+    }
+  }
+
+  private async _fetchConfig() {
+    if (!this.installationId || !this.owner || !this.repo) return;
+
+    this.isConfigLoading = true;
+    this.configFetchError = null;
+
+    try {
+      const { getWafirConfig } = await import("./api/client.js");
+      const config = await getWafirConfig(
+        this.installationId,
+        this.owner,
+        this.repo
+      );
+
+      if (config && config.fields) {
+        // Map bridge fields to widget fields (name -> id)
+        this.formConfig = config.fields.map((field: any) => ({
+          id: field.name,
+          label: field.label,
+          type: field.type,
+          required: field.required,
+          options: field.options,
+        }));
+      }
+
+      if (config && config.feedback && config.feedback.title) {
+        this.modalTitle = config.feedback.title;
+      }
+    } catch (error) {
+      console.warn(
+        "Wafir: Failed to fetch remote config, using defaults",
+        error
+      );
+      // We keep the default formConfig
+    } finally {
+      this.isConfigLoading = false;
+    }
   }
 
   private _closeModal() {
@@ -316,10 +364,16 @@ export class MyElement extends LitElement {
                   </button>
                 </div>
 
-                <wafir-form
-                  .fields="${this.formConfig}"
-                  @form-submit="${this._handleSubmit}"
-                ></wafir-form>
+                ${this.isConfigLoading
+                  ? html`<div style="padding: 20px; text-align: center;">
+                      Loading configuration...
+                    </div>`
+                  : html`
+                      <wafir-form
+                        .fields="${this.formConfig}"
+                        @form-submit="${this._handleSubmit}"
+                      ></wafir-form>
+                    `}
               </div>
             </div>
           `
