@@ -1,4 +1,5 @@
 packages:
   - "wafir"
   - "bridge"
+  - "react"
   - "react-consumer"

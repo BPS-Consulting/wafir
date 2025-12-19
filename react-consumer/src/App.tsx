@@ -2,8 +2,7 @@ import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
-// @ts-ignore - Import the Wafir widget
-import "../../wafir/src/wafir-reporter.ts";
+import { WafirReporter } from "@wafir/react";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -30,9 +29,7 @@ function App() {
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
       </p>
-
-      {/* @ts-ignore - Custom elements in React */}
-      <wafir-reporter installationId={0} owner="" repo=""></wafir-reporter>
+      <WafirReporter installationId={0} owner="" repo="" />
     </>
   );
 }
