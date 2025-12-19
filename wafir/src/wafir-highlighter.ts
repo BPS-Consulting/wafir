@@ -1,4 +1,5 @@
-import { LitElement, html, css } from "lit";
+import { LitElement, html, unsafeCSS } from "lit";
+import highlighterStyles from "./styles/wafir-highlighter.css?inline";
 import { customElement, state } from "lit/decorators.js";
 import { isSelecting, hoveredElement, stopSelection } from "./store";
 import { StoreController } from "@nanostores/lit";
@@ -12,50 +13,7 @@ export class WafirHighlighter extends LitElement {
   @state()
   private _rect: DOMRect | null = null;
 
-  static styles = css`
-    :host {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      pointer-events: none;
-      z-index: 10000;
-    }
-
-    .overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.1);
-      pointer-events: auto;
-      cursor: crosshair;
-    }
-
-    .highlight {
-      position: absolute;
-      border: 2px solid #2563eb;
-      background: rgba(37, 99, 235, 0.1);
-      pointer-events: none;
-      transition: all 0.1s ease;
-      box-sizing: border-box;
-      z-index: 10001;
-    }
-
-    .label {
-      position: absolute;
-      top: -24px;
-      left: 0;
-      background: #2563eb;
-      color: white;
-      padding: 2px 6px;
-      font-size: 10px;
-      border-radius: 4px;
-      white-space: nowrap;
-    }
-  `;
+  static styles = [unsafeCSS(highlighterStyles)];
 
   connectedCallback() {
     super.connectedCallback();

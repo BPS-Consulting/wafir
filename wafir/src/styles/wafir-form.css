@@ -1,0 +1,222 @@
+/* Wafir Form Component Styles
+ * Override these CSS custom properties to customize the appearance.
+ * Set variables on the wafir-reporter element to customize.
+ */
+
+@import "./reset.css";
+
+:host {
+  display: block;
+}
+
+form {
+  padding: var(--wafir-form-padding, 20px);
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: var(--wafir-form-text-color, #374151);
+  font-size: 13px;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  padding: var(--wafir-form-input-padding, 10px 12px);
+  border: 1px solid var(--wafir-form-border-color, #d1d5db);
+  border-radius: var(--wafir-form-border-radius, 6px);
+  font-size: 14px;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* Checkbox specific styles */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-group input {
+  width: auto;
+}
+
+.checkbox-group label {
+  margin-bottom: 0;
+}
+
+.submit-button {
+  width: 100%;
+  padding: 10px;
+  background: var(--wafir-form-primary-color, #2563eb);
+  color: white;
+  border: none;
+  border-radius: var(--wafir-form-border-radius, 6px);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.submit-button:hover {
+  background: var(--wafir-form-primary-hover, #1d4ed8);
+}
+
+.submit-button:disabled {
+  background: var(--wafir-form-disabled-color, #9ca3af);
+  cursor: not-allowed;
+}
+
+.screenshot-preview {
+  margin-top: 8px;
+  position: relative;
+  border: 1px solid var(--wafir-form-border-color, #d1d5db);
+  border-radius: var(--wafir-form-border-radius, 6px);
+  overflow: hidden;
+  max-height: 200px;
+  display: flex;
+  justify-content: center;
+  background: var(--wafir-form-bg-tertiary, #f9fafb);
+}
+
+.screenshot-preview img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.screenshot-clear {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.capture-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px;
+  background: var(--wafir-form-bg-secondary, #f3f4f6);
+  border: 1px dashed var(--wafir-form-border-color, #d1d5db);
+  border-radius: var(--wafir-form-border-radius, 6px);
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--wafir-form-text-color, #374151);
+  transition: all 0.2s;
+}
+
+.capture-button:hover {
+  background: #e5e7eb;
+  border-color: var(--wafir-form-disabled-color, #9ca3af);
+}
+
+.screenshot-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.screenshot-actions button {
+  flex: 1;
+  padding: 6px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1px solid var(--wafir-form-border-color, #d1d5db);
+  background: var(--wafir-form-bg-tertiary, #f9fafb);
+}
+
+.screenshot-actions button:hover {
+  background: var(--wafir-form-bg-secondary, #f3f4f6);
+}
+
+.screenshot-actions .highlight-btn {
+  color: var(--wafir-form-primary-color, #2563eb);
+  border-color: var(--wafir-form-primary-color, #2563eb);
+  background: #eff6ff;
+}
+
+.screenshot-actions .highlight-btn:hover {
+  background: #dbeafe;
+}
+
+.telemetry-section {
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--wafir-form-telemetry-bg, #f9fafb);
+  border: 1px solid var(--wafir-form-telemetry-border, #e5e7eb);
+  border-radius: var(--wafir-form-border-radius, 6px);
+  font-size: 12px;
+  color: #4b5563;
+}
+
+.telemetry-section h4 {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: var(--wafir-form-text-color, #374151);
+  font-weight: 600;
+}
+
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+}
+
+.telemetry-label {
+  font-weight: 500;
+  color: var(--wafir-form-text-secondary, #6b7280);
+}
+
+.logs-container {
+  max-height: 150px;
+  overflow-y: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  background: var(--wafir-form-logs-bg, #111827);
+  color: var(--wafir-form-logs-text, #f3f4f6);
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.log-item {
+  margin-bottom: 4px;
+  word-break: break-all;
+}
+
+.log-warn {
+  color: var(--wafir-form-log-warn, #fde047);
+}
+
+.log-error {
+  color: var(--wafir-form-log-error, #f87171);
+}

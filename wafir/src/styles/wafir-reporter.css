@@ -1,0 +1,181 @@
+/* Wafir Reporter Component Styles
+ * Override these CSS custom properties to customize the appearance.
+ * Set variables on the wafir-reporter element to customize.
+ */
+
+@import "./reset.css";
+
+:host {
+  font-family: var(
+    --wafir-font-family,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif
+  );
+  font-size: var(--wafir-font-size, 14px);
+  text-align: left;
+}
+
+/* Trigger button container */
+.trigger-container {
+  position: fixed;
+  z-index: 9998;
+}
+
+.trigger-container.bottom-right {
+  bottom: var(--wafir-button-offset, 20px);
+  right: var(--wafir-button-offset, 20px);
+}
+
+.trigger-container.bottom-left {
+  bottom: var(--wafir-button-offset, 20px);
+  left: var(--wafir-button-offset, 20px);
+}
+
+.trigger-container.top-right {
+  top: var(--wafir-button-offset, 20px);
+  right: var(--wafir-button-offset, 20px);
+}
+
+.trigger-container.top-left {
+  top: var(--wafir-button-offset, 20px);
+  left: var(--wafir-button-offset, 20px);
+}
+
+/* Button */
+button[part="button"] {
+  width: var(--wafir-button-size, 48px);
+  height: var(--wafir-button-size, 48px);
+  border-radius: var(--wafir-button-border-radius, 50%);
+  background: var(--wafir-primary-color, #2563eb);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--wafir-button-shadow, 0 4px 12px rgba(0, 0, 0, 0.15));
+  transition: all 0.2s ease;
+}
+
+button[part="button"]:hover {
+  background: var(--wafir-primary-hover, #1d4ed8);
+  transform: scale(1.05);
+  box-shadow: var(--wafir-button-shadow-hover, 0 6px 16px rgba(0, 0, 0, 0.2));
+}
+
+button[part="button"] span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--wafir-button-icon-size, 24px);
+  height: var(--wafir-button-icon-size, 24px);
+}
+
+button[part="button"] svg {
+  width: var(--wafir-button-icon-size, 24px);
+  height: var(--wafir-button-icon-size, 24px);
+  stroke: white;
+}
+
+/* Tooltip */
+.tooltip {
+  position: absolute;
+  bottom: 60px;
+  right: 0;
+  background: var(--wafir-tooltip-bg, #1f2937);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.trigger-container:hover .tooltip {
+  opacity: 1;
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--wafir-backdrop-color, rgba(0, 0, 0, 0.5));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal content */
+.modal-content {
+  background: var(--wafir-modal-bg, white);
+  border-radius: var(--wafir-modal-border-radius, 12px);
+  width: 90%;
+  max-width: var(--wafir-modal-max-width, 800px);
+  box-shadow: var(--wafir-modal-shadow, 0 20px 60px rgba(0, 0, 0, 0.3));
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Modal header */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--wafir-modal-padding, 20px);
+  border-bottom: 1px solid var(--wafir-border-color, #e5e7eb);
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--wafir-text-color, #111827);
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: var(--wafir-text-secondary, #6b7280);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.close-button:hover {
+  background: #f3f4f6;
+  color: var(--wafir-text-color, #111827);
+}

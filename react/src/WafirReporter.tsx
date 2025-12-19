@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from "react";
-// Import wafir to register the custom element
 import "wafir";
 
 export type WafirPosition =
