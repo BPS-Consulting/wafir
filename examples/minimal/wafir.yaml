@@ -1,0 +1,19 @@
+# WAFIR Configuration Example - Minimal Setup
+# The simplest possible configuration to get started
+
+storage:
+  type: issue
+
+feedback:
+  title: "Feedback"
+  labels: ["feedback"]
+
+fields:
+  - name: title
+    label: "Title"
+    type: text
+    required: true
+  - name: description
+    label: "What's on your mind?"
+    type: textarea
+    required: false
