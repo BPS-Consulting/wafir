@@ -7,6 +7,9 @@
 
 :host {
   display: block;
+  color: var(--wafir-form-text-color, #374151);
+  background-color: var(--wafir-form-bg, transparent);
+  line-height: 1.5;
 }
 
 form {
@@ -35,6 +38,8 @@ select {
   font-size: 14px;
   box-sizing: border-box;
   font-family: inherit;
+  color: var(--wafir-form-input-color, #111827);
+  background-color: var(--wafir-form-input-bg, #ffffff);
 }
 
 textarea {

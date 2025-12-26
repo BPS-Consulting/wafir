@@ -16,6 +16,8 @@
   );
   font-size: var(--wafir-font-size, 14px);
   text-align: left;
+  color: var(--wafir-text-color, #111827);
+  line-height: 1.5;
 }
 
 /* Trigger button container */
