@@ -1,0 +1,380 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const reactUsage = `import { WafirReporter } from '@wafir/react';
+
+function App() {
+  return (
+    <div>
+      {/* Your app content */}
+      
+      <WafirReporter
+        installationId={12345}
+        owner="your-username"
+        repo="your-repo"
+        position="bottom-right"
+      />
+    </div>
+  );
+}`;
+
+const vueUsage = `<script setup>
+import { WafirReporter } from '@wafir/vue';
+</script>
+
+<template>
+  <div>
+    <!-- Your app content -->
+    
+    <WafirReporter
+      :installation-id="12345"
+      owner="your-username"
+      repo="your-repo"
+      position="bottom-right"
+    />
+  </div>
+</template>`;
+
+const vanillaUsage = `<!-- Add the script -->
+<script type="module" src="https://unpkg.com/wafir"></script>
+
+<!-- Add the widget -->
+<wafir-reporter
+  installationId="12345"
+  owner="your-username"
+  repo="your-repo"
+  position="bottom-right"
+></wafir-reporter>`;
+
+const configExample = `# .github/wafir.yaml
+storage:
+  type: issue    # Options: issue, project, both
+
+feedback:
+  title: "Submit Feedback"
+
+issue:
+  screenshot: true      # Enable screenshot capture
+  browserInfo: true     # Collect browser details
+  consoleLog: false     # Capture console logs
+  labels: ["feedback"]
+
+fields:
+  - name: title
+    label: "Title"
+    type: text
+    required: true
+
+  - name: description
+    label: "Description"
+    type: textarea
+    required: false
+
+  - name: type
+    label: "Type"
+    type: select
+    options: ["Bug", "Feature Request", "Question"]
+    required: true`;
+---
+
+<Layout title="Installation - Wafir" description="Learn how to install and configure the Wafir feedback widget in your application.">
+	<section class="page-header section">
+		<div class="container">
+			<h1>Installation</h1>
+			<p>Get Wafir running in your application in minutes</p>
+		</div>
+	</section>
+
+	<section class="content section">
+		<div class="container">
+			<div class="steps-container">
+
+				<div class="install-step">
+					<h2><span class="step-badge">1</span> Install the GitHub App</h2>
+					<p>
+						First, install the Wafir GitHub App on your repository. This allows Wafir to create issues and read your configuration.
+					</p>
+					<a href="https://github.com/apps/wafir" target="_blank" rel="noopener" class="btn btn-primary">
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+							<path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+						</svg>
+						Install GitHub App
+					</a>
+					<p class="note">After installation, note your <strong>Installation ID</strong> from the URL. You'll need this to configure the widget.</p>
+				</div>
+
+				<div class="install-step">
+					<h2><span class="step-badge">2</span> Install the Widget Package</h2>
+					<p>Install the Wafir widget package for your framework of choice:</p>
+					
+					<div class="tabs">
+						<button class="tab active" data-tab="react">React</button>
+						<button class="tab" data-tab="vue">Vue</button>
+						<button class="tab" data-tab="vanilla">Vanilla JS</button>
+					</div>
+
+					<div class="tab-content active" data-tab="react">
+						<pre><code>npm install wafir @wafir/react</code></pre>
+						<p class="tab-note">Or with pnpm:</p>
+						<pre><code>pnpm add wafir @wafir/react</code></pre>
+					</div>
+
+					<div class="tab-content" data-tab="vue">
+						<pre><code>npm install wafir @wafir/vue</code></pre>
+						<p class="tab-note">Or with pnpm:</p>
+						<pre><code>pnpm add wafir @wafir/vue</code></pre>
+					</div>
+
+					<div class="tab-content" data-tab="vanilla">
+						<pre><code>npm install wafir</code></pre>
+						<p class="tab-note">Or use a CDN:</p>
+						<pre><code>&lt;script type="module" src="https://unpkg.com/wafir"&gt;&lt;/script&gt;</code></pre>
+					</div>
+				</div>
+
+				<div class="install-step">
+					<h2><span class="step-badge">3</span> Add the Widget to Your App</h2>
+					<p>Import and add the widget component to your application:</p>
+
+					<div class="tabs">
+						<button class="tab active" data-tab="react-usage">React</button>
+						<button class="tab" data-tab="vue-usage">Vue</button>
+						<button class="tab" data-tab="vanilla-usage">Vanilla JS</button>
+					</div>
+
+					<div class="tab-content active" data-tab="react-usage">
+						<pre><code>{reactUsage}</code></pre>
+					</div>
+
+					<div class="tab-content" data-tab="vue-usage">
+						<pre><code>{vueUsage}</code></pre>
+					</div>
+
+					<div class="tab-content" data-tab="vanilla-usage">
+						<pre><code>{vanillaUsage}</code></pre>
+					</div>
+				</div>
+
+				<div class="install-step">
+					<h2><span class="step-badge">4</span> Configure Your Repository</h2>
+					<p>Create a <code>.github/wafir.yaml</code> file in your repository to configure the widget:</p>
+					
+					<pre><code>{configExample}</code></pre>
+				</div>
+
+				<div class="install-step">
+					<h2>Props Reference</h2>
+					<table class="props-table">
+						<thead>
+							<tr>
+								<th>Prop</th>
+								<th>Type</th>
+								<th>Required</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><code>installationId</code></td>
+								<td>number</td>
+								<td>Yes</td>
+								<td>Your GitHub App installation ID</td>
+							</tr>
+							<tr>
+								<td><code>owner</code></td>
+								<td>string</td>
+								<td>Yes</td>
+								<td>GitHub repository owner</td>
+							</tr>
+							<tr>
+								<td><code>repo</code></td>
+								<td>string</td>
+								<td>Yes</td>
+								<td>GitHub repository name</td>
+							</tr>
+							<tr>
+								<td><code>position</code></td>
+								<td>string</td>
+								<td>No</td>
+								<td>Widget position: <code>bottom-right</code>, <code>bottom-left</code>, <code>top-right</code>, <code>top-left</code></td>
+							</tr>
+							<tr>
+								<td><code>modalTitle</code></td>
+								<td>string</td>
+								<td>No</td>
+								<td>Custom title for the feedback modal</td>
+							</tr>
+							<tr>
+								<td><code>tooltipText</code></td>
+								<td>string</td>
+								<td>No</td>
+								<td>Tooltip text for the trigger button</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+			</div>
+		</div>
+	</section>
+</Layout>
+
+<script>
+	document.querySelectorAll('.tabs').forEach(tabGroup => {
+		tabGroup.querySelectorAll('.tab').forEach(tab => {
+			tab.addEventListener('click', () => {
+				const tabId = tab.dataset.tab;
+				const parent = tab.closest('.install-step');
+				
+				parent?.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+				parent?.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+				
+				tab.classList.add('active');
+				parent?.querySelector(`.tab-content[data-tab="${tabId}"]`)?.classList.add('active');
+			});
+		});
+	});
+</script>
+
+<style>
+	.page-header {
+		padding-bottom: 2rem;
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.page-header h1 {
+		font-size: 2.5rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.page-header p {
+		color: var(--color-text-muted);
+		font-size: 1.125rem;
+	}
+
+	.steps-container {
+		max-width: 800px;
+	}
+
+	.install-step {
+		margin-bottom: 4rem;
+	}
+
+	.install-step h2 {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		font-size: 1.5rem;
+		margin-bottom: 1rem;
+	}
+
+	.step-badge {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 2rem;
+		height: 2rem;
+		background: var(--color-primary);
+		color: white;
+		border-radius: 50%;
+		font-size: 0.875rem;
+		font-weight: 700;
+	}
+
+	.install-step > p {
+		color: var(--color-text-muted);
+		margin-bottom: 1.5rem;
+	}
+
+	.note {
+		margin-top: 1rem;
+		padding: 1rem;
+		background: var(--color-bg-card);
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		font-size: 0.875rem;
+	}
+
+	.tabs {
+		display: flex;
+		gap: 0.5rem;
+		margin-bottom: 1rem;
+	}
+
+	.tab {
+		padding: 0.5rem 1rem;
+		background: var(--color-bg-card);
+		border: 1px solid var(--color-border);
+		border-radius: 6px;
+		color: var(--color-text-muted);
+		cursor: pointer;
+		font-size: 0.875rem;
+		transition: all 0.2s ease;
+	}
+
+	.tab:hover {
+		color: var(--color-text);
+		border-color: var(--color-text-muted);
+	}
+
+	.tab.active {
+		background: var(--color-primary);
+		border-color: var(--color-primary);
+		color: white;
+	}
+
+	.tab-content {
+		display: none;
+	}
+
+	.tab-content.active {
+		display: block;
+	}
+
+	.tab-note {
+		margin: 1rem 0 0.5rem;
+		font-size: 0.875rem;
+		color: var(--color-text-muted);
+	}
+
+	pre {
+		margin-bottom: 0;
+	}
+
+	.props-table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.875rem;
+	}
+
+	.props-table th,
+	.props-table td {
+		padding: 0.75rem;
+		text-align: left;
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.props-table th {
+		background: var(--color-bg-elevated);
+		font-weight: 600;
+	}
+
+	.props-table td:first-child {
+		font-family: var(--font-mono);
+	}
+
+	@media (max-width: 768px) {
+		.page-header h1 {
+			font-size: 2rem;
+		}
+
+		.tabs {
+			flex-wrap: wrap;
+		}
+
+		.props-table {
+			display: block;
+			overflow-x: auto;
+		}
+	}
+</style>

@@ -212,7 +212,7 @@ export class MyElement extends LitElement {
       // Append telemetry to body
       if (this._remoteConfig?.issue?.browserInfo && browserInfo.get()) {
         const info = browserInfo.get()!;
-        finalBody += `\n\n### Browser Info\n| Field | Value |\n| :--- | :--- |\n| URL | ${info.url} |\n| User Agent | \`${info.userAgent}\` |\n| Viewport | ${info.viewportWidth}x${info.viewportHeight} |\n| Language | ${info.language} |`;
+        finalBody += `\n\n# Browser Info\n| Field | Value |\n| :--- | :--- |\n| URL | ${info.url} |\n| User Agent | \`${info.userAgent}\` |\n| Viewport | ${info.viewportWidth}x${info.viewportHeight} |\n| Language | ${info.language} |`;
       }
 
       if (
@@ -220,7 +220,7 @@ export class MyElement extends LitElement {
         consoleLogs.get().length > 0
       ) {
         const logs = consoleLogs.get();
-        finalBody += `\n\n### Console Logs\n\`\`\`\n${logs
+        finalBody += `\n\n# Console Logs\n\`\`\`\n${logs
           .map((l: ConsoleLog) => `[${l.type.toUpperCase()}] ${l.message}`)
           .join("\n")}\n\`\`\``;
       }

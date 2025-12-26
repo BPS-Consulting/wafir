@@ -4,3 +4,4 @@ packages:
   - "react"
   - "vue"
   - "react-consumer"
+  - "www"

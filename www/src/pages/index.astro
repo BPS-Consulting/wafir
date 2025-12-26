@@ -1,0 +1,315 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const features = [
+	{
+		icon: '🚀',
+		title: 'Easy to Use',
+		description: 'Drop-in widget for any web app. Works with React, Vue, or vanilla JavaScript in minutes.'
+	},
+	{
+		icon: '🔓',
+		title: 'Open Source',
+		description: 'MIT licensed. Self-host the bridge or use our free service. Full control over your data.'
+	},
+	{
+		icon: '🔗',
+		title: 'GitHub Native',
+		description: 'Issues go directly to your GitHub repo. Configure via a simple YAML file in your repo.'
+	},
+	{
+		icon: '📸',
+		title: 'Rich Context',
+		description: 'Capture screenshots, browser info, and console logs automatically for better debugging.'
+	},
+	{
+		icon: '🎨',
+		title: 'Fully Customizable',
+		description: 'Custom CSS, configurable forms, and slot-based triggers. Make it match your brand.'
+	},
+	{
+		icon: '🌐',
+		title: 'Framework Agnostic',
+		description: 'Built with Lit Web Components. Works anywhere with first-class React and Vue wrappers.'
+	}
+];
+
+const quickstartCode = `import { WafirReporter } from '@wafir/react';
+
+<WafirReporter
+  installationId={12345}
+  owner="your-org"
+  repo="your-repo"
+/>`;
+
+const configCode = `# .github/wafir.yaml
+storage:
+  type: issue
+
+fields:
+  - name: title
+    label: "Title"
+    type: text
+    required: true`;
+---
+
+<Layout>
+	<section class="hero section">
+		<div class="container">
+			<div class="hero-content">
+				<div class="badge">Open Source Feedback Widget</div>
+				<h1>Collect feedback.<br/>Ship to GitHub.</h1>
+				<p class="hero-description">
+					Wafir is a powerful, lightweight feedback and bug reporting widget that bridges user feedback directly to your GitHub workflow. Easy to embed, simple to configure.
+				</p>
+				<div class="hero-actions">
+					<a href="/installation" class="btn btn-primary">Get Started</a>
+					<a href="https://github.com/BPS-Consulting/wafir" target="_blank" rel="noopener" class="btn btn-secondary">
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+							<path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+						</svg>
+						View on GitHub
+					</a>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="features section">
+		<div class="container">
+			<div class="section-header">
+				<h2>Why Wafir?</h2>
+				<p>Everything you need for seamless feedback collection</p>
+			</div>
+			<div class="features-grid">
+				{features.map(feature => (
+					<div class="feature-card">
+						<div class="feature-icon">{feature.icon}</div>
+						<h3>{feature.title}</h3>
+						<p>{feature.description}</p>
+					</div>
+				))}
+			</div>
+		</div>
+	</section>
+
+	<section class="quickstart section">
+		<div class="container">
+			<div class="section-header">
+				<h2>Quick Start</h2>
+				<p>Get up and running in three steps</p>
+			</div>
+			<div class="steps">
+				<div class="step">
+					<div class="step-number">1</div>
+					<div class="step-content">
+						<h3>Install the widget</h3>
+						<pre><code>npm install wafir @wafir/react</code></pre>
+					</div>
+				</div>
+				<div class="step">
+					<div class="step-number">2</div>
+					<div class="step-content">
+						<h3>Add to your app</h3>
+						<pre><code>{quickstartCode}</code></pre>
+					</div>
+				</div>
+				<div class="step">
+					<div class="step-number">3</div>
+					<div class="step-content">
+						<h3>Configure your repo</h3>
+						<pre><code>{configCode}</code></pre>
+					</div>
+				</div>
+			</div>
+			<div class="cta-wrapper">
+				<a href="/installation" class="btn btn-primary">View Full Installation Guide</a>
+			</div>
+		</div>
+	</section>
+
+	<section class="tech-stack section">
+		<div class="container">
+			<div class="section-header">
+				<h2>Built With</h2>
+				<p>Modern, reliable technologies</p>
+			</div>
+			<div class="tech-badges">
+				<img src="https://img.shields.io/badge/Lit-324FFF?style=for-the-badge&logo=lit&logoColor=white" alt="Lit" loading="lazy" />
+				<img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" loading="lazy" />
+				<img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" loading="lazy" />
+				<img src="https://img.shields.io/badge/Fastify-000000?style=for-the-badge&logo=fastify&logoColor=white" alt="Fastify" loading="lazy" />
+			</div>
+		</div>
+	</section>
+</Layout>
+
+<style>
+	.hero {
+		padding-top: 6rem;
+		padding-bottom: 6rem;
+	}
+
+	.hero-content {
+		max-width: 700px;
+	}
+
+	.badge {
+		display: inline-block;
+		padding: 0.5rem 1rem;
+		background: var(--color-bg-card);
+		border: 1px solid var(--color-border);
+		border-radius: 9999px;
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--color-primary);
+		margin-bottom: 1.5rem;
+	}
+
+	.hero h1 {
+		font-size: 3.5rem;
+		font-weight: 800;
+		margin-bottom: 1.5rem;
+		letter-spacing: -0.02em;
+	}
+
+	.hero-description {
+		font-size: 1.25rem;
+		color: var(--color-text-muted);
+		margin-bottom: 2rem;
+		max-width: 600px;
+	}
+
+	.hero-actions {
+		display: flex;
+		gap: 1rem;
+		flex-wrap: wrap;
+	}
+
+	.section-header {
+		text-align: center;
+		margin-bottom: 3rem;
+	}
+
+	.section-header h2 {
+		font-size: 2.25rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.section-header p {
+		color: var(--color-text-muted);
+		font-size: 1.125rem;
+	}
+
+	.features-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+		gap: 1.5rem;
+	}
+
+	.feature-card {
+		background: var(--color-bg-card);
+		border: 1px solid var(--color-border);
+		border-radius: 12px;
+		padding: 1.5rem;
+		transition: border-color 0.2s ease;
+	}
+
+	.feature-card:hover {
+		border-color: var(--color-primary);
+	}
+
+	.feature-icon {
+		font-size: 2rem;
+		margin-bottom: 1rem;
+	}
+
+	.feature-card h3 {
+		font-size: 1.125rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.feature-card p {
+		color: var(--color-text-muted);
+		font-size: 0.9375rem;
+	}
+
+	.steps {
+		display: flex;
+		flex-direction: column;
+		gap: 2rem;
+		max-width: 700px;
+		margin: 0 auto;
+	}
+
+	.step {
+		display: flex;
+		gap: 1.5rem;
+		align-items: flex-start;
+	}
+
+	.step-number {
+		flex-shrink: 0;
+		width: 2.5rem;
+		height: 2.5rem;
+		background: var(--color-primary);
+		color: white;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-weight: 700;
+	}
+
+	.step-content {
+		flex: 1;
+	}
+
+	.step-content h3 {
+		font-size: 1.125rem;
+		margin-bottom: 0.75rem;
+	}
+
+	.step-content pre {
+		font-size: 0.875rem;
+	}
+
+	.cta-wrapper {
+		text-align: center;
+		margin-top: 3rem;
+	}
+
+	.tech-stack {
+		text-align: center;
+	}
+
+	.tech-badges {
+		display: flex;
+		justify-content: center;
+		gap: 1rem;
+		flex-wrap: wrap;
+	}
+
+	.tech-badges img {
+		height: 28px;
+	}
+
+	@media (max-width: 768px) {
+		.hero h1 {
+			font-size: 2.5rem;
+		}
+
+		.hero-description {
+			font-size: 1.125rem;
+		}
+
+		.features-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.step {
+			flex-direction: column;
+			gap: 1rem;
+		}
+	}
+</style>
