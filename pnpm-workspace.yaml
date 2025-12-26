@@ -2,4 +2,5 @@ packages:
   - "wafir"
   - "bridge"
   - "react"
+  - "vue"
   - "react-consumer"
