@@ -131,6 +131,8 @@ button[part="button"] svg {
   border-radius: var(--wafir-modal-border-radius, 12px);
   width: 90%;
   max-width: var(--wafir-modal-max-width, 800px);
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: var(--wafir-modal-shadow, 0 20px 60px rgba(0, 0, 0, 0.3));
   animation: slideUp 0.3s ease;
 }
@@ -157,9 +159,9 @@ button[part="button"] svg {
 
 .modal-header h3 {
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--wafir-text-color, #111827);
+  font-size: var(--wafir-modal-title-font-size, 18px);
+  font-weight: var(--wafir-modal-title-font-weight, 600);
+  color: var(--wafir-modal-title-color, var(--wafir-text-color, #111827));
 }
 
 .close-button {

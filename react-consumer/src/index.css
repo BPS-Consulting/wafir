@@ -165,3 +165,42 @@
     }
   }
 }
+
+/* ============================================
+   Wafir Form Customization Example
+   ============================================
+   Override Wafir CSS custom properties to match your app's theme.
+   Apply these to the wafir-reporter element. */
+
+wafir-reporter {
+  /* Form background and text colors */
+  --wafir-form-bg: oklch(0.18 0.012 270);
+  --wafir-form-text-color: oklch(0.92 0.004 270);
+  --wafir-form-text-secondary: oklch(0.62 0.008 270);
+
+  /* Input styling */
+  --wafir-form-input-bg: oklch(0.24 0.014 270);
+  --wafir-form-input-color: oklch(0.965 0.002 270);
+  --wafir-form-border-color: oklch(0.42 0.012 270);
+  --wafir-form-border-radius: 12px;
+  --wafir-form-input-padding: 12px 14px;
+
+  /* Primary button colors */
+  --wafir-form-primary-color: oklch(0.62 0.18 205);
+  --wafir-form-primary-hover: oklch(0.55 0.18 220);
+  --wafir-form-disabled-color: oklch(0.42 0.012 270);
+
+  /* Secondary backgrounds */
+  --wafir-form-bg-secondary: oklch(0.24 0.014 270);
+  --wafir-form-bg-tertiary: oklch(0.18 0.012 270);
+
+  /* Telemetry section */
+  --wafir-form-telemetry-bg: oklch(0.15 0.01 270);
+  --wafir-form-telemetry-border: oklch(0.33 0.014 270);
+
+  /* Console logs display */
+  --wafir-form-logs-bg: oklch(0.12 0.01 270);
+  --wafir-form-logs-text: oklch(0.92 0.004 270);
+  --wafir-form-log-warn: oklch(0.82 0.18 85);
+  --wafir-form-log-error: oklch(0.7 0.2 25);
+}

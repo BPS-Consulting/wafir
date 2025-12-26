@@ -64,7 +64,7 @@ export class MyElement extends LitElement {
       id: "description",
       label: "Description",
       type: "textarea",
-      required: false,
+      required: true,
     },
     {
       id: "type",
