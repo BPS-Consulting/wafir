@@ -1,94 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-
-const cssCustomProperties = `wafir-reporter {
-  --wafir-primary: #6366f1;
-  --wafir-primary-hover: #818cf8;
-  --wafir-bg: #ffffff;
-  --wafir-text: #1f2937;
-  --wafir-border: #e5e7eb;
-  --wafir-radius: 8px;
-  --wafir-font: 'Inter', sans-serif;
-}`;
-
-const partSelectors = `/* Style the trigger button */
-wafir-reporter::part(button) {
-  background: #10b981;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-wafir-reporter::part(button):hover {
-  background: #059669;
-}`;
-
-const reactTrigger = `import { WafirReporter } from '@wafir/react';
-
-function App() {
-  return (
-    <WafirReporter
-      installationId={12345}
-      owner="your-org"
-      repo="your-repo"
-    >
-      {/* Your custom trigger */}
-      <button className="my-custom-button">
-        Report an Issue
-      </button>
-    </WafirReporter>
-  );
-}`;
-
-const vueTrigger = `<template>
-  <WafirReporter
-    :installation-id="12345"
-    owner="your-org"
-    repo="your-repo"
-  >
-    <!-- Your custom trigger -->
-    <button class="my-custom-button">
-      Report an Issue
-    </button>
-  </WafirReporter>
-</template>`;
-
-const vanillaTrigger = `<wafir-reporter
-  installationId="12345"
-  owner="your-org"
-  repo="your-repo"
->
-  <button slot="trigger" class="my-custom-button">
-    Report an Issue
-  </button>
-</wafir-reporter>`;
-
-const fieldConfig = `fields:
-  - name: priority       # Required: unique identifier
-    label: "Priority"    # Required: display label
-    type: select         # Required: field type
-    options:             # Required for select type
-      - "Low"
-      - "Medium"
-      - "High"
-      - "Critical"
-    required: true       # Optional: default false`;
-
-const telemetryConfig = `# .github/wafir.yaml
-issue:
-  screenshot: true    # Enable screenshot capture
-  browserInfo: true   # Collect browser details
-  consoleLog: true    # Capture console messages
-  labels: ["bug", "needs-triage"]`;
-
-const crossRepoConfig = `# .github/wafir.yaml
-storage:
-  type: issue
-  owner: my-org          # Different organization
-  repo: feedback-repo    # Different repository`;
-
-const projectConfig = `# .github/wafir.yaml
-storage:
-  type: project
-  projectId: 123    # GitHub Project ID`;
+import { Content as DocumentationContent } from '../content/documentation.md';
 ---
 
 <Layout title="Documentation - Wafir" description="Learn how to customize and extend the Wafir feedback widget to match your application.">
@@ -107,235 +19,18 @@ storage:
 						<h4>On this page</h4>
 						<ul>
 							<li><a href="#css-customization">CSS Customization</a></li>
+							<li><a href="#css-custom-properties">CSS Variables</a></li>
 							<li><a href="#custom-triggers">Custom Triggers</a></li>
 							<li><a href="#form-configuration">Form Configuration</a></li>
-							<li><a href="#telemetry">Telemetry Options</a></li>
-							<li><a href="#storage">Storage Options</a></li>
-							<li><a href="#examples">Configuration Examples</a></li>
+							<li><a href="#telemetry-options">Telemetry Options</a></li>
+							<li><a href="#storage-options">Storage Options</a></li>
+							<li><a href="#configuration-examples">Configuration Examples</a></li>
 						</ul>
 					</nav>
 				</aside>
 
-				<div class="docs-content">
-					<section id="css-customization" class="doc-section">
-						<h2>CSS Customization</h2>
-						<p>
-							Wafir uses Shadow DOM for isolation, but exposes CSS custom properties and <code>::part()</code> selectors for customization.
-						</p>
-
-						<h3>CSS Custom Properties</h3>
-						<p>Override these variables in your global CSS to customize the widget's appearance:</p>
-						<pre><code>{cssCustomProperties}</code></pre>
-
-						<h3>Part Selectors</h3>
-						<p>Use <code>::part()</code> to style specific elements:</p>
-						<pre><code>{partSelectors}</code></pre>
-
-						<h3>Available Parts</h3>
-						<table class="parts-table">
-							<thead>
-								<tr>
-									<th>Part Name</th>
-									<th>Description</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<td><code>button</code></td>
-									<td>The floating trigger button</td>
-								</tr>
-								<tr>
-									<td><code>modal</code></td>
-									<td>The feedback modal container</td>
-								</tr>
-								<tr>
-									<td><code>form</code></td>
-									<td>The form element</td>
-								</tr>
-								<tr>
-									<td><code>input</code></td>
-									<td>Text input fields</td>
-								</tr>
-								<tr>
-									<td><code>textarea</code></td>
-									<td>Textarea fields</td>
-								</tr>
-								<tr>
-									<td><code>select</code></td>
-									<td>Select dropdowns</td>
-								</tr>
-								<tr>
-									<td><code>submit</code></td>
-									<td>The submit button</td>
-								</tr>
-							</tbody>
-						</table>
-					</section>
-
-					<section id="custom-triggers" class="doc-section">
-						<h2>Custom Triggers</h2>
-						<p>
-							Replace the default floating button with your own custom trigger element using the <code>trigger</code> slot.
-						</p>
-
-						<h3>React Example</h3>
-						<pre><code>{reactTrigger}</code></pre>
-
-						<h3>Vue Example</h3>
-						<pre><code>{vueTrigger}</code></pre>
-
-						<h3>Vanilla HTML Example</h3>
-						<pre><code>{vanillaTrigger}</code></pre>
-
-						<p class="tip">
-							<strong>Tip:</strong> Your custom trigger element should handle its own styling. The widget will automatically open/close the modal when clicked.
-						</p>
-					</section>
-
-					<section id="form-configuration" class="doc-section">
-						<h2>Form Configuration</h2>
-						<p>
-							Configure which fields appear in the feedback form using your <code>.github/wafir.yaml</code> file.
-						</p>
-
-						<h3>Field Types</h3>
-						<table class="parts-table">
-							<thead>
-								<tr>
-									<th>Type</th>
-									<th>Description</th>
-									<th>Options</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<td><code>text</code></td>
-									<td>Single-line text input</td>
-									<td>-</td>
-								</tr>
-								<tr>
-									<td><code>textarea</code></td>
-									<td>Multi-line text area</td>
-									<td>-</td>
-								</tr>
-								<tr>
-									<td><code>select</code></td>
-									<td>Dropdown selection</td>
-									<td>Requires <code>options</code> array</td>
-								</tr>
-								<tr>
-									<td><code>checkbox</code></td>
-									<td>Boolean checkbox</td>
-									<td>-</td>
-								</tr>
-							</tbody>
-						</table>
-
-						<h3>Field Properties</h3>
-						<pre><code>{fieldConfig}</code></pre>
-					</section>
-
-					<section id="telemetry" class="doc-section">
-						<h2>Telemetry Options</h2>
-						<p>
-							Wafir can automatically capture browser context to help with debugging. All telemetry is opt-in via configuration.
-						</p>
-
-						<h3>Available Options</h3>
-						<table class="parts-table">
-							<thead>
-								<tr>
-									<th>Option</th>
-									<th>Data Collected</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<td><code>screenshot</code></td>
-									<td>DOM-to-canvas screenshot with optional element highlighting</td>
-								</tr>
-								<tr>
-									<td><code>browserInfo</code></td>
-									<td>URL, user agent, viewport size, language</td>
-								</tr>
-								<tr>
-									<td><code>consoleLog</code></td>
-									<td>Recent console messages (errors, warnings, logs)</td>
-								</tr>
-							</tbody>
-						</table>
-
-						<h3>Configuration</h3>
-						<pre><code>{telemetryConfig}</code></pre>
-					</section>
-
-					<section id="storage" class="doc-section">
-						<h2>Storage Options</h2>
-						<p>
-							Choose where feedback is stored in your GitHub repository.
-						</p>
-
-						<h3>Storage Types</h3>
-						<table class="parts-table">
-							<thead>
-								<tr>
-									<th>Type</th>
-									<th>Description</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<td><code>issue</code></td>
-									<td>Create GitHub Issues for each submission</td>
-								</tr>
-								<tr>
-									<td><code>project</code></td>
-									<td>Add items to a GitHub Project board</td>
-								</tr>
-								<tr>
-									<td><code>both</code></td>
-									<td>Create both an issue and a project item</td>
-								</tr>
-							</tbody>
-						</table>
-
-						<h3>Cross-Repository Storage</h3>
-						<p>Store feedback in a different repository than where the widget is configured:</p>
-						<pre><code>{crossRepoConfig}</code></pre>
-
-						<h3>Project Board Storage</h3>
-						<pre><code>{projectConfig}</code></pre>
-					</section>
-
-					<section id="examples" class="doc-section">
-						<h2>Configuration Examples</h2>
-						<p>
-							We provide ready-to-use configuration templates for common use cases:
-						</p>
-
-						<div class="examples-grid">
-							<a href="https://github.com/BPS-Consulting/wafir/tree/main/examples/basic" target="_blank" rel="noopener" class="example-card">
-								<h4>Basic</h4>
-								<p>Standard bug reporting setup</p>
-							</a>
-							<a href="https://github.com/BPS-Consulting/wafir/tree/main/examples/minimal" target="_blank" rel="noopener" class="example-card">
-								<h4>Minimal</h4>
-								<p>Simplest possible config</p>
-							</a>
-							<a href="https://github.com/BPS-Consulting/wafir/tree/main/examples/full-featured" target="_blank" rel="noopener" class="example-card">
-								<h4>Full Featured</h4>
-								<p>All options demonstrated</p>
-							</a>
-							<a href="https://github.com/BPS-Consulting/wafir/tree/main/examples/privacy-focused" target="_blank" rel="noopener" class="example-card">
-								<h4>Privacy Focused</h4>
-								<p>No automatic data collection</p>
-							</a>
-							<a href="https://github.com/BPS-Consulting/wafir/tree/main/examples/feature-requests" target="_blank" rel="noopener" class="example-card">
-								<h4>Feature Requests</h4>
-								<p>Optimized for ideas</p>
-							</a>
-						</div>
-					</section>
+				<div class="prose">
+					<DocumentationContent />
 				</div>
 			</div>
 		</div>
@@ -398,60 +93,40 @@ storage:
 		color: var(--color-text);
 	}
 
-	.docs-content {
+	.prose {
 		max-width: 800px;
 	}
 
-	.doc-section {
-		margin-bottom: 4rem;
-		padding-top: 1rem;
-	}
-
-	.doc-section h2 {
+	.prose :global(h2) {
 		font-size: 1.75rem;
+		margin-top: 0;
 		margin-bottom: 1rem;
 		padding-bottom: 0.5rem;
 		border-bottom: 1px solid var(--color-border);
 	}
 
-	.doc-section h3 {
+	.prose :global(h3) {
 		font-size: 1.125rem;
-		margin: 2rem 0 1rem;
+		margin-top: 2rem;
+		margin-bottom: 0.75rem;
 	}
 
-	.doc-section > p {
+	.prose :global(p) {
 		color: var(--color-text-muted);
-		margin-bottom: 1.5rem;
+		margin-bottom: 1rem;
+		line-height: 1.7;
 	}
 
-	pre {
-		margin-bottom: 1.5rem;
+	.prose :global(a) {
+		color: var(--color-primary);
 	}
 
-	.parts-table {
-		width: 100%;
-		border-collapse: collapse;
-		font-size: 0.875rem;
-		margin-bottom: 1.5rem;
+	.prose :global(a:hover) {
+		text-decoration: underline;
 	}
 
-	.parts-table th,
-	.parts-table td {
-		padding: 0.75rem;
-		text-align: left;
-		border-bottom: 1px solid var(--color-border);
-	}
-
-	.parts-table th {
-		background: var(--color-bg-elevated);
-		font-weight: 600;
-	}
-
-	.parts-table code {
-		font-size: 0.8125rem;
-	}
-
-	.tip {
+	.prose :global(blockquote) {
+		margin: 1.5rem 0;
 		padding: 1rem;
 		background: var(--color-bg-card);
 		border: 1px solid var(--color-border);
@@ -460,33 +135,66 @@ storage:
 		font-size: 0.875rem;
 	}
 
-	.examples-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-		gap: 1rem;
+	.prose :global(blockquote p) {
+		margin-bottom: 0;
 	}
 
-	.example-card {
-		padding: 1.25rem;
-		background: var(--color-bg-card);
+	.prose :global(pre) {
+		background: var(--color-bg-elevated);
 		border: 1px solid var(--color-border);
 		border-radius: 8px;
-		transition: all 0.2s ease;
+		padding: 1rem;
+		overflow-x: auto;
+		margin-bottom: 1.5rem;
 	}
 
-	.example-card:hover {
-		border-color: var(--color-primary);
-		transform: translateY(-2px);
+	.prose :global(code) {
+		font-family: var(--font-mono);
+		font-size: 0.875rem;
 	}
 
-	.example-card h4 {
-		font-size: 1rem;
+	.prose :global(p code),
+	.prose :global(li code),
+	.prose :global(td code) {
+		background: var(--color-bg-elevated);
+		padding: 0.125rem 0.375rem;
+		border-radius: 4px;
+	}
+
+	.prose :global(ul),
+	.prose :global(ol) {
+		margin-bottom: 1rem;
+		padding-left: 1.5rem;
+	}
+
+	.prose :global(li) {
+		color: var(--color-text-muted);
 		margin-bottom: 0.25rem;
 	}
 
-	.example-card p {
-		font-size: 0.8125rem;
-		color: var(--color-text-muted);
+	.prose :global(table) {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.875rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.prose :global(th),
+	.prose :global(td) {
+		padding: 0.75rem;
+		text-align: left;
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.prose :global(th) {
+		background: var(--color-bg-elevated);
+		font-weight: 600;
+	}
+
+	.prose :global(hr) {
+		border: 0;
+		border-top: 1px solid var(--color-border);
+		margin: 3rem 0;
 	}
 
 	@media (max-width: 900px) {
@@ -517,7 +225,7 @@ storage:
 			font-size: 2rem;
 		}
 
-		.parts-table {
+		.prose :global(table) {
 			display: block;
 			overflow-x: auto;
 		}

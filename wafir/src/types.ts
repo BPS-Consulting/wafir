@@ -4,7 +4,8 @@ export type FieldType =
   | "textarea"
   | "select"
   | "checkbox"
-  | "screenshot";
+  | "screenshot"
+  | "switch";
 
 export interface FieldConfig {
   id: string; // The key for the data (e.g., 'description', 'browser_info')

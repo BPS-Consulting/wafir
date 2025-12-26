@@ -96,6 +96,83 @@ Create a `.env` file in the `bridge/` directory based on the usage requirements.
 
 The widget can be configured via attributes or JavaScript initialization. See the `wafir/` directory for specific implementation details.
 
+### CSS Customization
+
+Wafir uses Shadow DOM for isolation but exposes CSS custom properties for theming. Set these on the `wafir-reporter` element:
+
+#### Reporter Variables
+
+| Variable                          | Default                       | Description         |
+| --------------------------------- | ----------------------------- | ------------------- |
+| `--wafir-font-family`             | System fonts                  | Font stack          |
+| `--wafir-font-size`               | `14px`                        | Base font size      |
+| `--wafir-text-color`              | `#111827`                     | Primary text color  |
+| `--wafir-text-secondary`          | `#6b7280`                     | Muted text color    |
+| `--wafir-primary-color`           | `#2563eb`                     | Brand color         |
+| `--wafir-primary-hover`           | `#1d4ed8`                     | Hover state         |
+| `--wafir-border-color`            | `#e5e7eb`                     | Border color        |
+| `--wafir-button-size`             | `48px`                        | Trigger button size |
+| `--wafir-button-border-radius`    | `50%`                         | Button shape        |
+| `--wafir-button-offset`           | `20px`                        | Edge distance       |
+| `--wafir-button-icon-size`        | `24px`                        | Icon size           |
+| `--wafir-button-shadow`           | `0 4px 12px rgba(0,0,0,0.15)` | Button shadow       |
+| `--wafir-button-shadow-hover`     | `0 6px 16px rgba(0,0,0,0.2)`  | Hover shadow        |
+| `--wafir-tooltip-bg`              | `#1f2937`                     | Tooltip background  |
+| `--wafir-backdrop-color`          | `rgba(0,0,0,0.5)`             | Modal backdrop      |
+| `--wafir-modal-bg`                | `white`                       | Modal background    |
+| `--wafir-modal-border-radius`     | `12px`                        | Modal corners       |
+| `--wafir-modal-max-width`         | `800px`                       | Modal width         |
+| `--wafir-modal-padding`           | `20px`                        | Modal spacing       |
+| `--wafir-modal-shadow`            | `0 20px 60px rgba(0,0,0,0.3)` | Modal shadow        |
+| `--wafir-modal-title-font-size`   | `18px`                        | Title size          |
+| `--wafir-modal-title-font-weight` | `600`                         | Title weight        |
+| `--wafir-modal-title-color`       | `--wafir-text-color`          | Title color         |
+
+#### Form Variables
+
+| Variable                        | Default       | Description      |
+| ------------------------------- | ------------- | ---------------- |
+| `--wafir-form-text-color`       | `#374151`     | Form text        |
+| `--wafir-form-bg`               | `transparent` | Form background  |
+| `--wafir-form-padding`          | `20px`        | Form padding     |
+| `--wafir-form-border-color`     | `#d1d5db`     | Input borders    |
+| `--wafir-form-border-radius`    | `6px`         | Input corners    |
+| `--wafir-form-input-padding`    | `10px 12px`   | Input spacing    |
+| `--wafir-form-input-color`      | `#111827`     | Input text       |
+| `--wafir-form-input-bg`         | `#ffffff`     | Input background |
+| `--wafir-form-primary-color`    | `#2563eb`     | Submit button    |
+| `--wafir-form-primary-hover`    | `#1d4ed8`     | Submit hover     |
+| `--wafir-form-disabled-color`   | `#9ca3af`     | Disabled state   |
+| `--wafir-form-bg-secondary`     | `#f3f4f6`     | Secondary bg     |
+| `--wafir-form-bg-tertiary`      | `#f9fafb`     | Tertiary bg      |
+| `--wafir-form-text-secondary`   | `#6b7280`     | Secondary text   |
+| `--wafir-form-telemetry-bg`     | `#f9fafb`     | Telemetry bg     |
+| `--wafir-form-telemetry-border` | `#e5e7eb`     | Telemetry border |
+| `--wafir-form-logs-bg`          | `#111827`     | Logs background  |
+| `--wafir-form-logs-text`        | `#f3f4f6`     | Logs text        |
+| `--wafir-form-log-warn`         | `#fde047`     | Warning color    |
+| `--wafir-form-log-error`        | `#f87171`     | Error color      |
+
+#### Highlighter Variables
+
+| Variable                            | Default               | Description  |
+| ----------------------------------- | --------------------- | ------------ |
+| `--wafir-highlighter-overlay-bg`    | `rgba(0,0,0,0.1)`     | Overlay bg   |
+| `--wafir-highlighter-primary-color` | `#2563eb`             | Border color |
+| `--wafir-highlighter-highlight-bg`  | `rgba(37,99,235,0.1)` | Fill color   |
+
+#### Example
+
+```css
+wafir-reporter {
+  --wafir-primary-color: #6366f1;
+  --wafir-primary-hover: #818cf8;
+  --wafir-modal-bg: #ffffff;
+  --wafir-text-color: #1f2937;
+  --wafir-form-border-radius: 8px;
+}
+```
+
 ## 🤝 Contributing
 
 1.  Fork the repo

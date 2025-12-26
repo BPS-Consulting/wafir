@@ -225,3 +225,35 @@ textarea {
 .log-error {
   color: var(--wafir-form-log-error, #f87171);
 }
+
+/* Switch toggle styles */
+.switch-container {
+  display: flex;
+  background: var(--wafir-form-bg-secondary, #f3f4f6);
+  border-radius: var(--wafir-form-border-radius, 6px);
+  padding: 4px;
+  gap: 4px;
+}
+
+.switch-option {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  border-radius: calc(var(--wafir-form-border-radius, 6px) - 2px);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  color: var(--wafir-form-text-secondary, #6b7280);
+  transition: all 0.2s ease;
+}
+
+.switch-option:hover:not(.active) {
+  color: var(--wafir-form-text-color, #374151);
+}
+
+.switch-option.active {
+  background: var(--wafir-form-input-bg, #ffffff);
+  color: var(--wafir-form-primary-color, #2563eb);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}

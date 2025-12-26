@@ -58,7 +58,12 @@ export class MyElement extends LitElement {
 
   @property({ type: Array })
   formConfig: FieldConfig[] = [
-    // Default fallback config (Matches your requirements for "Feedback")
+    {
+      id: "mode",
+      label: "I'm reporting",
+      type: "switch",
+      options: ["Issue", "Feedback"],
+    },
     { id: "title", label: "Title", type: "text", required: true },
     {
       id: "description",

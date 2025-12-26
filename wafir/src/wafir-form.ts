@@ -106,6 +106,26 @@ export class WafirForm extends LitElement {
           </select>
         `;
 
+      case "switch":
+        const currentValue = value || field.options?.[0] || "";
+        return html`
+          <div class="switch-container">
+            ${field.options?.map(
+              (opt) => html`
+                <button
+                  type="button"
+                  class="switch-option ${currentValue === opt ? "active" : ""}"
+                  @click="${() => {
+                    setFormData({ ...formData.get(), [field.id]: opt });
+                  }}"
+                >
+                  ${opt}
+                </button>
+              `
+            )}
+          </div>
+        `;
+
       case "checkbox":
         return html`
           <div class="checkbox-group">
