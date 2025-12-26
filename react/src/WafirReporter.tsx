@@ -22,6 +22,8 @@ export interface WafirReporterProps {
   tooltipText?: string;
   /** Optional button text (shows instead of icon) */
   buttonText?: string;
+  /** Custom trigger element (replaces default button) */
+  children?: React.ReactNode;
 }
 
 interface WafirReporterElement extends HTMLElement {
@@ -46,10 +48,10 @@ export function WafirReporter({
   modalTitle,
   tooltipText,
   buttonText,
+  children,
 }: WafirReporterProps) {
   const ref = useRef<WafirReporterElement>(null);
 
-  // Set properties directly on the element when they change
   useEffect(() => {
     if (ref.current) {
       ref.current.installationId = installationId;
@@ -70,8 +72,11 @@ export function WafirReporter({
     buttonText,
   ]);
 
-  // Use createElement to avoid JSX typing issues with custom elements
-  return React.createElement("wafir-reporter", { ref });
+  return React.createElement(
+    "wafir-reporter",
+    { ref },
+    children ? React.createElement("div", { slot: "trigger" }, children) : null
+  );
 }
 
 export default WafirReporter;

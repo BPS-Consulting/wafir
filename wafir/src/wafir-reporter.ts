@@ -51,6 +51,9 @@ export class MyElement extends LitElement {
   configFetchError: string | null = null;
 
   @state()
+  private _hasCustomTrigger = false;
+
+  @state()
   private _remoteConfig: any = null;
 
   @property({ type: Array })
@@ -74,12 +77,33 @@ export class MyElement extends LitElement {
 
   static styles = [unsafeCSS(reporterStyles)];
 
+  connectedCallback() {
+    super.connectedCallback();
+    this._checkCustomTrigger();
+  }
+
+  private _checkCustomTrigger() {
+    this._hasCustomTrigger = this.querySelector('[slot="trigger"]') !== null;
+  }
+
+  public openModal() {
+    if (!this.isModalOpen) {
+      this._openModal();
+    }
+  }
+
+  private async _openModal() {
+    this.isModalOpen = true;
+    setBrowserInfo(getBrowserInfo());
+    setConsoleLogs(consoleInterceptor.getLogs());
+    await this._fetchConfig();
+  }
+
   private async _handleTriggerClick() {
-    this.isModalOpen = !this.isModalOpen;
     if (this.isModalOpen) {
-      setBrowserInfo(getBrowserInfo());
-      setConsoleLogs(consoleInterceptor.getLogs());
-      await this._fetchConfig();
+      this._closeModal();
+    } else {
+      await this._openModal();
     }
   }
 
@@ -233,17 +257,25 @@ export class MyElement extends LitElement {
     }
 
     return html`
-      <div class="trigger-container ${this.position}">
-        <button
-          @click="${this._handleTriggerClick}"
-          part="button"
-          aria-label="${this.tooltipText}"
-        >
-          <span>${unsafeHTML(bugIcon)}</span>
-        </button>
-        <div class="tooltip">${this.tooltipText}</div>
-      </div>
-
+      ${this._hasCustomTrigger
+        ? html`<div
+            class="trigger-container ${this.position}"
+            @click="${this._handleTriggerClick}"
+          >
+            <slot name="trigger"></slot>
+          </div>`
+        : html`
+            <div class="trigger-container ${this.position}">
+              <button
+                @click="${this._handleTriggerClick}"
+                part="button"
+                aria-label="${this.tooltipText}"
+              >
+                <span>${unsafeHTML(bugIcon)}</span>
+              </button>
+              <div class="tooltip">${this.tooltipText}</div>
+            </div>
+          `}
       ${this.isModalOpen
         ? html`
             <div

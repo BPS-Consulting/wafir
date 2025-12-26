@@ -50,5 +50,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <component :is="'wafir-reporter'" ref="elementRef" />
+  <component :is="'wafir-reporter'" ref="elementRef">
+    <template v-if="$slots.default">
+      <div slot="trigger">
+        <slot></slot>
+      </div>
+    </template>
+  </component>
 </template>
