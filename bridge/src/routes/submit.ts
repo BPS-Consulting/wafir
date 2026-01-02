@@ -101,6 +101,7 @@ const submitRoute: FastifyPluginAsync = async (
               Key: fileKey,
               Body: screenshotBuffer,
               ContentType: screenshotMime,
+              ACL: "public-read",
             })
           );
 
