@@ -1,7 +1,9 @@
 import createClient from "openapi-fetch";
 import type { paths } from ".";
 
-const apiClient = createClient<paths>({ baseUrl: "http://localhost:3000" });
+const apiClient = createClient<paths>({
+  baseUrl: "http://localhost:3000",
+});
 
 export type WafirConfig =
   paths["/config"]["get"]["responses"][200]["content"]["application/json"];
@@ -50,17 +52,16 @@ export const submitIssue = async (
     formData.append("screenshot", screenshot, "screenshot.png");
   }
 
-  const response = await fetch("http://localhost:3000/submit", {
-    method: "POST",
-    body: formData,
+  const response = await apiClient.POST("/submit", {
+    body: formData as any,
   });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
+  if (!response.response.ok) {
+    const errorData = await response.response.json().catch(() => ({}));
     throw new Error(errorData.message || "Failed to submit issue");
   }
 
-  return response.json();
+  return response.data;
 };
 
 export default apiClient;

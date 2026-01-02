@@ -29,6 +29,9 @@ importers:
       '@fastify/autoload':
         specifier: ^6.0.0
         version: 6.3.1
+      '@fastify/aws-lambda':
+        specifier: ^6.3.0
+        version: 6.3.0
       '@fastify/cors':
         specifier: ^11.2.0
         version: 11.2.0
@@ -881,6 +884,9 @@ packages:
 
   '@fastify/autoload@6.3.1':
     resolution: {integrity: sha512-0fsG+lO3m5yEZVjXKpltCe+2eHhM6rfAPQhvlGUgLUFTw/N2wA9WqPTObMtrF3oUCUrxbSDv60HlUIoh+aFM1A==}
+
+  '@fastify/aws-lambda@6.3.0':
+    resolution: {integrity: sha512-56GnThI4qoxL1Z9AieaCtMjYucYNsEghZgXVVT7fcYs2i2fnb2Jmi5obNj0LnarH24C+lB0Wca4v5nPIO2KHZw==}
 
   '@fastify/busboy@3.2.0':
     resolution: {integrity: sha512-m9FVDXU3GT2ITSe0UaMA5rU3QkfC/UXtCU8y0gSN/GugTqtVldOBWIB5V6V3sbmenVZUIpU6f+mPEO2+m5iTaA==}
@@ -5665,6 +5671,8 @@ snapshots:
       fast-uri: 3.1.0
 
   '@fastify/autoload@6.3.1': {}
+
+  '@fastify/aws-lambda@6.3.0': {}
 
   '@fastify/busboy@3.2.0': {}
 

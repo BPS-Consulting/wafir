@@ -1,0 +1,39 @@
+{
+  "version": "2.0",
+  "routeKey": "GET /config",
+  "rawPath": "/config",
+  "rawQueryString": "installationId=12345678&owner=your-username&repo=your-repo",
+  "headers": {
+    "accept": "application/json",
+    "content-type": "application/json",
+    "host": "your-api-id.execute-api.us-east-1.amazonaws.com",
+    "user-agent": "Mozilla/5.0",
+    "x-forwarded-for": "127.0.0.1",
+    "x-forwarded-port": "443",
+    "x-forwarded-proto": "https"
+  },
+  "queryStringParameters": {
+    "installationId": "12345678",
+    "owner": "your-username",
+    "repo": "your-repo"
+  },
+  "requestContext": {
+    "accountId": "123456789012",
+    "apiId": "your-api-id",
+    "domainName": "your-api-id.execute-api.us-east-1.amazonaws.com",
+    "domainPrefix": "your-api-id",
+    "http": {
+      "method": "GET",
+      "path": "/config",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "127.0.0.1",
+      "userAgent": "Mozilla/5.0"
+    },
+    "requestId": "test-request-id",
+    "routeKey": "GET /config",
+    "stage": "$default",
+    "time": "02/Jan/2026:12:00:00 +0000",
+    "timeEpoch": 1767355200000
+  },
+  "isBase64Encoded": false
+}
