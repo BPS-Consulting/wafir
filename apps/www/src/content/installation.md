@@ -154,6 +154,48 @@ fields:
 | `installationId` | number | Yes      | Your GitHub App installation ID                                         |
 | `owner`          | string | Yes      | GitHub repository owner                                                 |
 | `repo`           | string | Yes      | GitHub repository name                                                  |
+| `bridgeUrl`      | string | No       | Custom bridge server URL (for self-hosted bridge)                       |
 | `position`       | string | No       | Widget position: `bottom-right`, `bottom-left`, `top-right`, `top-left` |
 | `modalTitle`     | string | No       | Custom title for the feedback modal                                     |
 | `tooltipText`    | string | No       | Tooltip text for the trigger button                                     |
+
+---
+
+## Self-Hosting the Bridge
+
+If you're self-hosting the Wafir bridge server, you can configure the widget to use your custom bridge URL:
+
+### React
+
+```jsx
+<WafirReporter
+  installationId={12345}
+  owner="your-username"
+  repo="your-repo"
+  bridgeUrl="https://your-bridge.example.com"
+/>
+```
+
+### Vue
+
+```vue
+<WafirReporter
+  :installation-id="12345"
+  owner="your-username"
+  repo="your-repo"
+  bridge-url="https://your-bridge.example.com"
+/>
+```
+
+### Vanilla JS
+
+```html
+<wafir-reporter
+  installationId="12345"
+  owner="your-username"
+  repo="your-repo"
+  bridgeUrl="https://your-bridge.example.com"
+></wafir-reporter>
+```
+
+> **Note:** If you don't specify a `bridgeUrl`, the widget will use the default hosted bridge service.

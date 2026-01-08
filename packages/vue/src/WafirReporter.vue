@@ -12,6 +12,7 @@ export interface WafirReporterProps {
   installationId: number;
   owner: string;
   repo: string;
+  bridgeUrl?: string;
   position?: WafirPosition;
   modalTitle?: string;
   tooltipText?: string;
@@ -22,6 +23,7 @@ interface WafirReporterElement extends HTMLElement {
   installationId?: number;
   owner?: string;
   repo?: string;
+  bridgeUrl?: string;
   position?: string;
   modalTitle?: string;
   tooltipText?: string;
@@ -40,6 +42,7 @@ onMounted(() => {
       elementRef.value.installationId = props.installationId;
       elementRef.value.owner = props.owner;
       elementRef.value.repo = props.repo;
+      if (props.bridgeUrl) elementRef.value.bridgeUrl = props.bridgeUrl;
       if (props.position) elementRef.value.position = props.position;
       if (props.modalTitle) elementRef.value.modalTitle = props.modalTitle;
       if (props.tooltipText) elementRef.value.tooltipText = props.tooltipText;

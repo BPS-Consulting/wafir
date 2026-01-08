@@ -123,7 +123,8 @@ export class MyElement extends LitElement {
       const config = await getWafirConfig(
         this.installationId,
         this.owner,
-        this.repo
+        this.repo,
+        this.bridgeUrl || undefined
       );
 
       if (config && config.fields) {
@@ -179,6 +180,9 @@ export class MyElement extends LitElement {
 
   @property({ type: String })
   repo = "";
+
+  @property({ type: String })
+  bridgeUrl = "";
 
   private async _handleSubmit(event: CustomEvent) {
     const formData = event.detail.formData;
@@ -237,7 +241,8 @@ export class MyElement extends LitElement {
         title,
         finalBody,
         labels,
-        screenshotBlob
+        screenshotBlob,
+        this.bridgeUrl || undefined
       );
 
       // Success handling

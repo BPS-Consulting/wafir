@@ -14,6 +14,8 @@ export interface WafirReporterProps {
   owner: string;
   /** GitHub repository name */
   repo: string;
+  /** Custom bridge server URL (for self-hosted bridge) */
+  bridgeUrl?: string;
   /** Widget button position */
   position?: WafirPosition;
   /** Modal title text */
@@ -30,6 +32,7 @@ interface WafirReporterElement extends HTMLElement {
   installationId?: number;
   owner?: string;
   repo?: string;
+  bridgeUrl?: string;
   position?: string;
   modalTitle?: string;
   tooltipText?: string;
@@ -44,6 +47,7 @@ export function WafirReporter({
   installationId,
   owner,
   repo,
+  bridgeUrl,
   position = "bottom-right",
   modalTitle,
   tooltipText,
@@ -57,6 +61,7 @@ export function WafirReporter({
       ref.current.installationId = installationId;
       ref.current.owner = owner;
       ref.current.repo = repo;
+      if (bridgeUrl) ref.current.bridgeUrl = bridgeUrl;
       if (position) ref.current.position = position;
       if (modalTitle) ref.current.modalTitle = modalTitle;
       if (tooltipText) ref.current.tooltipText = tooltipText;
@@ -66,6 +71,7 @@ export function WafirReporter({
     installationId,
     owner,
     repo,
+    bridgeUrl,
     position,
     modalTitle,
     tooltipText,
