@@ -1,8 +1,11 @@
 import createClient from "openapi-fetch";
 import type { paths } from ".";
 
+const DEFAULT_API_URL =
+  "https://ket5zkk30l.execute-api.us-east-1.amazonaws.com";
+
 const apiClient = createClient<paths>({
-  baseUrl: "http://localhost:3000",
+  baseUrl: import.meta.env.VITE_WAFIR_API_URL || DEFAULT_API_URL,
 });
 
 export type WafirConfig =
