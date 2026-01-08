@@ -284,7 +284,7 @@ const submitRoute: FastifyPluginAsync = async (
 
                 if (isUserProjectError) {
                   const userToken =
-                    fastify.tokenStore.getUserToken(installationId);
+                    await fastify.tokenStore.getUserToken(installationId);
                   if (userToken) {
                     request.log.info(
                       "Retrying with user token for personal project..."

@@ -107,6 +107,9 @@ const authRoute: FastifyPluginAsync = async (fastify): Promise<void> => {
 
         const tokenData = (await tokenResponse.json()) as {
           access_token?: string;
+          refresh_token?: string;
+          expires_in?: number;
+          refresh_token_expires_in?: number;
           error?: string;
           error_description?: string;
         };
@@ -123,10 +126,19 @@ const authRoute: FastifyPluginAsync = async (fastify): Promise<void> => {
           return reply.redirect(errorUrl.toString());
         }
 
-        fastify.tokenStore.setUserToken(
-          parsedState.installationId,
-          tokenData.access_token
-        );
+        const now = new Date();
+        await fastify.tokenStore.setUserToken(parsedState.installationId, {
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token || "",
+          expiresAt: new Date(
+            now.getTime() + (tokenData.expires_in || 28800) * 1000
+          ).toISOString(),
+          refreshTokenExpiresAt: tokenData.refresh_token_expires_in
+            ? new Date(
+                now.getTime() + tokenData.refresh_token_expires_in * 1000
+              ).toISOString()
+            : new Date(now.getTime() + 15552000 * 1000).toISOString(),
+        });
 
         const successUrl = new URL(
           parsedState.returnUrl || "http://localhost:4321/connect"
@@ -172,7 +184,7 @@ const authRoute: FastifyPluginAsync = async (fastify): Promise<void> => {
     async (request) => {
       const installationId = Number(request.params.installationId);
       return {
-        connected: fastify.tokenStore.hasUserToken(installationId),
+        connected: await fastify.tokenStore.hasUserToken(installationId),
         installationId,
       };
     }
@@ -196,7 +208,7 @@ const authRoute: FastifyPluginAsync = async (fastify): Promise<void> => {
     },
     async (request, reply) => {
       const installationId = Number(request.params.installationId);
-      const deleted = fastify.tokenStore.deleteUserToken(installationId);
+      const deleted = await fastify.tokenStore.deleteUserToken(installationId);
       return reply.code(deleted ? 200 : 404).send({
         success: deleted,
         installationId,
