@@ -2,135 +2,81 @@
 const currentYear = new Date().getFullYear();
 ---
 
-<footer>
-	<div class="container">
-		<div class="footer-content">
-			<div class="footer-brand">
-				<a href="/" class="logo">
-					<svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<rect width="32" height="32" rx="8" fill="#6366f1"/>
-						<path d="M10 12L16 8L22 12V20L16 24L10 20V12Z" stroke="white" stroke-width="2" stroke-linejoin="round"/>
-						<circle cx="16" cy="16" r="3" fill="white"/>
-					</svg>
-					<span>Wafir</span>
-				</a>
-				<p class="tagline">Feedback & bug reporting, made simple.</p>
-			</div>
+<footer class="bg-bg-elevated border-t border-border pt-12 pb-6 mt-auto">
+  <div class="max-w-[1200px] mx-auto px-6">
+    <div class="flex justify-between gap-12 mb-8 max-md:flex-col max-md:gap-8">
+      <div class="max-w-[280px]">
+        <a href="/" class="flex items-center gap-2 font-bold text-lg mb-3">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 32 32"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect width="32" height="32" rx="8" fill="#6366f1"></rect>
+            <path
+              d="M10 12L16 8L22 12V20L16 24L10 20V12Z"
+              stroke="white"
+              stroke-width="2"
+              stroke-linejoin="round"></path>
+            <circle cx="16" cy="16" r="3" fill="white"></circle>
+          </svg>
+          <span>Wafir</span>
+        </a>
+        <p class="text-text-muted text-sm">
+          Feedback & bug reporting, made simple.
+        </p>
+      </div>
 
-			<div class="footer-links">
-				<div class="link-group">
-					<h4>Product</h4>
-					<a href="/installation">Installation</a>
-					<a href="/documentation">Documentation</a>
-				</div>
-				<div class="link-group">
-					<h4>Resources</h4>
-					<a href="https://github.com/BPS-Consulting/wafir" target="_blank" rel="noopener">GitHub</a>
-					<a href="https://github.com/BPS-Consulting/wafir/issues" target="_blank" rel="noopener">Issues</a>
-				</div>
-			</div>
-		</div>
+      <div class="flex gap-16 max-md:gap-8">
+        <div class="flex flex-col gap-3">
+          <h4 class="text-sm font-semibold mb-1">Product</h4>
+          <a
+            href="/installation"
+            class="text-text-muted text-sm transition-colors duration-200 hover:text-text"
+            >Installation</a
+          >
+          <a
+            href="/documentation"
+            class="text-text-muted text-sm transition-colors duration-200 hover:text-text"
+            >Documentation</a
+          >
+        </div>
+        <div class="flex flex-col gap-3">
+          <h4 class="text-sm font-semibold mb-1">Resources</h4>
+          <a
+            href="https://github.com/BPS-Consulting/wafir"
+            target="_blank"
+            rel="noopener"
+            class="text-text-muted text-sm transition-colors duration-200 hover:text-text"
+            >GitHub</a
+          >
+          <a
+            href="https://github.com/BPS-Consulting/wafir/issues"
+            target="_blank"
+            rel="noopener"
+            class="text-text-muted text-sm transition-colors duration-200 hover:text-text"
+            >Issues</a
+          >
+        </div>
+      </div>
+    </div>
 
-		<div class="footer-bottom">
-			<p>&copy; {currentYear} Wafir. Open source under the MIT License.</p>
-			<div class="badges">
-				<img src="https://img.shields.io/github/license/BPS-Consulting/wafir?style=flat-square&color=6366f1" alt="MIT License" loading="lazy" />
-			</div>
-		</div>
-	</div>
+    <div
+      class="flex justify-between items-center pt-6 border-t border-border max-md:flex-col max-md:gap-4 max-md:text-center"
+    >
+      <p class="text-text-muted text-sm">
+        &copy; {currentYear} Wafir. Open source under the MIT License.
+      </p>
+      <div>
+        <img
+          src="https://img.shields.io/github/license/BPS-Consulting/wafir?style=flat-square&color=6366f1"
+          alt="MIT License"
+          loading="lazy"
+          class="h-5"
+        />
+      </div>
+    </div>
+  </div>
 </footer>
-
-<style>
-	footer {
-		background: var(--color-bg-elevated);
-		border-top: 1px solid var(--color-border);
-		padding: 3rem 0 1.5rem;
-		margin-top: auto;
-	}
-
-	.footer-content {
-		display: flex;
-		justify-content: space-between;
-		gap: 3rem;
-		margin-bottom: 2rem;
-	}
-
-	.footer-brand {
-		max-width: 280px;
-	}
-
-	.logo {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		font-weight: 700;
-		font-size: 1.125rem;
-		margin-bottom: 0.75rem;
-	}
-
-	.tagline {
-		color: var(--color-text-muted);
-		font-size: 0.875rem;
-	}
-
-	.footer-links {
-		display: flex;
-		gap: 4rem;
-	}
-
-	.link-group {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-	}
-
-	.link-group h4 {
-		font-size: 0.875rem;
-		font-weight: 600;
-		margin-bottom: 0.25rem;
-	}
-
-	.link-group a {
-		color: var(--color-text-muted);
-		font-size: 0.875rem;
-		transition: color 0.2s ease;
-	}
-
-	.link-group a:hover {
-		color: var(--color-text);
-	}
-
-	.footer-bottom {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding-top: 1.5rem;
-		border-top: 1px solid var(--color-border);
-	}
-
-	.footer-bottom p {
-		color: var(--color-text-muted);
-		font-size: 0.875rem;
-	}
-
-	.badges img {
-		height: 20px;
-	}
-
-	@media (max-width: 768px) {
-		.footer-content {
-			flex-direction: column;
-			gap: 2rem;
-		}
-
-		.footer-links {
-			gap: 2rem;
-		}
-
-		.footer-bottom {
-			flex-direction: column;
-			gap: 1rem;
-			text-align: center;
-		}
-	}
-</style>

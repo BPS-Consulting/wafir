@@ -1,242 +1,150 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../layouts/Layout.astro";
 
-const bridgeUrl = import.meta.env.PUBLIC_BRIDGE_URL || 'http://localhost:3000';
-const siteUrl = import.meta.env.SITE || 'http://localhost:4322';
+const bridgeUrl = import.meta.env.PUBLIC_BRIDGE_URL || "http://localhost:3000";
+const siteUrl = import.meta.env.SITE || "http://localhost:4322";
 
 const urlParams = Astro.url.searchParams;
-const success = urlParams.get('success') === 'true';
-const error = urlParams.get('error');
-const connectedInstallationId = urlParams.get('installationId');
+const success = urlParams.get("success") === "true";
+const error = urlParams.get("error");
+const connectedInstallationId = urlParams.get("installationId");
 ---
 
-<Layout title="Connect Personal Projects - Wafir" description="Authorize Wafir to access your personal GitHub projects.">
-	<section class="connect section">
-		<div class="container">
-			<div class="connect-content">
-				<h1>Connect Personal Projects</h1>
-				<p class="description">
-					GitHub personal projects require additional authorization beyond the GitHub App installation.
-					Connect your account to enable feedback submission to personal project boards.
-				</p>
+<Layout
+  title="Connect Personal Projects - Wafir"
+  description="Authorize Wafir to access your personal GitHub projects."
+>
+  <section class="py-16 max-md:py-12">
+    <div class="max-w-[1200px] mx-auto px-6">
+      <div class="max-w-[600px] mx-auto">
+        <h1 class="text-4xl font-bold mb-4">Connect Personal Projects</h1>
+        <p class="text-text-muted text-lg mb-8 leading-relaxed">
+          GitHub personal projects require additional authorization beyond the
+          GitHub App installation. Connect your account to enable feedback
+          submission to personal project boards.
+        </p>
 
-				{success && (
-					<div class="alert alert-success">
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-							<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-							<polyline points="22 4 12 14.01 9 11.01"/>
-						</svg>
-						<div>
-							<strong>Connected Successfully!</strong>
-							<p>Installation ID {connectedInstallationId} is now authorized for personal projects.</p>
-						</div>
-					</div>
-				)}
+        {
+          success && (
+            <div class="flex gap-4 py-4 px-5 rounded-lg mb-8 items-start bg-accent/10 border border-accent/30 text-accent">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                class="shrink-0 mt-0.5"
+              >
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+              <div>
+                <strong class="block mb-1">Connected Successfully!</strong>
+                <p class="text-[0.9375rem] opacity-90">
+                  Installation ID {connectedInstallationId} is now authorized
+                  for personal projects.
+                </p>
+              </div>
+            </div>
+          )
+        }
 
-				{error && (
-					<div class="alert alert-error">
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-							<circle cx="12" cy="12" r="10"/>
-							<line x1="15" y1="9" x2="9" y2="15"/>
-							<line x1="9" y1="9" x2="15" y2="15"/>
-						</svg>
-						<div>
-							<strong>Authorization Failed</strong>
-							<p>Error: {error}. Please try again.</p>
-						</div>
-					</div>
-				)}
+        {
+          error && (
+            <div class="flex gap-4 py-4 px-5 rounded-lg mb-8 items-start bg-red-500/10 border border-red-500/30 text-red-500">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                class="shrink-0 mt-0.5"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+              <div>
+                <strong class="block mb-1">Authorization Failed</strong>
+                <p class="text-[0.9375rem] opacity-90">
+                  Error: {error}. Please try again.
+                </p>
+              </div>
+            </div>
+          )
+        }
 
-				<div class="connect-form">
-					<label for="installationId">Installation ID</label>
-					<p class="help-text">
-						Find this in your GitHub App installation URL: 
-						<code>github.com/settings/installations/<strong>12345678</strong></code>
-					</p>
-					<input 
-						type="text" 
-						id="installationId" 
-						name="installationId" 
-						placeholder="e.g., 12345678"
-						pattern="[0-9]+"
-						required
-					/>
+        <div class="bg-bg-card border border-border rounded-xl p-6 mb-8">
+          <label for="installationId" class="block font-semibold mb-2"
+            >Installation ID</label
+          >
+          <p class="text-text-muted text-sm mb-3">
+            Find this in your GitHub App installation URL:
+            <code class="text-[0.8125rem]"
+              >github.com/settings/installations/<strong>12345678</strong></code
+            >
+          </p>
+          <input
+            type="text"
+            id="installationId"
+            name="installationId"
+            placeholder="e.g., 12345678"
+            pattern="[0-9]+"
+            required
+            class="w-full py-3 px-4 text-base bg-bg-elevated border border-border rounded-lg text-text mb-4 font-mono focus:outline-none focus:border-primary focus:shadow-[0_0_0_3px_rgba(99,102,241,0.2)]"
+          />
 
-					<button type="button" id="connectBtn" class="btn btn-primary btn-large">
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-							<path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-						</svg>
-						Authorize with GitHub
-					</button>
-				</div>
+          <button
+            type="button"
+            id="connectBtn"
+            class="w-full py-4 text-base justify-center inline-flex items-center gap-2 rounded-lg font-medium transition-all duration-200 cursor-pointer border-none bg-primary text-white hover:bg-primary-hover hover:-translate-y-0.5"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+              ></path>
+            </svg>
+            Authorize with GitHub
+          </button>
+        </div>
 
-				<div class="info-section">
-					<h2>What permissions are requested?</h2>
-					<ul>
-						<li><strong>read:user</strong> — Read your GitHub profile</li>
-						<li><strong>project</strong> — Access your GitHub projects</li>
-					</ul>
-					<p class="note">
-						Your access token is stored securely and only used to add issues to your personal projects.
-						You can revoke access at any time.
-					</p>
-				</div>
-			</div>
-		</div>
-	</section>
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h2 class="text-lg font-bold mb-4">
+            What permissions are requested?
+          </h2>
+          <ul class="m-0 mb-4 pl-6">
+            <li class="text-text-muted mb-2">
+              <strong>read:user</strong> — Read your GitHub profile
+            </li>
+            <li class="text-text-muted mb-2">
+              <strong>project</strong> — Access your GitHub projects
+            </li>
+          </ul>
+          <p class="text-text-muted text-sm m-0 pt-4 border-t border-border">
+            Your access token is stored securely and only used to add issues to
+            your personal projects. You can revoke access at any time.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
 </Layout>
 
 <script define:vars={{ bridgeUrl, siteUrl }}>
-	document.getElementById('connectBtn').addEventListener('click', () => {
-		const installationId = document.getElementById('installationId').value.trim();
-		
-		if (!installationId || !/^\d+$/.test(installationId)) {
-			alert('Please enter a valid Installation ID (numbers only)');
-			return;
-		}
+  document.getElementById("connectBtn").addEventListener("click", () => {
+    const installationId = document
+      .getElementById("installationId")
+      .value.trim();
 
-		const returnUrl = `${siteUrl}/connect`;
-		const authUrl = `${bridgeUrl}/auth/github?installationId=${installationId}&returnUrl=${encodeURIComponent(returnUrl)}`;
-		window.location.href = authUrl;
-	});
+    if (!installationId || !/^\d+$/.test(installationId)) {
+      alert("Please enter a valid Installation ID (numbers only)");
+      return;
+    }
+
+    const returnUrl = `${siteUrl}/connect`;
+    const authUrl = `${bridgeUrl}/auth/github?installationId=${installationId}&returnUrl=${encodeURIComponent(returnUrl)}`;
+    window.location.href = authUrl;
+  });
 </script>
-
-<style>
-	.connect {
-		padding-top: 4rem;
-		padding-bottom: 4rem;
-	}
-
-	.connect-content {
-		max-width: 600px;
-		margin: 0 auto;
-	}
-
-	h1 {
-		font-size: 2.5rem;
-		margin-bottom: 1rem;
-	}
-
-	.description {
-		color: var(--color-text-muted);
-		font-size: 1.125rem;
-		margin-bottom: 2rem;
-		line-height: 1.7;
-	}
-
-	.alert {
-		display: flex;
-		gap: 1rem;
-		padding: 1rem 1.25rem;
-		border-radius: 8px;
-		margin-bottom: 2rem;
-		align-items: flex-start;
-	}
-
-	.alert svg {
-		flex-shrink: 0;
-		margin-top: 0.125rem;
-	}
-
-	.alert strong {
-		display: block;
-		margin-bottom: 0.25rem;
-	}
-
-	.alert p {
-		margin: 0;
-		font-size: 0.9375rem;
-		opacity: 0.9;
-	}
-
-	.alert-success {
-		background: rgba(34, 197, 94, 0.1);
-		border: 1px solid rgba(34, 197, 94, 0.3);
-		color: #22c55e;
-	}
-
-	.alert-error {
-		background: rgba(239, 68, 68, 0.1);
-		border: 1px solid rgba(239, 68, 68, 0.3);
-		color: #ef4444;
-	}
-
-	.connect-form {
-		background: var(--color-bg-card);
-		border: 1px solid var(--color-border);
-		border-radius: 12px;
-		padding: 1.5rem;
-		margin-bottom: 2rem;
-	}
-
-	.connect-form label {
-		display: block;
-		font-weight: 600;
-		margin-bottom: 0.5rem;
-	}
-
-	.help-text {
-		color: var(--color-text-muted);
-		font-size: 0.875rem;
-		margin-bottom: 0.75rem;
-	}
-
-	.help-text code {
-		font-size: 0.8125rem;
-	}
-
-	.connect-form input {
-		width: 100%;
-		padding: 0.75rem 1rem;
-		font-size: 1rem;
-		background: var(--color-bg-elevated);
-		border: 1px solid var(--color-border);
-		border-radius: 8px;
-		color: var(--color-text);
-		margin-bottom: 1rem;
-		font-family: var(--font-mono);
-	}
-
-	.connect-form input:focus {
-		outline: none;
-		border-color: var(--color-primary);
-		box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-	}
-
-	.btn-large {
-		width: 100%;
-		padding: 1rem;
-		font-size: 1rem;
-		justify-content: center;
-	}
-
-	.info-section {
-		background: var(--color-bg-elevated);
-		border: 1px solid var(--color-border);
-		border-radius: 12px;
-		padding: 1.5rem;
-	}
-
-	.info-section h2 {
-		font-size: 1.125rem;
-		margin-bottom: 1rem;
-	}
-
-	.info-section ul {
-		margin: 0 0 1rem;
-		padding-left: 1.5rem;
-	}
-
-	.info-section li {
-		color: var(--color-text-muted);
-		margin-bottom: 0.5rem;
-	}
-
-	.note {
-		color: var(--color-text-muted);
-		font-size: 0.875rem;
-		margin: 0;
-		padding-top: 1rem;
-		border-top: 1px solid var(--color-border);
-	}
-</style>
