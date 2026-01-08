@@ -128,6 +128,26 @@ AWS_REGION=us-east-1
 AWS_S3_BUCKET=your-bucket-name
 ```
 
+## 9. Personal Projects OAuth (Optional)
+
+To enable feedback submission to personal GitHub project boards, configure OAuth:
+
+1. In your GitHub App settings, under **OAuth credentials**:
+   - Generate a **Client secret**
+   - Note your **Client ID**
+
+2. Add to `bridge/.env`:
+
+   ```env
+   GITHUB_CLIENT_ID=Iv1.xxxxxxxxxxxx
+   GITHUB_CLIENT_SECRET=your_client_secret
+   BASE_URL=http://localhost:3000
+   ```
+
+3. Users can then authorize via the Connect page at `/connect`
+
+> **Note:** Organization projects work without OAuth. This is only needed for personal (user-owned) projects.
+
 ## Troubleshooting
 
 - **Widget not loading config**: Ensure `.github/wafir.yaml` is pushed to your repository

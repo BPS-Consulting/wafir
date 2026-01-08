@@ -272,6 +272,51 @@ const submitRoute: FastifyPluginAsync = async (
                   { error: error.message, errors: error.errors },
                   "Failed to find project via GraphQL"
                 );
+
+                // Check if this is a personal project access issue and try user token
+                const isUserProjectError = error.errors?.some(
+                  (e: { path?: string[]; type?: string }) =>
+                    e.path?.includes("user") && e.type === "NOT_FOUND"
+                );
+
+                if (isUserProjectError) {
+                  const userToken =
+                    fastify.tokenStore.getUserToken(installationId);
+                  if (userToken) {
+                    request.log.info(
+                      "Retrying with user token for personal project..."
+                    );
+                    try {
+                      const userOctokit =
+                        fastify.getGitHubClientWithToken(userToken);
+                      const userResult = await userOctokit.graphql<{
+                        user: { projectV2: { id: string } | null } | null;
+                      }>(
+                        `query FindUserProject($owner: String!, $number: Int!) {
+                          user(login: $owner) {
+                            projectV2(number: $number) { id }
+                          }
+                        }`,
+                        { owner: projectOwner, number: projectNumber }
+                      );
+                      projectNodeId = userResult.user?.projectV2?.id;
+                      request.log.info(
+                        { projectNodeId },
+                        "Found project with user token"
+                      );
+                    } catch (userError: any) {
+                      request.log.error(
+                        { error: userError.message },
+                        "User token project lookup also failed"
+                      );
+                    }
+                  } else {
+                    request.log.warn(
+                      { installationId },
+                      "Personal project access requires OAuth authorization. Visit /connect to authorize."
+                    );
+                  }
+                }
               }
 
               if (projectNodeId) {

@@ -6,6 +6,7 @@ import { Octokit } from "octokit";
 declare module "fastify" {
   interface FastifyInstance {
     getGitHubClient: (installationId: number) => Promise<Octokit>;
+    getGitHubClientWithToken: (token: string) => Octokit;
   }
 }
 
@@ -32,5 +33,10 @@ export default fp(async (fastify, opts) => {
     // This retrieves an installation access token
     const octokit = await app.getInstallationOctokit(installationId);
     return octokit;
+  });
+
+  // Decorator: Creates Octokit client from user's personal access token
+  fastify.decorate("getGitHubClientWithToken", (token: string) => {
+    return new Octokit({ auth: token });
   });
 });

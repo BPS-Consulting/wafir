@@ -245,6 +245,19 @@ storage:
   projectNumber: 1 # GitHub Project number from URL
 ```
 
+### Personal Projects Authentication
+
+GitHub personal projects require additional authorization beyond the standard GitHub App installation. This is due to GitHub API limitations—personal projects can only be accessed with a user access token.
+
+**To enable personal project access:**
+
+1. Visit the [Connect](/connect) page
+2. Enter your GitHub App Installation ID
+3. Authorize Wafir via GitHub OAuth
+4. Your personal projects will now be accessible
+
+> **Note:** Organization projects work automatically with the GitHub App installation. Personal project authorization is only needed for projects owned by individual GitHub accounts.
+
 ---
 
 ## Configuration Examples
