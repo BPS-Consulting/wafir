@@ -210,6 +210,9 @@ const submitRoute: FastifyPluginAsync = async (
         }
 
         // Add to project if storage type is 'project' or 'both'
+        let projectAdded = false;
+        let projectError: string | undefined;
+
         if (
           (storageType === "project" || storageType === "both") &&
           projectNumber
@@ -324,48 +327,74 @@ const submitRoute: FastifyPluginAsync = async (
                   { projectNodeId, issueNodeId },
                   "Adding issue to project..."
                 );
-                const addResult = await octokit.graphql(
-                  ADD_TO_PROJECT_MUTATION,
-                  {
-                    projectId: projectNodeId,
-                    contentId: issueNodeId,
-                  }
-                );
-                request.log.info(
-                  { addResult },
-                  `Successfully added issue to project #${projectNumber}`
-                );
+                try {
+                  const addResult = await octokit.graphql(
+                    ADD_TO_PROJECT_MUTATION,
+                    {
+                      projectId: projectNodeId,
+                      contentId: issueNodeId,
+                    }
+                  );
+                  request.log.info(
+                    { addResult },
+                    `Successfully added issue to project #${projectNumber}`
+                  );
+                  projectAdded = true;
+                } catch (addError: any) {
+                  request.log.error(
+                    { error: addError.message },
+                    "Failed to add issue to project"
+                  );
+                  projectError = `Failed to add to project: ${addError.message}`;
+                }
               } else {
+                projectError = `Could not find project #${projectNumber} for user ${projectOwner}. Personal projects require OAuth authorization.`;
                 request.log.error(
                   { projectOwner, projectNumber, repo },
-                  `Could not find project #${projectNumber} in repo ${repo} or for user ${projectOwner}`
+                  projectError
                 );
               }
-            } catch (projectError: any) {
+            } catch (projectLookupError: any) {
+              projectError = `Project lookup failed: ${projectLookupError.message}`;
               request.log.error(
                 {
-                  error: projectError.message,
-                  errors: projectError.errors,
-                  data: projectError.data,
+                  error: projectLookupError.message,
+                  errors: projectLookupError.errors,
+                  data: projectLookupError.data,
                 },
                 "Failed to add to project"
               );
             }
           } else {
             request.log.warn("No issueNodeId available, cannot add to project");
+            projectError = "No issue ID available to add to project";
           }
         } else if (storageType === "project" || storageType === "both") {
-          request.log.warn(
-            { storageType, projectNumber },
-            "Project storage requested but no projectNumber configured"
-          );
+          projectError =
+            "Project storage requested but no projectNumber configured";
+          request.log.warn({ storageType, projectNumber }, projectError);
         }
 
-        reply.code(201).send({
+        const response: {
+          success: boolean;
+          issueUrl?: string;
+          issueNumber?: number;
+          projectAdded?: boolean;
+          warning?: string;
+        } = {
           success: true,
           issueUrl,
           issueNumber,
-        });
+        };
+
+        if (storageType === "project" || storageType === "both") {
+          response.projectAdded = projectAdded;
+          if (!projectAdded && projectError) {
+            response.warning = projectError;
+          }
+        }
+
+        reply.code(201).send(response);
       } catch (error: any) {
         request.log.error(
           { error: error.message, stack: error.stack },

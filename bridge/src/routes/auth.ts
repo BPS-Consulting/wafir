@@ -117,7 +117,7 @@ const authRoute: FastifyPluginAsync = async (fastify): Promise<void> => {
             "OAuth token exchange failed"
           );
           const errorUrl = new URL(
-            parsedState.returnUrl || "http://localhost:4322/connect"
+            parsedState.returnUrl || "http://localhost:4321/connect"
           );
           errorUrl.searchParams.set("error", tokenData.error || "unknown");
           return reply.redirect(errorUrl.toString());
@@ -129,7 +129,7 @@ const authRoute: FastifyPluginAsync = async (fastify): Promise<void> => {
         );
 
         const successUrl = new URL(
-          parsedState.returnUrl || "http://localhost:4322/connect"
+          parsedState.returnUrl || "http://localhost:4321/connect"
         );
         successUrl.searchParams.set("success", "true");
         successUrl.searchParams.set(
