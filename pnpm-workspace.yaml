@@ -1,7 +1,4 @@
 packages:
-  - "wafir"
-  - "bridge"
-  - "react"
-  - "vue"
-  - "react-consumer"
-  - "www"
+  - "packages/*"
+  - "apps/*"
+  - "internal/*"
