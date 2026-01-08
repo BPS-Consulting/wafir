@@ -242,7 +242,7 @@ storage:
 # .github/wafir.yaml
 storage:
   type: project
-  projectId: 123 # GitHub Project ID
+  projectNumber: 1 # GitHub Project number from URL
 ```
 
 ---

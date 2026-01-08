@@ -12,7 +12,7 @@ export const wafirConfigSchema = {
         },
         owner: { type: "string" },
         repo: { type: "string" },
-        projectId: { type: "number" },
+        projectNumber: { type: "number" },
       },
     },
     feedback: {

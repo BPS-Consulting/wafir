@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from "fastify";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from "uuid";
+import yaml from "js-yaml";
 
 interface SubmitBody {
   installationId: number;
@@ -10,6 +11,38 @@ interface SubmitBody {
   body: string;
   labels?: string[];
 }
+
+interface WafirConfig {
+  storage?: {
+    type?: "issue" | "project" | "both";
+    projectNumber?: number;
+    owner?: string;
+    repo?: string;
+  };
+}
+
+const ADD_TO_PROJECT_MUTATION = `
+  mutation AddToProject($projectId: ID!, $contentId: ID!) {
+    addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) {
+      item { id }
+    }
+  }
+`;
+
+const FIND_PROJECT_QUERY = `
+  query FindProject($owner: String!, $number: Int!) {
+    organization(login: $owner) {
+      projectV2(number: $number) {
+        id
+      }
+    }
+    user(login: $owner) {
+      projectV2(number: $number) {
+        id
+      }
+    }
+  }
+`;
 
 const submitRoute: FastifyPluginAsync = async (
   fastify,
@@ -90,6 +123,45 @@ const submitRoute: FastifyPluginAsync = async (
       }
 
       try {
+        const octokit = await fastify.getGitHubClient(installationId);
+
+        // Fetch wafir.yaml config to get storage settings
+        let wafirConfig: WafirConfig = {};
+        try {
+          const { data: configData } = await octokit.rest.repos.getContent({
+            owner,
+            repo,
+            path: ".github/wafir.yaml",
+          });
+
+          if ("content" in configData) {
+            const yamlContent = Buffer.from(
+              configData.content,
+              "base64"
+            ).toString("utf-8");
+            wafirConfig = (yaml.load(yamlContent) as WafirConfig) || {};
+            request.log.info({ wafirConfig }, "Loaded wafir.yaml config");
+          }
+        } catch (configError: any) {
+          if (configError.status === 404) {
+            request.log.info("No wafir.yaml found, using defaults");
+          } else {
+            request.log.error(
+              { error: configError.message, status: configError.status },
+              "Failed to fetch wafir.yaml"
+            );
+          }
+        }
+
+        const storageType = wafirConfig.storage?.type || "issue";
+        const projectNumber = wafirConfig.storage?.projectNumber;
+        const projectOwner = wafirConfig.storage?.owner || owner;
+
+        request.log.info(
+          { storageType, projectNumber, projectOwner },
+          "Storage settings"
+        );
+
         let finalBody = body;
 
         // Upload to S3 if screenshot exists
@@ -113,23 +185,147 @@ const submitRoute: FastifyPluginAsync = async (
           );
         }
 
-        const octokit = await fastify.getGitHubClient(installationId);
+        let issueNodeId: string | undefined;
+        let issueUrl: string | undefined;
+        let issueNumber: number | undefined;
 
-        const issue = await octokit.rest.issues.create({
-          owner,
-          repo,
-          title,
-          body: finalBody,
-          labels: labels || ["wafir-feedback"],
-        });
+        // Create issue if storage type is 'issue' or 'both'
+        if (storageType === "issue" || storageType === "both") {
+          request.log.info("Creating GitHub issue...");
+          const issue = await octokit.rest.issues.create({
+            owner,
+            repo,
+            title,
+            body: finalBody,
+            labels: labels || ["wafir-feedback"],
+          });
+
+          issueNodeId = issue.data.node_id;
+          issueUrl = issue.data.html_url;
+          issueNumber = issue.data.number;
+          request.log.info(
+            { issueNumber, issueUrl, issueNodeId },
+            "Created issue"
+          );
+        }
+
+        // Add to project if storage type is 'project' or 'both'
+        if (
+          (storageType === "project" || storageType === "both") &&
+          projectNumber
+        ) {
+          request.log.info(
+            { storageType, projectNumber },
+            "Will add to project"
+          );
+
+          if (!issueNodeId && storageType === "project") {
+            request.log.info(
+              "Creating GitHub issue for project-only storage..."
+            );
+            const issue = await octokit.rest.issues.create({
+              owner,
+              repo,
+              title,
+              body: finalBody,
+              labels: labels || ["wafir-feedback"],
+            });
+
+            issueNodeId = issue.data.node_id;
+            issueUrl = issue.data.html_url;
+            issueNumber = issue.data.number;
+            request.log.info(
+              { issueNumber, issueUrl, issueNodeId },
+              "Created issue for project"
+            );
+          }
+
+          if (issueNodeId) {
+            try {
+              request.log.info(
+                { projectOwner, projectNumber, repo },
+                "Looking up project node ID..."
+              );
+
+              let projectNodeId: string | undefined;
+
+              // Find project via GraphQL (checks both org and user in one query)
+              try {
+                const projectResult = await octokit.graphql<{
+                  organization: { projectV2: { id: string } | null } | null;
+                  user: { projectV2: { id: string } | null } | null;
+                }>(FIND_PROJECT_QUERY, {
+                  owner: projectOwner,
+                  number: projectNumber,
+                });
+
+                projectNodeId =
+                  projectResult.organization?.projectV2?.id ||
+                  projectResult.user?.projectV2?.id;
+
+                request.log.info(
+                  { projectResult, projectNodeId },
+                  "GraphQL response for project lookup"
+                );
+              } catch (error: any) {
+                request.log.error(
+                  { error: error.message, errors: error.errors },
+                  "Failed to find project via GraphQL"
+                );
+              }
+
+              if (projectNodeId) {
+                request.log.info(
+                  { projectNodeId, issueNodeId },
+                  "Adding issue to project..."
+                );
+                const addResult = await octokit.graphql(
+                  ADD_TO_PROJECT_MUTATION,
+                  {
+                    projectId: projectNodeId,
+                    contentId: issueNodeId,
+                  }
+                );
+                request.log.info(
+                  { addResult },
+                  `Successfully added issue to project #${projectNumber}`
+                );
+              } else {
+                request.log.error(
+                  { projectOwner, projectNumber, repo },
+                  `Could not find project #${projectNumber} in repo ${repo} or for user ${projectOwner}`
+                );
+              }
+            } catch (projectError: any) {
+              request.log.error(
+                {
+                  error: projectError.message,
+                  errors: projectError.errors,
+                  data: projectError.data,
+                },
+                "Failed to add to project"
+              );
+            }
+          } else {
+            request.log.warn("No issueNodeId available, cannot add to project");
+          }
+        } else if (storageType === "project" || storageType === "both") {
+          request.log.warn(
+            { storageType, projectNumber },
+            "Project storage requested but no projectNumber configured"
+          );
+        }
 
         reply.code(201).send({
           success: true,
-          issueUrl: issue.data.html_url,
-          issueNumber: issue.data.number,
+          issueUrl,
+          issueNumber,
         });
       } catch (error: any) {
-        request.log.error(error);
+        request.log.error(
+          { error: error.message, stack: error.stack },
+          "Submit failed"
+        );
         return reply
           .code(500)
           .send({ error: "Submission Failed", message: error.message });

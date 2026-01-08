@@ -11,6 +11,7 @@ This directory contains example `wafir.yaml` configuration files for different u
 | [full-featured](./full-featured/)       | All options demonstrated     | You want full control               |
 | [privacy-focused](./privacy-focused/)   | No automatic data collection | User privacy is paramount           |
 | [feature-requests](./feature-requests/) | Optimized for ideas          | Collecting enhancement requests     |
+| [project-based](./project-based/)       | GitHub Projects integration  | Kanban-style feedback tracking      |
 
 ## Quick Start
 
