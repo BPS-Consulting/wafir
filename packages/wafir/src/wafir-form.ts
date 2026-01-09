@@ -25,6 +25,9 @@ export class WafirForm extends LitElement {
   @property({ type: Boolean })
   showConsoleLog = false;
 
+  @property({ type: Boolean })
+  loading = false;
+
   private _capturedImageController = new StoreController(this, capturedImage);
   private _formDataController = new StoreController(this, formData);
   private _browserInfoController = new StoreController(this, browserInfo);
@@ -66,6 +69,7 @@ export class WafirForm extends LitElement {
 
   private _handleSubmit(event: Event) {
     event.preventDefault();
+    this.loading = true;
     this.dispatchEvent(
       new CustomEvent("form-submit", {
         detail: { formData: formData.get() },
@@ -256,7 +260,11 @@ export class WafirForm extends LitElement {
           `;
         })}
 
-        <button class="submit-button" type="submit">Submit</button>
+        <button class="submit-button" type="submit" ?disabled="${this.loading}">
+          ${this.loading
+            ? html`<span class="spinner"></span> Submitting...`
+            : "Submit"}
+        </button>
 
         ${this.showBrowserInfo && this._browserInfoController.value
           ? html`
