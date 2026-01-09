@@ -29,6 +29,14 @@ const ADD_TO_PROJECT_MUTATION = `
   }
 `;
 
+const ADD_DRAFT_TO_PROJECT_MUTATION = `
+  mutation AddDraftToProject($projectId: ID!, $title: String!, $body: String) {
+    addProjectV2DraftIssue(input: { projectId: $projectId, title: $title, body: $body }) {
+      projectItem { id }
+    }
+  }
+`;
+
 const FIND_PROJECT_QUERY = `
   query FindProject($owner: String!, $number: Int!) {
     organization(login: $owner) {
@@ -209,179 +217,239 @@ const submitRoute: FastifyPluginAsync = async (
           );
         }
 
-        // Add to project if storage type is 'project' or 'both'
         let projectAdded = false;
         let projectError: string | undefined;
+        let draftItemId: string | undefined;
 
-        if (
-          (storageType === "project" || storageType === "both") &&
-          projectNumber
-        ) {
+        // Handle "project" storage type - create draft directly in project
+        if (storageType === "project" && projectNumber) {
           request.log.info(
             { storageType, projectNumber },
-            "Will add to project"
+            "Will create draft in project"
           );
 
-          if (!issueNodeId && storageType === "project") {
-            request.log.info(
-              "Creating GitHub issue for project-only storage..."
-            );
-            const issue = await octokit.rest.issues.create({
-              owner,
-              repo,
-              title,
-              body: finalBody,
-              labels: labels || ["wafir-feedback"],
-            });
+          try {
+            let projectNodeId: string | undefined;
+            let useUserToken = false;
+            let userOctokit: ReturnType<
+              typeof fastify.getGitHubClientWithToken
+            > | null = null;
 
-            issueNodeId = issue.data.node_id;
-            issueUrl = issue.data.html_url;
-            issueNumber = issue.data.number;
-            request.log.info(
-              { issueNumber, issueUrl, issueNodeId },
-              "Created issue for project"
-            );
-          }
+            const userToken =
+              await fastify.tokenStore.getUserToken(installationId);
+            if (userToken) {
+              userOctokit = fastify.getGitHubClientWithToken(userToken);
+            }
 
-          if (issueNodeId) {
             try {
-              request.log.info(
-                { projectOwner, projectNumber, repo },
-                "Looking up project node ID..."
+              const projectResult = await octokit.graphql<{
+                organization: { projectV2: { id: string } | null } | null;
+                user: { projectV2: { id: string } | null } | null;
+              }>(FIND_PROJECT_QUERY, {
+                owner: projectOwner,
+                number: projectNumber,
+              });
+
+              if (projectResult.organization?.projectV2?.id) {
+                projectNodeId = projectResult.organization.projectV2.id;
+                useUserToken = false;
+              } else if (projectResult.user?.projectV2?.id) {
+                projectNodeId = projectResult.user.projectV2.id;
+                useUserToken = true;
+              }
+            } catch (error: any) {
+              request.log.error(
+                { error: error.message },
+                "Failed to find project via GraphQL"
               );
 
-              let projectNodeId: string | undefined;
-              let useUserToken = false;
-              let userOctokit: ReturnType<
-                typeof fastify.getGitHubClientWithToken
-              > | null = null;
-
-              // Check if we have a user token for personal project access
-              const userToken =
-                await fastify.tokenStore.getUserToken(installationId);
-              if (userToken) {
-                userOctokit = fastify.getGitHubClientWithToken(userToken);
-              }
-
-              // Find project via GraphQL (checks both org and user in one query)
-              try {
-                const projectResult = await octokit.graphql<{
-                  organization: { projectV2: { id: string } | null } | null;
-                  user: { projectV2: { id: string } | null } | null;
-                }>(FIND_PROJECT_QUERY, {
-                  owner: projectOwner,
-                  number: projectNumber,
-                });
-
-                if (projectResult.organization?.projectV2?.id) {
-                  projectNodeId = projectResult.organization.projectV2.id;
-                  useUserToken = false;
-                } else if (projectResult.user?.projectV2?.id) {
-                  projectNodeId = projectResult.user.projectV2.id;
+              if (userOctokit) {
+                try {
+                  const userResult = await userOctokit.graphql<{
+                    user: { projectV2: { id: string } | null } | null;
+                  }>(
+                    `query FindUserProject($owner: String!, $number: Int!) {
+                      user(login: $owner) {
+                        projectV2(number: $number) { id }
+                      }
+                    }`,
+                    { owner: projectOwner, number: projectNumber }
+                  );
+                  projectNodeId = userResult.user?.projectV2?.id;
                   useUserToken = true;
-                }
-
-                request.log.info(
-                  { projectResult, projectNodeId, useUserToken },
-                  "GraphQL response for project lookup"
-                );
-              } catch (error: any) {
-                request.log.error(
-                  { error: error.message, errors: error.errors },
-                  "Failed to find project via GraphQL"
-                );
-
-                // Check if this is a personal project access issue and try user token
-                const isUserProjectError = error.errors?.some(
-                  (e: { path?: string[]; type?: string }) =>
-                    e.path?.includes("user") && e.type === "NOT_FOUND"
-                );
-
-                if (isUserProjectError && userOctokit) {
-                  request.log.info(
-                    "Retrying with user token for personal project..."
-                  );
-                  try {
-                    const userResult = await userOctokit.graphql<{
-                      user: { projectV2: { id: string } | null } | null;
-                    }>(
-                      `query FindUserProject($owner: String!, $number: Int!) {
-                        user(login: $owner) {
-                          projectV2(number: $number) { id }
-                        }
-                      }`,
-                      { owner: projectOwner, number: projectNumber }
-                    );
-                    projectNodeId = userResult.user?.projectV2?.id;
-                    useUserToken = true;
-                    request.log.info(
-                      { projectNodeId },
-                      "Found project with user token"
-                    );
-                  } catch (userError: any) {
-                    request.log.error(
-                      { error: userError.message },
-                      "User token project lookup also failed"
-                    );
-                  }
-                } else if (isUserProjectError) {
-                  request.log.warn(
-                    { installationId },
-                    "Personal project access requires OAuth authorization. Visit /connect to authorize."
+                } catch (userError: any) {
+                  request.log.error(
+                    { error: userError.message },
+                    "User token project lookup also failed"
                   );
                 }
               }
+            }
 
-              if (projectNodeId) {
+            if (projectNodeId) {
+              const clientToUse =
+                useUserToken && userOctokit ? userOctokit : octokit;
+              const draftResult = await clientToUse.graphql<{
+                addProjectV2DraftIssue: { projectItem: { id: string } };
+              }>(ADD_DRAFT_TO_PROJECT_MUTATION, {
+                projectId: projectNodeId,
+                title,
+                body: finalBody,
+              });
+              draftItemId = draftResult.addProjectV2DraftIssue.projectItem.id;
+              projectAdded = true;
+              request.log.info(
+                { draftItemId, projectNumber },
+                "Created draft item in project"
+              );
+            } else {
+              projectError = `Could not find project #${projectNumber} for user ${projectOwner}.`;
+              request.log.error({ projectOwner, projectNumber }, projectError);
+            }
+          } catch (error: any) {
+            projectError = `Failed to create draft in project: ${error.message}`;
+            request.log.error({ error: error.message }, projectError);
+          }
+        }
+
+        // Handle "both" storage type - add existing issue to project
+        if (storageType === "both" && projectNumber && issueNodeId) {
+          request.log.info(
+            { storageType, projectNumber },
+            "Will add issue to project"
+          );
+
+          try {
+            request.log.info(
+              { projectOwner, projectNumber, repo },
+              "Looking up project node ID..."
+            );
+
+            let projectNodeId: string | undefined;
+            let useUserToken = false;
+            let userOctokit: ReturnType<
+              typeof fastify.getGitHubClientWithToken
+            > | null = null;
+
+            const userToken =
+              await fastify.tokenStore.getUserToken(installationId);
+            if (userToken) {
+              userOctokit = fastify.getGitHubClientWithToken(userToken);
+            }
+
+            try {
+              const projectResult = await octokit.graphql<{
+                organization: { projectV2: { id: string } | null } | null;
+                user: { projectV2: { id: string } | null } | null;
+              }>(FIND_PROJECT_QUERY, {
+                owner: projectOwner,
+                number: projectNumber,
+              });
+
+              if (projectResult.organization?.projectV2?.id) {
+                projectNodeId = projectResult.organization.projectV2.id;
+                useUserToken = false;
+              } else if (projectResult.user?.projectV2?.id) {
+                projectNodeId = projectResult.user.projectV2.id;
+                useUserToken = true;
+              }
+
+              request.log.info(
+                { projectResult, projectNodeId, useUserToken },
+                "GraphQL response for project lookup"
+              );
+            } catch (error: any) {
+              request.log.error(
+                { error: error.message, errors: error.errors },
+                "Failed to find project via GraphQL"
+              );
+
+              const isUserProjectError = error.errors?.some(
+                (e: { path?: string[]; type?: string }) =>
+                  e.path?.includes("user") && e.type === "NOT_FOUND"
+              );
+
+              if (isUserProjectError && userOctokit) {
                 request.log.info(
-                  { projectNodeId, issueNodeId, useUserToken },
-                  "Adding issue to project..."
+                  "Retrying with user token for personal project..."
                 );
                 try {
-                  const clientToUse =
-                    useUserToken && userOctokit ? userOctokit : octokit;
-                  const addResult = await clientToUse.graphql(
-                    ADD_TO_PROJECT_MUTATION,
-                    {
-                      projectId: projectNodeId,
-                      contentId: issueNodeId,
-                    }
+                  const userResult = await userOctokit.graphql<{
+                    user: { projectV2: { id: string } | null } | null;
+                  }>(
+                    `query FindUserProject($owner: String!, $number: Int!) {
+                      user(login: $owner) {
+                        projectV2(number: $number) { id }
+                      }
+                    }`,
+                    { owner: projectOwner, number: projectNumber }
                   );
+                  projectNodeId = userResult.user?.projectV2?.id;
+                  useUserToken = true;
                   request.log.info(
-                    { addResult },
-                    `Successfully added issue to project #${projectNumber}`
+                    { projectNodeId },
+                    "Found project with user token"
                   );
-                  projectAdded = true;
-                } catch (addError: any) {
+                } catch (userError: any) {
                   request.log.error(
-                    { error: addError.message },
-                    "Failed to add issue to project"
+                    { error: userError.message },
+                    "User token project lookup also failed"
                   );
-                  projectError = `Failed to add to project: ${addError.message}`;
                 }
-              } else {
-                projectError = `Could not find project #${projectNumber} for user ${projectOwner}. Personal projects require OAuth authorization.`;
-                request.log.error(
-                  { projectOwner, projectNumber, repo },
-                  projectError
+              } else if (isUserProjectError) {
+                request.log.warn(
+                  { installationId },
+                  "Personal project access requires OAuth authorization. Visit /connect to authorize."
                 );
               }
-            } catch (projectLookupError: any) {
-              projectError = `Project lookup failed: ${projectLookupError.message}`;
+            }
+
+            if (projectNodeId) {
+              request.log.info(
+                { projectNodeId, issueNodeId, useUserToken },
+                "Adding issue to project..."
+              );
+              try {
+                const clientToUse =
+                  useUserToken && userOctokit ? userOctokit : octokit;
+                const addResult = await clientToUse.graphql(
+                  ADD_TO_PROJECT_MUTATION,
+                  {
+                    projectId: projectNodeId,
+                    contentId: issueNodeId,
+                  }
+                );
+                request.log.info(
+                  { addResult },
+                  `Successfully added issue to project #${projectNumber}`
+                );
+                projectAdded = true;
+              } catch (addError: any) {
+                request.log.error(
+                  { error: addError.message },
+                  "Failed to add issue to project"
+                );
+                projectError = `Failed to add to project: ${addError.message}`;
+              }
+            } else {
+              projectError = `Could not find project #${projectNumber} for user ${projectOwner}. Personal projects require OAuth authorization.`;
               request.log.error(
-                {
-                  error: projectLookupError.message,
-                  errors: projectLookupError.errors,
-                  data: projectLookupError.data,
-                },
-                "Failed to add to project"
+                { projectOwner, projectNumber, repo },
+                projectError
               );
             }
-          } else {
-            request.log.warn("No issueNodeId available, cannot add to project");
-            projectError = "No issue ID available to add to project";
+          } catch (projectLookupError: any) {
+            projectError = `Project lookup failed: ${projectLookupError.message}`;
+            request.log.error(
+              {
+                error: projectLookupError.message,
+                errors: projectLookupError.errors,
+                data: projectLookupError.data,
+              },
+              "Failed to add to project"
+            );
           }
-        } else if (storageType === "project" || storageType === "both") {
+        } else if (storageType === "both" && !projectNumber) {
           projectError =
             "Project storage requested but no projectNumber configured";
           request.log.warn({ storageType, projectNumber }, projectError);
