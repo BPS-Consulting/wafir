@@ -45,9 +45,17 @@ export async function takeFullPageScreenshot(
       window.innerHeight
     );
 
+    const computedStyle = window.getComputedStyle(document.body);
+    const bgColor = computedStyle.backgroundColor;
+    const backgroundColor =
+      bgColor === "rgba(0, 0, 0, 0)" || bgColor === "transparent"
+        ? "#ffffff"
+        : bgColor;
+
     const dataUrl = await domToDataUrl(document.documentElement, {
       width,
       height,
+      backgroundColor,
       filter: (node: Node) => {
         if (node instanceof HTMLElement) {
           const tagName = node.tagName.toLowerCase();
