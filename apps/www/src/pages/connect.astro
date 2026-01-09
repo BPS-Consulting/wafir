@@ -2,7 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 
 const bridgeUrl = import.meta.env.PUBLIC_BRIDGE_URL || "http://localhost:3000";
-const siteUrl = import.meta.env.SITE || "http://localhost:4322";
+const siteUrl = import.meta.env.SITE || "http://localhost:4321";
 
 const urlParams = Astro.url.searchParams;
 const success = urlParams.get("success") === "true";

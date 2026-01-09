@@ -251,6 +251,17 @@ const submitRoute: FastifyPluginAsync = async (
               );
 
               let projectNodeId: string | undefined;
+              let useUserToken = false;
+              let userOctokit: ReturnType<
+                typeof fastify.getGitHubClientWithToken
+              > | null = null;
+
+              // Check if we have a user token for personal project access
+              const userToken =
+                await fastify.tokenStore.getUserToken(installationId);
+              if (userToken) {
+                userOctokit = fastify.getGitHubClientWithToken(userToken);
+              }
 
               // Find project via GraphQL (checks both org and user in one query)
               try {
@@ -262,12 +273,16 @@ const submitRoute: FastifyPluginAsync = async (
                   number: projectNumber,
                 });
 
-                projectNodeId =
-                  projectResult.organization?.projectV2?.id ||
-                  projectResult.user?.projectV2?.id;
+                if (projectResult.organization?.projectV2?.id) {
+                  projectNodeId = projectResult.organization.projectV2.id;
+                  useUserToken = false;
+                } else if (projectResult.user?.projectV2?.id) {
+                  projectNodeId = projectResult.user.projectV2.id;
+                  useUserToken = true;
+                }
 
                 request.log.info(
-                  { projectResult, projectNodeId },
+                  { projectResult, projectNodeId, useUserToken },
                   "GraphQL response for project lookup"
                 );
               } catch (error: any) {
@@ -282,53 +297,50 @@ const submitRoute: FastifyPluginAsync = async (
                     e.path?.includes("user") && e.type === "NOT_FOUND"
                 );
 
-                if (isUserProjectError) {
-                  const userToken =
-                    await fastify.tokenStore.getUserToken(installationId);
-                  if (userToken) {
-                    request.log.info(
-                      "Retrying with user token for personal project..."
+                if (isUserProjectError && userOctokit) {
+                  request.log.info(
+                    "Retrying with user token for personal project..."
+                  );
+                  try {
+                    const userResult = await userOctokit.graphql<{
+                      user: { projectV2: { id: string } | null } | null;
+                    }>(
+                      `query FindUserProject($owner: String!, $number: Int!) {
+                        user(login: $owner) {
+                          projectV2(number: $number) { id }
+                        }
+                      }`,
+                      { owner: projectOwner, number: projectNumber }
                     );
-                    try {
-                      const userOctokit =
-                        fastify.getGitHubClientWithToken(userToken);
-                      const userResult = await userOctokit.graphql<{
-                        user: { projectV2: { id: string } | null } | null;
-                      }>(
-                        `query FindUserProject($owner: String!, $number: Int!) {
-                          user(login: $owner) {
-                            projectV2(number: $number) { id }
-                          }
-                        }`,
-                        { owner: projectOwner, number: projectNumber }
-                      );
-                      projectNodeId = userResult.user?.projectV2?.id;
-                      request.log.info(
-                        { projectNodeId },
-                        "Found project with user token"
-                      );
-                    } catch (userError: any) {
-                      request.log.error(
-                        { error: userError.message },
-                        "User token project lookup also failed"
-                      );
-                    }
-                  } else {
-                    request.log.warn(
-                      { installationId },
-                      "Personal project access requires OAuth authorization. Visit /connect to authorize."
+                    projectNodeId = userResult.user?.projectV2?.id;
+                    useUserToken = true;
+                    request.log.info(
+                      { projectNodeId },
+                      "Found project with user token"
+                    );
+                  } catch (userError: any) {
+                    request.log.error(
+                      { error: userError.message },
+                      "User token project lookup also failed"
                     );
                   }
+                } else if (isUserProjectError) {
+                  request.log.warn(
+                    { installationId },
+                    "Personal project access requires OAuth authorization. Visit /connect to authorize."
+                  );
                 }
               }
 
               if (projectNodeId) {
                 request.log.info(
-                  { projectNodeId, issueNodeId },
+                  { projectNodeId, issueNodeId, useUserToken },
                   "Adding issue to project..."
                 );
                 try {
-                  const addResult = await octokit.graphql(
+                  const clientToUse =
+                    useUserToken && userOctokit ? userOctokit : octokit;
+                  const addResult = await clientToUse.graphql(
                     ADD_TO_PROJECT_MUTATION,
                     {
                       projectId: projectNodeId,

@@ -87,7 +87,6 @@ const authRoute: FastifyPluginAsync = async (fastify): Promise<void> => {
       } catch {
         return reply.code(400).send({ error: "Invalid state parameter" });
       }
-
       try {
         const tokenResponse = await fetch(
           "https://github.com/login/oauth/access_token",
@@ -116,13 +115,20 @@ const authRoute: FastifyPluginAsync = async (fastify): Promise<void> => {
 
         if (tokenData.error || !tokenData.access_token) {
           request.log.error(
-            { error: tokenData.error },
+            {
+              error: tokenData.error,
+              description: tokenData.error_description,
+            },
             "OAuth token exchange failed"
           );
           const errorUrl = new URL(
             parsedState.returnUrl || "http://localhost:4321/connect"
           );
-          errorUrl.searchParams.set("error", tokenData.error || "unknown");
+          const errorCode =
+            tokenData.error === "bad_verification_code"
+              ? "session_expired"
+              : tokenData.error || "unknown";
+          errorUrl.searchParams.set("error", errorCode);
           return reply.redirect(errorUrl.toString());
         }
 
