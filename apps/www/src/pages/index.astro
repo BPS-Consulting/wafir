@@ -1,6 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
 
+const base = import.meta.env.BASE_URL;
+
 const features = [
   {
     icon: "🚀",
@@ -78,7 +80,7 @@ fields:
         </p>
         <div class="flex gap-4 flex-wrap">
           <a
-            href="/installation"
+            href={`${base}/installation`}
             class="inline-flex items-center gap-2 py-3 px-6 rounded-lg font-medium text-base transition-all duration-200 cursor-pointer border-none bg-primary text-white hover:bg-primary-hover hover:-translate-y-0.5"
             >Get Started</a
           >
@@ -170,7 +172,7 @@ fields:
       </div>
       <div class="text-center mt-12">
         <a
-          href="/installation"
+          href={`${base}/installation`}
           class="inline-flex items-center gap-2 py-3 px-6 rounded-lg font-medium text-base transition-all duration-200 cursor-pointer border-none bg-primary text-white hover:bg-primary-hover hover:-translate-y-0.5"
           >View Full Installation Guide</a
         >

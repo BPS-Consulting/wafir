@@ -1,9 +1,11 @@
 ---
+const base = import.meta.env.BASE_URL;
+
 const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/installation", label: "Installation" },
-  { href: "/documentation", label: "Documentation" },
-  { href: "/connect", label: "Connect" },
+  { href: `${base}/`, label: "Home" },
+  { href: `${base}/installation`, label: "Installation" },
+  { href: `${base}/documentation`, label: "Documentation" },
+  { href: `${base}/connect`, label: "Connect" },
 ];
 ---
 
@@ -13,7 +15,7 @@ const navLinks = [
   <nav
     class="max-w-[1200px] mx-auto px-6 flex items-center justify-between h-16"
   >
-    <a href="/" class="flex items-center gap-3 font-bold text-xl">
+    <a href={base} class="flex items-center gap-3 font-bold text-xl">
       <svg
         width="32"
         height="32"
