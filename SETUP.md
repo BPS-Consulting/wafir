@@ -117,9 +117,9 @@ function App() {
 }
 ```
 
-## 8. S3 Setup (Optional)
+## 8. S3 Setup (Required for Screenshots)
 
-For screenshot uploads, configure AWS credentials in `bridge/.env`:
+GitHub rejects large base64-encoded images in issue bodies, so screenshots must be hosted externally. Configure an S3 bucket to enable screenshot uploads:
 
 ```env
 AWS_ACCESS_KEY_ID=your_access_key
@@ -147,6 +147,84 @@ To enable feedback submission to personal GitHub project boards, configure OAuth
 3. Users can then authorize via the Connect page at `/connect`
 
 > **Note:** Organization projects work without OAuth. This is only needed for personal (user-owned) projects.
+
+---
+
+## Self-Hosting the Bridge
+
+You can self-host the Wafir bridge instead of using the hosted version. This gives you complete control over your data and deployment.
+
+### Environment Variables Reference
+
+| Variable                | Required | Description                                                             |
+| ----------------------- | -------- | ----------------------------------------------------------------------- |
+| `GITHUB_APP_ID`         | ✅       | Your GitHub App's ID                                                    |
+| `GITHUB_PRIVATE_KEY`    | ✅       | Private key from your GitHub App (PEM format, newlines escaped as `\n`) |
+| `GITHUB_CLIENT_ID`      | ❌       | OAuth Client ID (for personal project boards)                           |
+| `GITHUB_CLIENT_SECRET`  | ❌       | OAuth Client Secret (for personal project boards)                       |
+| `BASE_URL`              | ❌       | Public URL of your bridge (default: `http://localhost:3000`)            |
+| `AWS_ACCESS_KEY_ID`     | ❌       | AWS credentials for S3 screenshot uploads                               |
+| `AWS_SECRET_ACCESS_KEY` | ❌       | AWS credentials for S3 screenshot uploads                               |
+| `AWS_REGION`            | ❌       | AWS region for S3 bucket                                                |
+| `S3_BUCKET_NAME`        | ❌       | S3 bucket name for screenshot storage                                   |
+
+### Docker Deployment
+
+The bridge includes a Dockerfile and docker-compose configuration for easy deployment.
+
+**Using Docker Compose:**
+
+1. Create a `.env` file with your configuration:
+
+   ```env
+   GITHUB_APP_ID=123456
+   GITHUB_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"
+
+   # Optional
+   AWS_REGION=us-east-1
+   S3_BUCKET_NAME=my-wafir-screenshots
+   ```
+
+2. Run the bridge:
+
+   ```bash
+   cd apps/bridge
+   docker compose up -d
+   ```
+
+**Building Manually:**
+
+```bash
+cd apps/bridge
+docker build -t wafir-bridge .
+docker run -p 3000:3000 --env-file .env wafir-bridge
+```
+
+### Connecting Your Widget
+
+Configure the widget to use your self-hosted bridge:
+
+```html
+<wafir-reporter
+  installationId="YOUR_INSTALLATION_ID"
+  owner="YOUR_GITHUB_USERNAME"
+  repo="YOUR_REPO_NAME"
+  bridgeUrl="https://your-bridge.example.com"
+></wafir-reporter>
+```
+
+Or in React:
+
+```tsx
+<wafir-reporter
+  installationId={12345678}
+  owner="owner"
+  repo="repo"
+  bridgeUrl="https://your-bridge.example.com"
+/>
+```
+
+---
 
 ## Troubleshooting
 
