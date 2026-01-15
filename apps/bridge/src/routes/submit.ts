@@ -1,4 +1,4 @@
-import { FastifyPluginAsync } from "fastify";
+import { FastifyPluginAsync, FastifyRequest } from "fastify";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from "uuid";
 import yaml from "js-yaml";
@@ -10,6 +10,11 @@ interface SubmitBody {
   title: string;
   body: string;
   labels?: string[];
+}
+
+interface ParsedRequestData extends SubmitBody {
+  screenshotBuffer?: Buffer;
+  screenshotMime?: string;
 }
 
 interface WafirConfig {
@@ -39,18 +44,263 @@ const ADD_DRAFT_TO_PROJECT_MUTATION = `
 
 const FIND_PROJECT_QUERY = `
   query FindProject($owner: String!, $number: Int!) {
-    organization(login: $owner) {
-      projectV2(number: $number) {
-        id
-      }
-    }
-    user(login: $owner) {
-      projectV2(number: $number) {
-        id
-      }
-    }
+    organization(login: $owner) { projectV2(number: $number) { id } }
+    user(login: $owner) { projectV2(number: $number) { id } }
   }
 `;
+
+/**
+ * Parses the incoming request, handling both Multipart and JSON bodies.
+ */
+async function parseSubmitRequest(
+  request: FastifyRequest
+): Promise<ParsedRequestData> {
+  const result: Partial<ParsedRequestData> = {};
+
+  if (request.isMultipart()) {
+    const parts = request.parts();
+    for await (const part of parts) {
+      if (part.type === "file" && part.fieldname === "screenshot") {
+        result.screenshotBuffer = await part.toBuffer();
+        result.screenshotMime = part.mimetype;
+      } else if (part.type === "field") {
+        const val = part.value as string;
+        switch (part.fieldname) {
+          case "installationId":
+            result.installationId = Number(val);
+            break;
+          case "owner":
+            result.owner = val;
+            break;
+          case "repo":
+            result.repo = val;
+            break;
+          case "title":
+            result.title = val;
+            break;
+          case "body":
+            result.body = val;
+            break;
+          case "labels":
+            try {
+              result.labels = JSON.parse(val);
+            } catch {
+              result.labels = val.split(",").map((l) => l.trim());
+            }
+            break;
+        }
+      }
+    }
+  } else {
+    Object.assign(result, request.body as SubmitBody);
+  }
+
+  // Validation
+  if (
+    !result.installationId ||
+    !result.owner ||
+    !result.repo ||
+    !result.title ||
+    !result.body
+  ) {
+    throw new Error(
+      "Missing required fields (installationId, owner, repo, title, or body)"
+    );
+  }
+
+  return result as ParsedRequestData;
+}
+
+/**
+ * Fetches and parses the wafir.yaml config from the repo.
+ */
+async function getWafirConfig(
+  octokit: any,
+  owner: string,
+  repo: string,
+  log: any
+): Promise<WafirConfig> {
+  try {
+    const { data: configData } = await octokit.rest.repos.getContent({
+      owner,
+      repo,
+      path: ".github/wafir.yaml",
+    });
+
+    if ("content" in configData) {
+      const yamlContent = Buffer.from(configData.content, "base64").toString(
+        "utf-8"
+      );
+      const config = (yaml.load(yamlContent) as WafirConfig) || {};
+      log.info({ config }, "Loaded wafir.yaml config");
+      return config;
+    }
+  } catch (error: any) {
+    if (error.status === 404) {
+      log.info("No wafir.yaml found, using defaults");
+    } else {
+      log.error({ error: error.message }, "Failed to fetch wafir.yaml");
+    }
+  }
+  return {};
+}
+
+/**
+ * Uploads screenshot to S3 and returns the markdown formatted image string.
+ */
+async function uploadScreenshot(
+  s3Client: S3Client,
+  bucketName: string | undefined,
+  buffer: Buffer,
+  mime: string,
+  region: string | undefined
+): Promise<string> {
+  if (!bucketName) return "";
+
+  const fileKey = `snapshots/${uuidv4()}.png`;
+  await s3Client.send(
+    new PutObjectCommand({
+      Bucket: bucketName,
+      Key: fileKey,
+      Body: buffer,
+      ContentType: mime,
+      ACL: "public-read",
+    })
+  );
+
+  const publicUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${fileKey}`;
+  return `\n\n![Screenshot](${publicUrl})`;
+}
+
+/**
+ * Finds the ProjectV2 Node ID. Handles complexity of checking Org vs User
+ * and falling back to a User Token if necessary.
+ */
+async function findProjectNodeId(
+  appOctokit: any,
+  userOctokit: any | null,
+  owner: string,
+  number: number,
+  log: any
+): Promise<{
+  nodeId: string | undefined;
+  shouldUseUserToken: boolean;
+  error?: string;
+}> {
+  // Try with App Token (Org or User)
+  try {
+    const result = await appOctokit.graphql(FIND_PROJECT_QUERY, {
+      owner,
+      number,
+    });
+    if (result.organization?.projectV2?.id)
+      return {
+        nodeId: result.organization.projectV2.id,
+        shouldUseUserToken: false,
+      };
+    if (result.user?.projectV2?.id)
+      return { nodeId: result.user.projectV2.id, shouldUseUserToken: true }; // User projects usually need user token for mutations
+  } catch (error: any) {
+    log.debug(
+      { error: error.message },
+      "App token project lookup failed, trying user token..."
+    );
+  }
+
+  // Retry with User Token (specifically for User Projects)
+  if (userOctokit) {
+    try {
+      const userResult = await userOctokit.graphql(
+        `query FindUserProject($owner: String!, $number: Int!) {
+          user(login: $owner) { projectV2(number: $number) { id } }
+        }`,
+        { owner, number }
+      );
+      if (userResult.user?.projectV2?.id) {
+        log.info("Found project using User Token");
+        return {
+          nodeId: userResult.user.projectV2.id,
+          shouldUseUserToken: true,
+        };
+      }
+    } catch (error: any) {
+      log.error({ error: error.message }, "User token project lookup failed");
+    }
+  }
+
+  return {
+    nodeId: undefined,
+    shouldUseUserToken: false,
+    error: `Could not find project #${number} for owner ${owner}. Ensure permissions are correct.`,
+  };
+}
+
+/**
+ * Adds an item (Draft or Existing Issue) to a Project V2.
+ */
+async function handleProjectLogic(params: {
+  appOctokit: any;
+  userOctokit: any | null;
+  projectOwner: string;
+  projectNumber: number;
+  title: string;
+  body: string;
+  issueNodeId?: string; // If present, adds existing issue. If null, creates draft.
+  log: any;
+}): Promise<{ added: boolean; error?: string; itemId?: string }> {
+  const {
+    appOctokit,
+    userOctokit,
+    projectOwner,
+    projectNumber,
+    issueNodeId,
+    title,
+    body,
+    log,
+  } = params;
+
+  const {
+    nodeId: projectId,
+    shouldUseUserToken,
+    error: lookupError,
+  } = await findProjectNodeId(
+    appOctokit,
+    userOctokit,
+    projectOwner,
+    projectNumber,
+    log
+  );
+
+  if (!projectId) return { added: false, error: lookupError };
+
+  const client = shouldUseUserToken && userOctokit ? userOctokit : appOctokit;
+
+  try {
+    if (issueNodeId) {
+      // Add existing issue
+      await client.graphql(ADD_TO_PROJECT_MUTATION, {
+        projectId,
+        contentId: issueNodeId,
+      });
+      return { added: true };
+    } else {
+      // Create draft
+      const result: any = await client.graphql(ADD_DRAFT_TO_PROJECT_MUTATION, {
+        projectId,
+        title,
+        body,
+      });
+      return {
+        added: true,
+        itemId: result.addProjectV2DraftIssue.projectItem.id,
+      };
+    }
+  } catch (e: any) {
+    return { added: false, error: e.message };
+  }
+}
+
+// --- Main Route Handler ---
 
 const submitRoute: FastifyPluginAsync = async (
   fastify,
@@ -66,420 +316,136 @@ const submitRoute: FastifyPluginAsync = async (
         tags: ["WAFIR"],
         summary: "Submit Feedback/Issue",
         description:
-          "Creates a new issue in the target GitHub repository. Supports multipart/form-data for screenshots, which are uploaded to SnapStore (S3).",
+          "Creates a new issue or project draft. Supports multipart/form-data.",
       },
     },
     async (request, reply) => {
-      let installationId: number | undefined;
-      let owner: string | undefined;
-      let repo: string | undefined;
-      let title: string | undefined;
-      let body: string | undefined;
-      let labels: string[] | undefined;
-      let screenshotBuffer: Buffer | undefined;
-      let screenshotMime: string | undefined;
-
-      if (request.isMultipart()) {
-        const parts = request.parts();
-        for await (const part of parts) {
-          if (part.type === "file") {
-            if (part.fieldname === "screenshot") {
-              screenshotBuffer = await part.toBuffer();
-              screenshotMime = part.mimetype;
-            }
-          } else {
-            switch (part.fieldname) {
-              case "installationId":
-                installationId = Number(part.value);
-                break;
-              case "owner":
-                owner = String(part.value);
-                break;
-              case "repo":
-                repo = String(part.value);
-                break;
-              case "title":
-                title = String(part.value);
-                break;
-              case "body":
-                body = String(part.value);
-                break;
-              case "labels":
-                try {
-                  labels = JSON.parse(String(part.value));
-                } catch {
-                  labels = String(part.value)
-                    .split(",")
-                    .map((l) => l.trim());
-                }
-                break;
-            }
-          }
-        }
-      } else {
-        const data = request.body as SubmitBody;
-        installationId = data.installationId;
-        owner = data.owner;
-        repo = data.repo;
-        title = data.title;
-        body = data.body;
-        labels = data.labels;
-      }
-
-      if (!installationId || !owner || !repo || !title || !body) {
-        return reply.code(400).send({ error: "Missing required fields" });
-      }
-
       try {
-        const octokit = await fastify.getGitHubClient(installationId);
+        // Parse Input
+        const input = await parseSubmitRequest(request);
+        const { installationId, owner, repo, title, labels } = input;
+        let finalBody = input.body;
 
-        // Fetch wafir.yaml config to get storage settings
-        let wafirConfig: WafirConfig = {};
-        try {
-          const { data: configData } = await octokit.rest.repos.getContent({
-            owner,
-            repo,
-            path: ".github/wafir.yaml",
-          });
+        // Initialize Clients
+        const appOctokit = await fastify.getGitHubClient(installationId);
+        const userToken = await fastify.tokenStore.getUserToken(installationId);
+        const userOctokit = userToken
+          ? fastify.getGitHubClientWithToken(userToken)
+          : null;
 
-          if ("content" in configData) {
-            const yamlContent = Buffer.from(
-              configData.content,
-              "base64"
-            ).toString("utf-8");
-            wafirConfig = (yaml.load(yamlContent) as WafirConfig) || {};
-            request.log.info({ wafirConfig }, "Loaded wafir.yaml config");
-          }
-        } catch (configError: any) {
-          if (configError.status === 404) {
-            request.log.info("No wafir.yaml found, using defaults");
-          } else {
-            request.log.error(
-              { error: configError.message, status: configError.status },
-              "Failed to fetch wafir.yaml"
+        // Load Config
+        const config = await getWafirConfig(
+          appOctokit,
+          owner,
+          repo,
+          request.log
+        );
+        const storageType = config.storage?.type || "issue";
+        const projectNumber = config.storage?.projectNumber;
+        const projectOwner = config.storage?.owner || owner;
+
+        // Handle S3 Upload
+        if (input.screenshotBuffer && input.screenshotMime) {
+          try {
+            const imageMd = await uploadScreenshot(
+              s3Client,
+              bucketName,
+              input.screenshotBuffer,
+              input.screenshotMime,
+              process.env.AWS_REGION
+            );
+            finalBody += imageMd;
+          } catch (e) {
+            request.log.warn(
+              "Failed to upload screenshot, continuing without it."
             );
           }
         }
 
-        const storageType = wafirConfig.storage?.type || "issue";
-        const projectNumber = wafirConfig.storage?.projectNumber;
-        const projectOwner = wafirConfig.storage?.owner || owner;
+        // Execute Storage Logic
+        let issueData = {
+          number: undefined as number | undefined,
+          url: undefined as string | undefined,
+          nodeId: undefined as string | undefined,
+        };
+        let projectResult: {
+          added: boolean;
+          error?: string;
+        } = {
+          added: false,
+          error: undefined as string | undefined,
+        };
 
-        request.log.info(
-          { storageType, projectNumber, projectOwner },
-          "Storage settings"
-        );
-
-        let finalBody = body;
-
-        // Upload to S3 if screenshot exists
-        if (screenshotBuffer && screenshotMime && bucketName) {
-          const fileKey = `snapshots/${uuidv4()}.png`;
-          await s3Client.send(
-            new PutObjectCommand({
-              Bucket: bucketName,
-              Key: fileKey,
-              Body: screenshotBuffer,
-              ContentType: screenshotMime,
-              ACL: "public-read",
-            })
-          );
-
-          const publicUrl = `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileKey}`;
-          finalBody += `\n\n![Screenshot](${publicUrl})`;
-        } else if (screenshotBuffer && !bucketName) {
-          request.log.warn(
-            "S3_BUCKET_NAME not set, skipping screenshot upload"
-          );
-        }
-
-        let issueNodeId: string | undefined;
-        let issueUrl: string | undefined;
-        let issueNumber: number | undefined;
-
-        // Create issue if storage type is 'issue' or 'both'
+        // Create Issue (if type is issue or both)
         if (storageType === "issue" || storageType === "both") {
           request.log.info("Creating GitHub issue...");
-          const issue = await octokit.rest.issues.create({
+          const issue = await appOctokit.rest.issues.create({
             owner,
             repo,
             title,
             body: finalBody,
             labels: labels || ["wafir-feedback"],
           });
-
-          issueNodeId = issue.data.node_id;
-          issueUrl = issue.data.html_url;
-          issueNumber = issue.data.number;
-          request.log.info(
-            { issueNumber, issueUrl, issueNodeId },
-            "Created issue"
-          );
+          issueData = {
+            number: issue.data.number,
+            url: issue.data.html_url,
+            nodeId: issue.data.node_id,
+          };
         }
 
-        let projectAdded = false;
-        let projectError: string | undefined;
-        let draftItemId: string | undefined;
+        // Handle Project (Draft or Add Issue)
+        if (
+          projectNumber &&
+          (storageType === "project" || storageType === "both")
+        ) {
+          // If "project" -> Create Draft (pass null nodeId).
+          // If "both" -> Add existing issue (pass issueData.nodeId).
+          const targetNodeId =
+            storageType === "both" ? issueData.nodeId : undefined;
 
-        // Handle "project" storage type - create draft directly in project
-        if (storageType === "project" && projectNumber) {
-          request.log.info(
-            { storageType, projectNumber },
-            "Will create draft in project"
-          );
+          projectResult = await handleProjectLogic({
+            appOctokit,
+            userOctokit,
+            projectOwner,
+            projectNumber,
+            title,
+            body: finalBody,
+            issueNodeId: targetNodeId,
+            log: request.log,
+          });
 
-          try {
-            let projectNodeId: string | undefined;
-            let useUserToken = false;
-            let userOctokit: ReturnType<
-              typeof fastify.getGitHubClientWithToken
-            > | null = null;
-
-            const userToken =
-              await fastify.tokenStore.getUserToken(installationId);
-            if (userToken) {
-              userOctokit = fastify.getGitHubClientWithToken(userToken);
-            }
-
-            try {
-              const projectResult = await octokit.graphql<{
-                organization: { projectV2: { id: string } | null } | null;
-                user: { projectV2: { id: string } | null } | null;
-              }>(FIND_PROJECT_QUERY, {
-                owner: projectOwner,
-                number: projectNumber,
-              });
-
-              if (projectResult.organization?.projectV2?.id) {
-                projectNodeId = projectResult.organization.projectV2.id;
-                useUserToken = false;
-              } else if (projectResult.user?.projectV2?.id) {
-                projectNodeId = projectResult.user.projectV2.id;
-                useUserToken = true;
-              }
-            } catch (error: any) {
-              request.log.error(
-                { error: error.message },
-                "Failed to find project via GraphQL"
-              );
-
-              if (userOctokit) {
-                try {
-                  const userResult = await userOctokit.graphql<{
-                    user: { projectV2: { id: string } | null } | null;
-                  }>(
-                    `query FindUserProject($owner: String!, $number: Int!) {
-                      user(login: $owner) {
-                        projectV2(number: $number) { id }
-                      }
-                    }`,
-                    { owner: projectOwner, number: projectNumber }
-                  );
-                  projectNodeId = userResult.user?.projectV2?.id;
-                  useUserToken = true;
-                } catch (userError: any) {
-                  request.log.error(
-                    { error: userError.message },
-                    "User token project lookup also failed"
-                  );
-                }
-              }
-            }
-
-            if (projectNodeId) {
-              const clientToUse =
-                useUserToken && userOctokit ? userOctokit : octokit;
-              const draftResult = await clientToUse.graphql<{
-                addProjectV2DraftIssue: { projectItem: { id: string } };
-              }>(ADD_DRAFT_TO_PROJECT_MUTATION, {
-                projectId: projectNodeId,
-                title,
-                body: finalBody,
-              });
-              draftItemId = draftResult.addProjectV2DraftIssue.projectItem.id;
-              projectAdded = true;
-              request.log.info(
-                { draftItemId, projectNumber },
-                "Created draft item in project"
-              );
-            } else {
-              projectError = `Could not find project #${projectNumber} for user ${projectOwner}.`;
-              request.log.error({ projectOwner, projectNumber }, projectError);
-            }
-          } catch (error: any) {
-            projectError = `Failed to create draft in project: ${error.message}`;
-            request.log.error({ error: error.message }, projectError);
-          }
-        }
-
-        // Handle "both" storage type - add existing issue to project
-        if (storageType === "both" && projectNumber && issueNodeId) {
-          request.log.info(
-            { storageType, projectNumber },
-            "Will add issue to project"
-          );
-
-          try {
-            request.log.info(
-              { projectOwner, projectNumber, repo },
-              "Looking up project node ID..."
-            );
-
-            let projectNodeId: string | undefined;
-            let useUserToken = false;
-            let userOctokit: ReturnType<
-              typeof fastify.getGitHubClientWithToken
-            > | null = null;
-
-            const userToken =
-              await fastify.tokenStore.getUserToken(installationId);
-            if (userToken) {
-              userOctokit = fastify.getGitHubClientWithToken(userToken);
-            }
-
-            try {
-              const projectResult = await octokit.graphql<{
-                organization: { projectV2: { id: string } | null } | null;
-                user: { projectV2: { id: string } | null } | null;
-              }>(FIND_PROJECT_QUERY, {
-                owner: projectOwner,
-                number: projectNumber,
-              });
-
-              if (projectResult.organization?.projectV2?.id) {
-                projectNodeId = projectResult.organization.projectV2.id;
-                useUserToken = false;
-              } else if (projectResult.user?.projectV2?.id) {
-                projectNodeId = projectResult.user.projectV2.id;
-                useUserToken = true;
-              }
-
-              request.log.info(
-                { projectResult, projectNodeId, useUserToken },
-                "GraphQL response for project lookup"
-              );
-            } catch (error: any) {
-              request.log.error(
-                { error: error.message, errors: error.errors },
-                "Failed to find project via GraphQL"
-              );
-
-              const isUserProjectError = error.errors?.some(
-                (e: { path?: string[]; type?: string }) =>
-                  e.path?.includes("user") && e.type === "NOT_FOUND"
-              );
-
-              if (isUserProjectError && userOctokit) {
-                request.log.info(
-                  "Retrying with user token for personal project..."
-                );
-                try {
-                  const userResult = await userOctokit.graphql<{
-                    user: { projectV2: { id: string } | null } | null;
-                  }>(
-                    `query FindUserProject($owner: String!, $number: Int!) {
-                      user(login: $owner) {
-                        projectV2(number: $number) { id }
-                      }
-                    }`,
-                    { owner: projectOwner, number: projectNumber }
-                  );
-                  projectNodeId = userResult.user?.projectV2?.id;
-                  useUserToken = true;
-                  request.log.info(
-                    { projectNodeId },
-                    "Found project with user token"
-                  );
-                } catch (userError: any) {
-                  request.log.error(
-                    { error: userError.message },
-                    "User token project lookup also failed"
-                  );
-                }
-              } else if (isUserProjectError) {
-                request.log.warn(
-                  { installationId },
-                  "Personal project access requires OAuth authorization. Visit /connect to authorize."
-                );
-              }
-            }
-
-            if (projectNodeId) {
-              request.log.info(
-                { projectNodeId, issueNodeId, useUserToken },
-                "Adding issue to project..."
-              );
-              try {
-                const clientToUse =
-                  useUserToken && userOctokit ? userOctokit : octokit;
-                const addResult = await clientToUse.graphql(
-                  ADD_TO_PROJECT_MUTATION,
-                  {
-                    projectId: projectNodeId,
-                    contentId: issueNodeId,
-                  }
-                );
-                request.log.info(
-                  { addResult },
-                  `Successfully added issue to project #${projectNumber}`
-                );
-                projectAdded = true;
-              } catch (addError: any) {
-                request.log.error(
-                  { error: addError.message },
-                  "Failed to add issue to project"
-                );
-                projectError = `Failed to add to project: ${addError.message}`;
-              }
-            } else {
-              projectError = `Could not find project #${projectNumber} for user ${projectOwner}. Personal projects require OAuth authorization.`;
-              request.log.error(
-                { projectOwner, projectNumber, repo },
-                projectError
-              );
-            }
-          } catch (projectLookupError: any) {
-            projectError = `Project lookup failed: ${projectLookupError.message}`;
-            request.log.error(
-              {
-                error: projectLookupError.message,
-                errors: projectLookupError.errors,
-                data: projectLookupError.data,
-              },
-              "Failed to add to project"
+          if (projectResult.error) {
+            request.log.warn(
+              { error: projectResult.error },
+              "Project operation failed"
             );
           }
-        } else if (storageType === "both" && !projectNumber) {
-          projectError =
+        } else if (storageType === "project" && !projectNumber) {
+          projectResult.error =
             "Project storage requested but no projectNumber configured";
-          request.log.warn({ storageType, projectNumber }, projectError);
         }
 
-        const response: {
-          success: boolean;
-          issueUrl?: string;
-          issueNumber?: number;
-          projectAdded?: boolean;
-          warning?: string;
-        } = {
+        // Send Response
+        const response = {
           success: true,
-          issueUrl,
-          issueNumber,
+          issueUrl: issueData.url,
+          issueNumber: issueData.number,
+          projectAdded: projectResult.added,
+          warning: projectResult.error,
         };
 
-        if (storageType === "project" || storageType === "both") {
-          response.projectAdded = projectAdded;
-          if (!projectAdded && projectError) {
-            response.warning = projectError;
-          }
-        }
-
-        reply.code(201).send(response);
+        return reply.code(201).send(response);
       } catch (error: any) {
         request.log.error(
           { error: error.message, stack: error.stack },
           "Submit failed"
         );
+
+        // Handle Validation Error specially
+        if (error.message.includes("Missing required fields")) {
+          return reply.code(400).send({ error: error.message });
+        }
+
         return reply
           .code(500)
           .send({ error: "Submission Failed", message: error.message });
