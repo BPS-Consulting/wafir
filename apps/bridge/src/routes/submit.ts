@@ -10,19 +10,29 @@ interface SubmitBody {
   title: string;
   body: string;
   labels?: string[];
+  rating?: number;
+  submissionType?: "issue" | "feedback";
 }
 
 interface ParsedRequestData extends SubmitBody {
   screenshotBuffer?: Buffer;
   screenshotMime?: string;
+  rating?: number;
+  submissionType?: "issue" | "feedback";
 }
 
 interface WafirConfig {
+  mode?: "issue" | "feedback" | "both";
   storage?: {
     type?: "issue" | "project" | "both";
     projectNumber?: number;
     owner?: string;
     repo?: string;
+  };
+  feedbackProject?: {
+    projectNumber?: number;
+    owner?: string;
+    ratingField?: string;
   };
 }
 
@@ -46,6 +56,40 @@ const FIND_PROJECT_QUERY = `
   query FindProject($owner: String!, $number: Int!) {
     organization(login: $owner) { projectV2(number: $number) { id } }
     user(login: $owner) { projectV2(number: $number) { id } }
+  }
+`;
+
+const FIND_PROJECT_FIELDS_QUERY = `
+  query FindProjectFields($projectId: ID!) {
+    node(id: $projectId) {
+      ... on ProjectV2 {
+        fields(first: 50) {
+          nodes {
+            ... on ProjectV2SingleSelectField {
+              id
+              name
+              options {
+                id
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+const UPDATE_PROJECT_FIELD_MUTATION = `
+  mutation UpdateProjectField($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+    updateProjectV2ItemFieldValue(input: {
+      projectId: $projectId
+      itemId: $itemId
+      fieldId: $fieldId
+      value: { singleSelectOptionId: $optionId }
+    }) {
+      projectV2Item { id }
+    }
   }
 `;
 
@@ -87,6 +131,12 @@ async function parseSubmitRequest(
             } catch {
               result.labels = val.split(",").map((l) => l.trim());
             }
+            break;
+          case "rating":
+            result.rating = Number(val);
+            break;
+          case "submissionType":
+            result.submissionType = val as "issue" | "feedback";
             break;
         }
       }
@@ -300,6 +350,65 @@ async function handleProjectLogic(params: {
   }
 }
 
+/**
+ * Sets the Rating field on a project item.
+ * Maps numeric rating (1-5) to emoji star options (⭐, ⭐⭐, etc.)
+ */
+async function setProjectRatingField(params: {
+  octokit: any;
+  projectId: string;
+  itemId: string;
+  ratingFieldName: string;
+  rating: number;
+  log: any;
+}): Promise<{ success: boolean; error?: string }> {
+  const { octokit, projectId, itemId, ratingFieldName, rating, log } = params;
+
+  try {
+    const fieldsResult: any = await octokit.graphql(FIND_PROJECT_FIELDS_QUERY, {
+      projectId,
+    });
+
+    const fields = fieldsResult.node?.fields?.nodes || [];
+    const ratingField = fields.find(
+      (f: any) => f?.name?.toLowerCase() === ratingFieldName.toLowerCase()
+    );
+
+    if (!ratingField) {
+      log.warn(`Rating field "${ratingFieldName}" not found in project`);
+      return { success: false, error: `Field "${ratingFieldName}" not found` };
+    }
+
+    const starEmojis = ["⭐", "⭐⭐", "⭐⭐⭐", "⭐⭐⭐⭐", "⭐⭐⭐⭐⭐"];
+    const targetEmoji = starEmojis[Math.min(Math.max(rating - 1, 0), 4)];
+
+    const matchingOption = ratingField.options?.find(
+      (opt: any) => opt.name === targetEmoji
+    );
+
+    if (!matchingOption) {
+      log.warn(`No matching option for rating ${rating} (${targetEmoji})`);
+      return {
+        success: false,
+        error: `No option matching "${targetEmoji}" in Rating field`,
+      };
+    }
+
+    await octokit.graphql(UPDATE_PROJECT_FIELD_MUTATION, {
+      projectId,
+      itemId,
+      fieldId: ratingField.id,
+      optionId: matchingOption.id,
+    });
+
+    log.info({ rating, itemId }, "Set Rating field on project item");
+    return { success: true };
+  } catch (e: any) {
+    log.error({ error: e.message }, "Failed to set Rating field");
+    return { success: false, error: e.message };
+  }
+}
+
 // --- Main Route Handler ---
 
 const submitRoute: FastifyPluginAsync = async (
@@ -376,8 +485,13 @@ const submitRoute: FastifyPluginAsync = async (
           error: undefined as string | undefined,
         };
 
-        // Create Issue (if type is issue or both)
-        if (storageType === "issue" || storageType === "both") {
+        // Create Issue (if type is issue or both AND this is an issue submission)
+        const isFeedbackSubmission = input.submissionType === "feedback";
+        const shouldCreateIssue =
+          !isFeedbackSubmission &&
+          (storageType === "issue" || storageType === "both");
+
+        if (shouldCreateIssue) {
           request.log.info("Creating GitHub issue...");
           const issue = await appOctokit.rest.issues.create({
             owner,
@@ -394,12 +508,23 @@ const submitRoute: FastifyPluginAsync = async (
         }
 
         // Handle Project (Draft or Add Issue)
-        if (
+        // For feedback submissions, use feedbackProject config if available, otherwise use storage
+        const feedbackProjectNumber =
+          config.feedbackProject?.projectNumber || projectNumber;
+        const feedbackProjectOwner =
+          config.feedbackProject?.owner || projectOwner;
+        const ratingFieldName = config.feedbackProject?.ratingField || "Rating";
+
+        const shouldAddToProject =
           projectNumber &&
-          (storageType === "project" || storageType === "both")
-        ) {
-          // If "project" -> Create Draft (pass null nodeId).
-          // If "both" -> Add existing issue (pass issueData.nodeId).
+          !isFeedbackSubmission &&
+          (storageType === "project" || storageType === "both");
+
+        const shouldCreateFeedbackDraft =
+          isFeedbackSubmission && feedbackProjectNumber;
+
+        if (shouldAddToProject) {
+          // Regular issue/project handling
           const targetNodeId =
             storageType === "both" ? issueData.nodeId : undefined;
 
@@ -420,9 +545,61 @@ const submitRoute: FastifyPluginAsync = async (
               "Project operation failed"
             );
           }
+        } else if (shouldCreateFeedbackDraft) {
+          // Feedback submission - create draft and set Rating
+          request.log.info("Creating feedback draft in project...");
+
+          const {
+            nodeId: feedbackProjId,
+            shouldUseUserToken,
+            error: projLookupError,
+          } = await findProjectNodeId(
+            appOctokit,
+            userOctokit,
+            feedbackProjectOwner,
+            feedbackProjectNumber,
+            request.log
+          );
+
+          if (!feedbackProjId) {
+            projectResult.error =
+              projLookupError || "Could not find feedback project";
+          } else {
+            const client =
+              shouldUseUserToken && userOctokit ? userOctokit : appOctokit;
+
+            projectResult = await handleProjectLogic({
+              appOctokit,
+              userOctokit,
+              projectOwner: feedbackProjectOwner,
+              projectNumber: feedbackProjectNumber,
+              title,
+              body: finalBody,
+              issueNodeId: undefined,
+              log: request.log,
+            });
+
+            if (
+              projectResult.added &&
+              (projectResult as any).itemId &&
+              input.rating
+            ) {
+              await setProjectRatingField({
+                octokit: client,
+                projectId: feedbackProjId,
+                itemId: (projectResult as any).itemId,
+                ratingFieldName,
+                rating: input.rating,
+                log: request.log,
+              });
+            }
+          }
         } else if (storageType === "project" && !projectNumber) {
           projectResult.error =
             "Project storage requested but no projectNumber configured";
+        } else if (isFeedbackSubmission && !feedbackProjectNumber) {
+          projectResult.error =
+            "Feedback submission requires a project configured";
         }
 
         // Send Response

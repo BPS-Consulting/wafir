@@ -54,7 +54,9 @@ export const submitIssue = async (
   body: string,
   labels?: string[],
   screenshot?: Blob,
-  bridgeUrl?: string
+  bridgeUrl?: string,
+  rating?: number,
+  submissionType?: "issue" | "feedback"
 ) => {
   if (bridgeUrl) {
     setBridgeUrl(bridgeUrl);
@@ -71,6 +73,12 @@ export const submitIssue = async (
   }
   if (screenshot) {
     formData.append("screenshot", screenshot, "screenshot.png");
+  }
+  if (rating !== undefined) {
+    formData.append("rating", String(rating));
+  }
+  if (submissionType) {
+    formData.append("submissionType", submissionType);
   }
 
   const response = await getClient().POST("/submit", {

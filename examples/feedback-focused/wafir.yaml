@@ -9,6 +9,12 @@ mode: feedback
 storage:
   type: issue
 
+# Dedicated project for feedback with rating field
+# Follow setup guide to create Rating field with star emoji options (⭐, ⭐⭐, etc.)
+feedbackProject:
+  projectNumber: 1 # Your feedback project number
+  ratingField: "Rating" # Name of the Rating field in your project
+
 # Feedback modal settings
 feedback:
   title: "How are we doing?"

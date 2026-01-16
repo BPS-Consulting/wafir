@@ -69,6 +69,26 @@ export const wafirConfigSchema = {
         },
       },
     },
+    feedbackProject: {
+      type: "object",
+      description:
+        "Dedicated project for feedback submissions with star ratings",
+      properties: {
+        projectNumber: {
+          type: "number",
+          description: "GitHub Project number for feedback",
+        },
+        owner: {
+          type: "string",
+          description: "Project owner (defaults to repo owner)",
+        },
+        ratingField: {
+          type: "string",
+          default: "Rating",
+          description: "Name of the Rating field in the project",
+        },
+      },
+    },
   },
   additionalProperties: false,
 } as const;

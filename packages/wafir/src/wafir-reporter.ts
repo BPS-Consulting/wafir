@@ -225,10 +225,7 @@ export class MyElement extends LitElement {
 
   private async _handleSubmit(event: CustomEvent) {
     const formData = event.detail.formData;
-
-    // We no longer manually append the screenshot to the body here.
-    // The bridge will handle it if we pass the screenshot separately.
-    let finalBody = formData.description || "";
+    const isFeedbackMode = this._activeTab === "feedback";
 
     // Config validation
     if (!this.installationId || !this.owner || !this.repo) {
@@ -240,14 +237,22 @@ export class MyElement extends LitElement {
     }
 
     try {
-      // Map form data to API payload
-      // Assuming formData has 'title', 'description', and 'type' based on default config
-      const title = formData.title || "No Title";
-      const type = formData.type; // "Bug" or "Feature"
-
+      // Map form data based on submission type
+      let title: string;
+      let finalBody: string;
       const labels = ["feedback"];
-      if (type) {
-        labels.push(type.toLowerCase());
+
+      if (isFeedbackMode) {
+        const rating = Number(formData.rating) || 0;
+        title = `Feedback: ${rating} star${rating !== 1 ? "s" : ""}`;
+        finalBody = formData.comment || "";
+      } else {
+        title = formData.title || "No Title";
+        finalBody = formData.description || "";
+        const type = formData.type;
+        if (type) {
+          labels.push(type.toLowerCase());
+        }
       }
 
       const { submitIssue } = await import("./api/client.js");
@@ -257,13 +262,18 @@ export class MyElement extends LitElement {
         ? dataURLtoBlob(screenshotDataUrl)
         : undefined;
 
-      // Append telemetry to body
-      if (this._remoteConfig?.issue?.browserInfo && browserInfo.get()) {
+      // Append telemetry to body (only for issue mode)
+      if (
+        this._activeTab === "issue" &&
+        this._remoteConfig?.issue?.browserInfo &&
+        browserInfo.get()
+      ) {
         const info = browserInfo.get()!;
         finalBody += `\n\n# Browser Info\n| Field | Value |\n| :--- | :--- |\n| URL | ${info.url} |\n| User Agent | \`${info.userAgent}\` |\n| Viewport | ${info.viewportWidth}x${info.viewportHeight} |\n| Language | ${info.language} |`;
       }
 
       if (
+        this._activeTab === "issue" &&
         this._remoteConfig?.issue?.consoleLog &&
         consoleLogs.get().length > 0
       ) {
@@ -273,6 +283,12 @@ export class MyElement extends LitElement {
           .join("\n")}\n\`\`\``;
       }
 
+      // Determine submission type and rating
+      const submissionType: "issue" | "feedback" = this._activeTab;
+      const rating = isFeedbackMode
+        ? Number(formData.rating) || undefined
+        : undefined;
+
       await submitIssue(
         this.installationId,
         this.owner,
@@ -281,7 +297,9 @@ export class MyElement extends LitElement {
         finalBody,
         labels,
         screenshotBlob,
-        this.bridgeUrl || undefined
+        this.bridgeUrl || undefined,
+        rating,
+        submissionType
       );
 
       // Success handling
