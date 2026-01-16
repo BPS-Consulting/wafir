@@ -2,7 +2,7 @@ import createClient from "openapi-fetch";
 import type { paths } from ".";
 
 const DEFAULT_API_URL =
-  "https://ket5zkk30l.execute-api.us-east-1.amazonaws.com";
+  "https://pdi7xmy0di.execute-api.us-east-2.amazonaws.com";
 
 let currentBridgeUrl = import.meta.env.VITE_WAFIR_API_URL || DEFAULT_API_URL;
 
