@@ -10,7 +10,6 @@ mode: issue
 storage:
   type: project # Creates project items only; use "both" for issues + project items
   projectNumber: 1 # Your GitHub Project number (from project URL)
-  projectNumber: 1 # Your GitHub Project number (from project URL)
 
 # Feedback modal settings
 feedback:
