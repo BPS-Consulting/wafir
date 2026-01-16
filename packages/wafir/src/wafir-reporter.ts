@@ -3,6 +3,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import reporterStyles from "./styles/wafir-reporter.css?inline";
 import bugIcon from "./assets/bug.svg?raw";
+import thumbsupIcon from "./assets/thumbsup.svg?raw";
 import "./wafir-form.js";
 import "./wafir-highlighter.js";
 import {
@@ -281,7 +282,7 @@ export class MyElement extends LitElement {
                 part="button"
                 aria-label="${this.tooltipText}"
               >
-                <span>${unsafeHTML(bugIcon)}</span>
+                <span>${unsafeHTML(thumbsupIcon)}</span>
               </button>
               <div class="tooltip">${this.tooltipText}</div>
             </div>
