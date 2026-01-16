@@ -1,6 +1,9 @@
 # WAFIR Configuration Example - Full Featured
 # Demonstrates all available configuration options
 
+# Widget mode - issue reporting (options: issue, feedback, both)
+mode: issue
+
 # Storage settings
 storage:
   type: issue # Options: issue, project, both

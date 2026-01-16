@@ -1,6 +1,9 @@
 # WAFIR Configuration Example - Basic Usage
 # Place this file in .github/wafir.yaml in your repository
 
+# Widget mode - issue reporting
+mode: issue
+
 # Storage settings - where to store feedback
 storage:
   type: issue # Creates GitHub issues

@@ -1,6 +1,9 @@
 # WAFIR Configuration Example - Privacy Focused
 # Minimal data collection for privacy-conscious applications
 
+# Widget mode
+mode: issue
+
 storage:
   type: issue
 

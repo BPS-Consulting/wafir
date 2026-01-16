@@ -1,6 +1,9 @@
 # WAFIR Configuration Example - Feature Requests
 # Optimized for collecting feature ideas and suggestions
 
+# Widget mode
+mode: issue
+
 storage:
   type: issue
 

@@ -2,8 +2,8 @@
 # Collects user satisfaction ratings instead of bug reports
 # Place this file in .github/wafir.yaml in your repository
 
-# Widget mode - feedback only (star rating)
-mode: feedback
+# Widget mode - both issue reporting AND star ratings
+mode: both
 
 # Storage settings (feedback stored as issues with different labels)
 storage:

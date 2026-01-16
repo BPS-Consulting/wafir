@@ -1,6 +1,9 @@
 # WAFIR Configuration Example - Minimal Setup
 # The simplest possible configuration to get started
 
+# Widget mode
+mode: issue
+
 storage:
   type: issue
 
