@@ -52,3 +52,8 @@ fields:
 ```
 
 See [examples/](./examples) for more configuration templates.
+
+## Configuring Your Project
+If you are not currently collecting feedback, you may want to configure your account to track feedback separately from bugs and feature requests.
+
+* Add a `feedback` item type to your account (GitHub > Account > Settings > Planning > Issue Types > Name="Feedback", Description="A comment from a user").
