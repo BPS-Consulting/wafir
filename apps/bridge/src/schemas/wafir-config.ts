@@ -40,6 +40,11 @@ export const wafirConfigSchema = {
         screenshot: { type: "boolean", default: false },
         browserInfo: { type: "boolean", default: false },
         consoleLog: { type: "boolean", default: false },
+        types: {
+          type: "boolean",
+          default: true,
+          description: "Fetch and display issue types from organization",
+        },
         labels: {
           type: "array",
           items: { type: "string" },
@@ -47,6 +52,18 @@ export const wafirConfigSchema = {
         },
       },
       additionalProperties: false,
+    },
+    issueTypes: {
+      type: "array",
+      description: "Available issue types from the organization",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "number" },
+          name: { type: "string" },
+          color: { type: "string" },
+        },
+      },
     },
     fields: {
       type: "array",

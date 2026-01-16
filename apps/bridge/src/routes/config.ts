@@ -62,9 +62,42 @@ const configRoute: FastifyPluginAsync = async (
         const yamlContent = Buffer.from(data.content, "base64").toString(
           "utf-8"
         );
-        const parsedConfig = yaml.load(yamlContent);
+        const parsedConfig = yaml.load(yamlContent) as any;
 
-        return parsedConfig;
+        // Fetch issue types from organization (if enabled, default: true)
+        // Only works for organization repos, not user repos
+        let issueTypes: { id: number; name: string; color: string }[] = [];
+        const shouldFetchTypes = parsedConfig?.issue?.types !== false;
+
+        if (shouldFetchTypes) {
+          try {
+            // Check if owner is an organization
+            const { data: ownerData } = await octokit.rest.users.getByUsername({
+              username: owner,
+            });
+
+            if (ownerData.type === "Organization") {
+              const { data: orgTypes } = await octokit.request(
+                "GET /orgs/{org}/issue-types",
+                { org: owner }
+              );
+              issueTypes = orgTypes.map((t: any) => ({
+                id: t.id,
+                name: t.name,
+                color: t.color,
+              }));
+            }
+          } catch (typeError: any) {
+            request.log.debug(
+              "Could not fetch issue types (org may not support them)"
+            );
+          }
+        }
+
+        return {
+          ...parsedConfig,
+          issueTypes,
+        };
       } catch (error: any) {
         request.log.error(error);
         if (error.status === 404) {

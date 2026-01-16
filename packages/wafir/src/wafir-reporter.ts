@@ -149,6 +149,20 @@ export class MyElement extends LitElement {
             options: field.options,
           }));
 
+          // Add Issue Type select if types are available
+          if (config.issueTypes && config.issueTypes.length > 0) {
+            this.formConfig = [
+              {
+                id: "issueType",
+                label: "Issue Type",
+                type: "select",
+                required: true,
+                options: config.issueTypes.map((t: any) => t.name),
+              },
+              ...this.formConfig,
+            ];
+          }
+
           if (config.issue && config.issue.screenshot) {
             this.formConfig = [
               ...this.formConfig,

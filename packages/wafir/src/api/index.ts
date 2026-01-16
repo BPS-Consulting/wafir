@@ -68,6 +68,8 @@ export interface paths {
                 browserInfo: boolean;
                 /** @default false */
                 consoleLog: boolean;
+                /** @default true */
+                types: boolean;
                 /**
                  * @default [
                  *       "bug"
@@ -75,6 +77,12 @@ export interface paths {
                  */
                 labels: string[];
               };
+              /** Available issue types from the organization */
+              issueTypes?: {
+                id: number;
+                name: string;
+                color: string;
+              }[];
               fields?: {
                 name: string;
                 label: string;
