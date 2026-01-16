@@ -54,6 +54,10 @@ fields:
 See [examples/](./examples) for more configuration templates.
 
 ## Configuring Your Project
-If you are not currently collecting feedback, you may want to configure your account to track feedback separately from bugs and feature requests.
+You may want to configure your GitHub account to more effectively track feedback and keep it separate from bugs and feature requests.
 
 * Add a `feedback` item type to your account (GitHub > Account > Settings > Planning > Issue Types > Name="Feedback", Description="A comment from a user").
+* Set up a dedicated `Feedback` project board (GitHub > Projects > New Project > From Template > Bug Triage).
+* Edit your project's `Status` field to add a `Review` status (GitHub > Project > Settings > Custom Fields > Status > Options).
+* Edit the default workflow to make the initial status of new feedback items `Review` (GitHub > Project > Workflows > Item added to project > Edit).
+* Add a `Rating` field to your project (Type="Single select", Options=⭐,⭐⭐,etc.).  Typical ratings for customer satisfaction are 1-5 stars (Very Unsatisfied to Very Satisfied).  Typical ratings for Customer Effort Score are 1-5 stars (Very Difficult to Very Easy).
