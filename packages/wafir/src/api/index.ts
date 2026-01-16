@@ -4,152 +4,158 @@
  */
 
 export interface paths {
-    "/config": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get WAFIR Configuration
-         * @description Fetches and parses .github/wafir.yaml from the target repository.
-         */
-        get: {
-            parameters: {
-                query: {
-                    installationId: number;
-                    owner: string;
-                    repo: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            storage?: {
-                                /**
-                                 * @default issue
-                                 * @enum {string}
-                                 */
-                                type: "issue" | "project" | "both";
-                                owner?: string;
-                                repo?: string;
-                                projectId?: number;
-                            };
-                            feedback?: {
-                                /** @default Feedback */
-                                title: string;
-                                /**
-                                 * @default [
-                                 *       "feedback"
-                                 *     ]
-                                 */
-                                labels: string[];
-                            };
-                            issue?: {
-                                /** @default false */
-                                screenshot: boolean;
-                                /** @default false */
-                                browserInfo: boolean;
-                                /** @default false */
-                                consoleLog: boolean;
-                                /**
-                                 * @default [
-                                 *       "bug"
-                                 *     ]
-                                 */
-                                labels: string[];
-                            };
-                            fields?: {
-                                name: string;
-                                label: string;
-                                /** @enum {string} */
-                                type: "text" | "textarea" | "select" | "checkbox";
-                                /** @default false */
-                                required: boolean;
-                                /** @description Options for select type */
-                                options?: string[];
-                            }[];
-                        };
-                    };
-                };
-                /** @description Default Response */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error?: string;
-                            message?: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  "/config": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/submit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    /**
+     * Get WAFIR Configuration
+     * @description Fetches and parses .github/wafir.yaml from the target repository.
+     */
+    get: {
+      parameters: {
+        query: {
+          installationId: number;
+          owner: string;
+          repo: string;
         };
-        get?: never;
-        put?: never;
-        /**
-         * Submit Feedback/Issue
-         * @description Creates a new issue in the target GitHub repository. Supports multipart/form-data for screenshots.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              /**
+               * Widget mode: 'issue' for bug reports, 'feedback' for ratings, 'both' for both options
+               * @default issue
+               * @enum {string}
+               */
+              mode?: "issue" | "feedback" | "both";
+              storage?: {
+                /**
+                 * @default issue
+                 * @enum {string}
+                 */
+                type: "issue" | "project" | "both";
+                owner?: string;
+                repo?: string;
+                projectId?: number;
+              };
+              feedback?: {
+                /** @default Feedback */
+                title: string;
+                /**
+                 * @default [
+                 *       "feedback"
+                 *     ]
+                 */
+                labels: string[];
+              };
+              issue?: {
+                /** @default false */
+                screenshot: boolean;
+                /** @default false */
+                browserInfo: boolean;
+                /** @default false */
+                consoleLog: boolean;
+                /**
+                 * @default [
+                 *       "bug"
+                 *     ]
+                 */
+                labels: string[];
+              };
+              fields?: {
+                name: string;
+                label: string;
+                /** @enum {string} */
+                type: "text" | "textarea" | "select" | "checkbox";
+                /** @default false */
+                required: boolean;
+                /** @description Options for select type */
+                options?: string[];
+              }[];
             };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
+          };
         };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+        /** @description Default Response */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error?: string;
+              message?: string;
+            };
+          };
+        };
+      };
     };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/submit": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Submit Feedback/Issue
+     * @description Creates a new issue in the target GitHub repository. Supports multipart/form-data for screenshots.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: never;
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+  schemas: never;
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;

@@ -2,6 +2,13 @@ export const wafirConfigSchema = {
   $id: "wafirConfig",
   type: "object",
   properties: {
+    mode: {
+      type: "string",
+      enum: ["issue", "feedback", "both"],
+      default: "issue",
+      description:
+        "Widget mode: 'issue' for bug reports, 'feedback' for ratings, 'both' for both options",
+    },
     storage: {
       type: "object",
       properties: {

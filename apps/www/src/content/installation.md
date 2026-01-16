@@ -117,6 +117,8 @@ Create a `.github/wafir.yaml` file in your repository to configure the widget:
 
 ```yaml
 # .github/wafir.yaml
+mode: issue # Options: issue, feedback, both
+
 storage:
   type: issue # Options: issue, project, both
 

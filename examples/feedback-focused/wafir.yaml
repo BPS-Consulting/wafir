@@ -1,0 +1,27 @@
+# WAFIR Configuration Example - Feedback Only
+# Collects user satisfaction ratings instead of bug reports
+# Place this file in .github/wafir.yaml in your repository
+
+# Widget mode - feedback only (star rating)
+mode: feedback
+
+# Storage settings (feedback stored as issues with different labels)
+storage:
+  type: issue
+
+# Feedback modal settings
+feedback:
+  title: "How are we doing?"
+  labels: ["feedback", "user-satisfaction"]
+
+# Form fields - these will be shown after the star rating
+fields:
+  - name: title
+    label: "What's on your mind?"
+    type: text
+    required: false
+
+  - name: comment
+    label: "Tell us more (optional)"
+    type: textarea
+    required: false

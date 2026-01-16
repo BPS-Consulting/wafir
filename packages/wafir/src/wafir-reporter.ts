@@ -57,6 +57,12 @@ export class MyElement extends LitElement {
   @state()
   private _remoteConfig: any = null;
 
+  @state()
+  private _widgetMode: "issue" | "feedback" | "both" = "issue";
+
+  @state()
+  private _activeTab: "issue" | "feedback" = "issue";
+
   @property({ type: Array })
   formConfig: FieldConfig[] = [
     {
@@ -128,34 +134,38 @@ export class MyElement extends LitElement {
         this.bridgeUrl || undefined
       );
 
-      if (config && config.fields) {
+      if (config) {
         this._remoteConfig = config;
-        // Map bridge fields to widget fields (name -> id)
-        this.formConfig = config.fields.map((field: any) => ({
-          id: field.name,
-          label: field.label,
-          type: field.type,
-          required: field.required,
-          options: field.options,
-        }));
+        this._widgetMode = config.mode || "issue";
+        this._activeTab =
+          this._widgetMode === "feedback" ? "feedback" : "issue";
 
-        if (config.issue && config.issue.screenshot) {
-          this.formConfig = [
-            ...this.formConfig,
-            { id: "screenshot", label: "Screenshot", type: "screenshot" },
-          ];
+        if (config.fields) {
+          this.formConfig = config.fields.map((field: any) => ({
+            id: field.name,
+            label: field.label,
+            type: field.type,
+            required: field.required,
+            options: field.options,
+          }));
+
+          if (config.issue && config.issue.screenshot) {
+            this.formConfig = [
+              ...this.formConfig,
+              { id: "screenshot", label: "Screenshot", type: "screenshot" },
+            ];
+          }
         }
-      }
 
-      if (config && config.feedback && config.feedback.title) {
-        this.modalTitle = config.feedback.title;
+        if (config.feedback && config.feedback.title) {
+          this.modalTitle = config.feedback.title;
+        }
       }
     } catch (error) {
       console.warn(
         "Wafir: Failed to fetch remote config, using defaults",
         error
       );
-      // We keep the default formConfig
     } finally {
       this.isConfigLoading = false;
     }
@@ -164,6 +174,34 @@ export class MyElement extends LitElement {
   private _closeModal() {
     this.isModalOpen = false;
     resetState();
+  }
+
+  private _getFeedbackFormConfig(): FieldConfig[] {
+    return [
+      {
+        id: "rating",
+        label: "How would you rate your experience?",
+        type: "rating",
+        required: true,
+      },
+      {
+        id: "comment",
+        label: "Additional comments (optional)",
+        type: "textarea",
+        required: false,
+      },
+    ];
+  }
+
+  private _getActiveFormConfig(): FieldConfig[] {
+    if (this._activeTab === "feedback") {
+      return this._getFeedbackFormConfig();
+    }
+    return this.formConfig;
+  }
+
+  private _switchTab(tab: "issue" | "feedback") {
+    this._activeTab = tab;
   }
 
   // Effect to reopen modal after selection
@@ -329,12 +367,34 @@ export class MyElement extends LitElement {
                       Loading configuration...
                     </div>`
                   : html`
+                      ${this._widgetMode === "both"
+                        ? html`
+                            <div class="mode-tabs">
+                              <button
+                                class="mode-tab ${this._activeTab === "issue"
+                                  ? "active"
+                                  : ""}"
+                                @click="${() => this._switchTab("issue")}"
+                              >
+                                ${unsafeHTML(bugIcon)} Report Issue
+                              </button>
+                              <button
+                                class="mode-tab ${this._activeTab === "feedback"
+                                  ? "active"
+                                  : ""}"
+                                @click="${() => this._switchTab("feedback")}"
+                              >
+                                ${unsafeHTML(thumbsupIcon)} Give Feedback
+                              </button>
+                            </div>
+                          `
+                        : ""}
                       <wafir-form
-                        .fields="${this.formConfig}"
-                        .showBrowserInfo="${!!this._remoteConfig?.issue
-                          ?.browserInfo}"
-                        .showConsoleLog="${!!this._remoteConfig?.issue
-                          ?.consoleLog}"
+                        .fields="${this._getActiveFormConfig()}"
+                        .showBrowserInfo="${this._activeTab === "issue" &&
+                        !!this._remoteConfig?.issue?.browserInfo}"
+                        .showConsoleLog="${this._activeTab === "issue" &&
+                        !!this._remoteConfig?.issue?.consoleLog}"
                         @form-submit="${this._handleSubmit}"
                       ></wafir-form>
                     `}

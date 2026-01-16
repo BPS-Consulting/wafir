@@ -212,6 +212,46 @@ issue:
 
 ---
 
+## Mode Configuration
+
+Choose what type of input the widget collects.
+
+### Widget Modes
+
+| Mode       | Description                                                          |
+| ---------- | -------------------------------------------------------------------- |
+| `issue`    | Bug reporting form with title, description, and type (default)       |
+| `feedback` | Star rating with optional comments for user satisfaction             |
+| `both`     | Tabbed interface allowing users to choose between issue and feedback |
+
+### Configuration
+
+```yaml
+# .github/wafir.yaml
+mode: issue # Options: issue, feedback, both
+```
+
+### When to Use Each Mode
+
+- **`issue`** - Best for bug tracking, feature requests, and detailed reports
+- **`feedback`** - Best for customer satisfaction, NPS surveys, quick sentiment
+- **`both`** - When you want users to choose what kind of input to provide
+
+### Feedback Mode Example
+
+```yaml
+# .github/wafir.yaml
+mode: feedback
+
+feedback:
+  title: "How are we doing?"
+  labels: ["feedback", "user-satisfaction"]
+```
+
+When `mode: feedback` is set, users see a 5-star rating component followed by optional comment fields.
+
+---
+
 ## Storage Options
 
 Choose where feedback is stored in your GitHub repository.
@@ -269,3 +309,4 @@ We provide ready-to-use configuration templates for common use cases:
 - **[Full Featured](https://github.com/BPS-Consulting/wafir/tree/main/examples/full-featured)** — All options demonstrated
 - **[Privacy Focused](https://github.com/BPS-Consulting/wafir/tree/main/examples/privacy-focused)** — No automatic data collection
 - **[Feature Requests](https://github.com/BPS-Consulting/wafir/tree/main/examples/feature-requests)** — Optimized for ideas
+- **[Feedback Focused](https://github.com/BPS-Consulting/wafir/tree/main/examples/feedback-focused)** — Star rating and satisfaction surveys

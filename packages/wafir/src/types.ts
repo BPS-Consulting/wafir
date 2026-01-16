@@ -5,7 +5,8 @@ export type FieldType =
   | "select"
   | "checkbox"
   | "screenshot"
-  | "switch";
+  | "switch"
+  | "rating";
 
 export interface FieldConfig {
   id: string; // The key for the data (e.g., 'description', 'browser_info')

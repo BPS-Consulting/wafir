@@ -183,3 +183,43 @@ button[part="button"] svg {
   background: #f3f4f6;
   color: var(--wafir-text-color, #111827);
 }
+
+/* Mode tabs */
+.mode-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--wafir-border-color, #e5e7eb);
+}
+
+.mode-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--wafir-text-secondary, #6b7280);
+  transition: all 0.2s ease;
+}
+
+.mode-tab:hover {
+  background: var(--wafir-form-bg-tertiary, #f9fafb);
+  color: var(--wafir-text-color, #111827);
+}
+
+.mode-tab.active {
+  color: var(--wafir-primary-color, #2563eb);
+  border-bottom-color: var(--wafir-primary-color, #2563eb);
+}
+
+.mode-tab svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+}

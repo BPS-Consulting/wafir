@@ -1,5 +1,6 @@
 import { LitElement, html, unsafeCSS } from "lit";
 import formStyles from "./styles/wafir-form.css?inline";
+import "./star-rating.js";
 import { customElement, property } from "lit/decorators.js";
 import { StoreController } from "@nanostores/lit";
 import {
@@ -221,6 +222,16 @@ export class WafirForm extends LitElement {
                   </button>
                 `}
           </div>
+        `;
+
+      case "rating":
+        return html`
+          <wafir-star-rating
+            .value="${Number(value) || 0}"
+            @rating-change="${(e: CustomEvent) => {
+              setFormData({ ...formData.get(), [field.id]: e.detail.value });
+            }}"
+          ></wafir-star-rating>
         `;
 
       case "text":
