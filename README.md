@@ -1,6 +1,6 @@
-# Wafir
+# Wafir - The Web App Feedback and Issue Reporter
 
-Wafir is a powerful, lightweight feedback and bug reporting widget designed to bridge the gap between user feedback and your development workflow. It captures high-fidelity screenshots, collects console logs, and gathers essential browser telemetry to make debugging effortless.
+Wafir is a lightweight feedback and issue reporting tool that seamlessly connects users and testers to your GitHub-based development workflow. It captures user input, screenshots, console logs, and essential browser telemetry to accelerate debugging.  See details at https://bps-consulting.github.io/wafir/.
 
 ## 🚀 Tech Stack
 
