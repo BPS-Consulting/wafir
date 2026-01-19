@@ -3,7 +3,7 @@
 
 # Storage settings
 storage:
-  type: issue # Options: issue, project, both
+  type: both # Options: issue, project, both
   # owner: optional-other-owner
   # repo: optional-other-repo
 
