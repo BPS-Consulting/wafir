@@ -1,7 +1,7 @@
 # Quickstart Guide
 Start collecting feedback with Wafir in minutes!
 
-* Get the Wafir GitHub App from [GitHub](https://github.com/apps/wafir-web-feedback-widget) and install it on your GitHub account. Make sure to note the *Installation ID*.
+* Get the Wafir GitHub App from [GitHub](https://github.com/apps/wafir-web-feedback-widget) and install it on your GitHub account. Make sure to note the *Installation ID*, which is the number at the end of the URL after you install the app.
 * Create a GitHub project on your GitHub account to receive feedback and bug reports.  Create any custom fields you want to show up in the widget.
 * Optionally create a `.github/wafir.yaml` configuration file in the target repository to customize the feedback form.
 * Get the Wafir widget from our [GitHub page](https://github.com/BPS-Consulting/wafir) or build it from the source here. Add the widget to your web application and include your GitHub details.
