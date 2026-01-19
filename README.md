@@ -1,6 +1,18 @@
 # Wafir - The Web App Feedback and Issue Reporter
 
-Wafir is a lightweight feedback and issue reporting tool that seamlessly connects users and testers to your GitHub-based development workflow. It captures user input, screenshots, console logs, and essential browser telemetry to accelerate debugging.  See details at https://bps-consulting.github.io/wafir/.
+Wafir is a lightweight feedback and issue reporting tool that seamlessly connects input from users and testers to your GitHub-based development workflow. It captures user input, screenshots, console logs, and essential browser telemetry to accelerate debugging.  See details at https://bps-consulting.github.io/wafir/.
+
+## What's in this Repo
+This repository contains everything needed to build, use, and support Wafir.  You don't need to clone the repo to use Wafir: simply get the widget code and add it to your web application as described in the [Quickstart Guide](QUICKSTART.md).
+
+The repo includes source code for the following:
+- **Wafir Widget** (packages/wafir): A web component built with Lit that you can embed in any web application to collect user feedback.
+- **Bridge Service** (apps/bridge): A Fastify-based backend service that handles feedback submissions, file uploads, and GitHub integration.  See the [wafir-infrastructure](https://github.com/bps-consulting/wafir-infrastructure) repo for deployment and infrastructure details.
+- **Test Web Page** (packages/wafir/index.html): A simple HTML page to test the Wafir widget in isolation.
+- **React Consumer** (internal/react-consumer): A sample React application demonstrating how to integrate the Wafir widget. {TODO: Update or remove if needed}
+- **Framework Wrappers** (packages/react, packages/vue): Sample React and Vue wrappers demonstrating how to integrate the Wafir widget into popular frameworks.
+- **Public Documentation Site** (apps/www): An Astro-based website for public documentation deployed on [GitHub Pages](https://bps-consulting.github.io/wafir/).
+- **Configuration Examples** (examples/): Sample YAML files showing how to configure the Wafir widget.
 
 ## 🚀 Tech Stack
 
