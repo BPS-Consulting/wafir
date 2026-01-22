@@ -76,7 +76,7 @@ export class WafirForm extends LitElement {
         detail: { formData: formData.get() },
         bubbles: true,
         composed: true,
-      })
+      }),
     );
   }
 
@@ -106,7 +106,7 @@ export class WafirForm extends LitElement {
           >
             <option value="" disabled selected>Select an option</option>
             ${field.options?.map(
-              (opt) => html`<option value="${opt}">${opt}</option>`
+              (opt) => html`<option value="${opt}">${opt}</option>`,
             )}
           </select>
         `;
@@ -126,7 +126,7 @@ export class WafirForm extends LitElement {
                 >
                   ${opt}
                 </button>
-              `
+              `,
             )}
           </div>
         `;
@@ -228,6 +228,7 @@ export class WafirForm extends LitElement {
         return html`
           <wafir-star-rating
             .value="${Number(value) || 0}"
+            .labels="${field.ratingLabels || []}"
             @rating-change="${(e: CustomEvent) => {
               setFormData({ ...formData.get(), [field.id]: e.detail.value });
             }}"
@@ -312,7 +313,7 @@ export class WafirForm extends LitElement {
                         [${log.timestamp.split("T")[1].split(".")[0]}]
                         ${log.message}
                       </div>
-                    `
+                    `,
                   )}
                 </div>
               </div>

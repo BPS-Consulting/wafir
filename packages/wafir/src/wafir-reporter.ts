@@ -4,6 +4,7 @@ import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import reporterStyles from "./styles/wafir-reporter.css?inline";
 import bugIcon from "./assets/bug.svg?raw";
 import thumbsupIcon from "./assets/thumbsup.svg?raw";
+import lightbulbIcon from "./assets/lightbulb.svg?raw";
 import "./wafir-form.js";
 import "./wafir-highlighter.js";
 import {
@@ -21,8 +22,20 @@ import type { FieldConfig } from "./types.js";
 import { dataURLtoBlob } from "./utils/file.js";
 import type { ConsoleLog } from "./utils/telemetry.js";
 import { getBrowserInfo, consoleInterceptor } from "./utils/telemetry.js";
+import {
+  type TabType,
+  type TabConfigs,
+  DEFAULT_TABS,
+  getDefaultTabConfigs,
+} from "./default-config.js";
 
 type WidgetPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
+
+const TAB_ICONS: Record<string, string> = {
+  thumbsup: thumbsupIcon,
+  lightbulb: lightbulbIcon,
+  bug: bugIcon,
+};
 
 @customElement("wafir-reporter")
 export class MyElement extends LitElement {
@@ -37,6 +50,9 @@ export class MyElement extends LitElement {
 
   @property({ type: String })
   tooltipText = "Open Issue Reporter";
+
+  @property({ type: Object })
+  config: Partial<TabConfigs> = {};
 
   private _isSelectingController = new StoreController(this, isSelecting);
   private _isCapturingController = new StoreController(this, isCapturing);
@@ -58,38 +74,36 @@ export class MyElement extends LitElement {
   private _remoteConfig: any = null;
 
   @state()
-  private _widgetMode: "issue" | "feedback" | "both" = "issue";
+  private _tabConfigs: TabConfigs = getDefaultTabConfigs();
 
   @state()
-  private _activeTab: "issue" | "feedback" = "issue";
+  private _activeTab: TabType = "feedback";
 
-  @property({ type: Array })
-  formConfig: FieldConfig[] = [
-    { id: "title", label: "Title", type: "text", required: true },
-    {
-      id: "description",
-      label: "Description",
-      type: "textarea",
-      required: true,
-    },
-    {
-      id: "type",
-      label: "Type",
-      type: "select",
-      options: ["Bug", "Feature"],
-      required: true,
-    },
-  ];
+  @state()
+  private _availableTabs = DEFAULT_TABS;
 
   static styles = [unsafeCSS(reporterStyles)];
 
   connectedCallback() {
     super.connectedCallback();
     this._checkCustomTrigger();
+    this._mergeInlineConfig();
   }
 
   private _checkCustomTrigger() {
     this._hasCustomTrigger = this.querySelector('[slot="trigger"]') !== null;
+  }
+
+  private _mergeInlineConfig() {
+    if (this.config && Object.keys(this.config).length > 0) {
+      const merged = { ...this._tabConfigs };
+      for (const key of Object.keys(this.config) as TabType[]) {
+        if (this.config[key]) {
+          merged[key] = this.config[key]!;
+        }
+      }
+      this._tabConfigs = merged;
+    }
   }
 
   public openModal() {
@@ -130,39 +144,40 @@ export class MyElement extends LitElement {
 
       if (config) {
         this._remoteConfig = config;
-        this._widgetMode = config.mode || "issue";
-        this._activeTab =
-          this._widgetMode === "feedback" ? "feedback" : "issue";
 
         if (config.fields) {
-          this.formConfig = config.fields.map((field: any) => ({
-            id: field.name,
-            label: field.label,
-            type: field.type,
-            required: field.required,
-            options: field.options,
-          }));
+          const issueFields: FieldConfig[] = config.fields.map(
+            (field: any) => ({
+              id: field.name,
+              label: field.label,
+              type: field.type,
+              required: field.required,
+              options: field.options,
+            }),
+          );
 
-          // Add Issue Type select if types are available
           if (config.issueTypes && config.issueTypes.length > 0) {
-            this.formConfig = [
-              {
-                id: "issueType",
-                label: "Issue Type",
-                type: "select",
-                required: true,
-                options: config.issueTypes.map((t: any) => t.name),
-              },
-              ...this.formConfig,
-            ];
+            issueFields.unshift({
+              id: "issueType",
+              label: "Issue Type",
+              type: "select",
+              required: true,
+              options: config.issueTypes.map((t: any) => t.name),
+            });
           }
 
           if (config.issue && config.issue.screenshot) {
-            this.formConfig = [
-              ...this.formConfig,
-              { id: "screenshot", label: "Screenshot", type: "screenshot" },
-            ];
+            issueFields.push({
+              id: "screenshot",
+              label: "Screenshot",
+              type: "screenshot",
+            });
           }
+
+          this._tabConfigs = {
+            ...this._tabConfigs,
+            issue: issueFields,
+          };
         }
 
         if (config.feedback && config.feedback.title) {
@@ -174,7 +189,6 @@ export class MyElement extends LitElement {
         "Wafir: Failed to fetch remote config, using defaults",
         error,
       );
-      this._widgetMode = "both";
     } finally {
       this.isConfigLoading = false;
     }
@@ -185,35 +199,14 @@ export class MyElement extends LitElement {
     resetState();
   }
 
-  private _getFeedbackFormConfig(): FieldConfig[] {
-    return [
-      {
-        id: "rating",
-        label: "How would you rate your experience?",
-        type: "rating",
-        required: true,
-      },
-      {
-        id: "comment",
-        label: "Additional comments (optional)",
-        type: "textarea",
-        required: false,
-      },
-    ];
-  }
-
   private _getActiveFormConfig(): FieldConfig[] {
-    if (this._activeTab === "feedback") {
-      return this._getFeedbackFormConfig();
-    }
-    return this.formConfig;
+    return this._tabConfigs[this._activeTab] || [];
   }
 
-  private _switchTab(tab: "issue" | "feedback") {
+  private _switchTab(tab: TabType) {
     this._activeTab = tab;
   }
 
-  // Effect to reopen modal after selection
   updated(changedProperties: Map<string, any>) {
     if (changedProperties.has("_isSelectingController")) {
       // Logic handled by the fact that we check isSelecting in render
@@ -234,9 +227,7 @@ export class MyElement extends LitElement {
 
   private async _handleSubmit(event: CustomEvent) {
     const formData = event.detail.formData;
-    const isFeedbackMode = this._activeTab === "feedback";
 
-    // Config validation
     if (!this.installationId || !this.owner || !this.repo) {
       console.error(
         "Wafir: Missing configuration (installationId, owner, or repo)",
@@ -246,15 +237,24 @@ export class MyElement extends LitElement {
     }
 
     try {
-      // Map form data based on submission type
       let title: string;
       let finalBody: string;
-      const labels = ["feedback"];
+      const labels: string[] = [this._activeTab];
 
-      if (isFeedbackMode) {
+      if (this._activeTab === "feedback") {
         const rating = Number(formData.rating) || 0;
-        title = `Feedback: ${rating} star${rating !== 1 ? "s" : ""}`;
-        finalBody = formData.comment || "";
+        const hasRatingField = this._tabConfigs.feedback.some(
+          (f) => f.id === "rating",
+        );
+        if (hasRatingField && rating > 0) {
+          title = formData.title || "Feedback";
+        } else {
+          title = `Feedback rating: ${rating}`;
+        }
+        finalBody = formData.description || "";
+      } else if (this._activeTab === "suggestion") {
+        title = formData.title || "Suggestion";
+        finalBody = formData.description || "";
       } else {
         title = formData.title || "No Title";
         finalBody = formData.description || "";
@@ -271,7 +271,6 @@ export class MyElement extends LitElement {
         ? dataURLtoBlob(screenshotDataUrl)
         : undefined;
 
-      // Append telemetry to body (only for issue mode)
       if (
         this._activeTab === "issue" &&
         this._remoteConfig?.issue?.browserInfo &&
@@ -292,11 +291,12 @@ export class MyElement extends LitElement {
           .join("\n")}\n\`\`\``;
       }
 
-      // Determine submission type and rating
-      const submissionType: "issue" | "feedback" = this._activeTab;
-      const rating = isFeedbackMode
-        ? Number(formData.rating) || undefined
-        : undefined;
+      const submissionType: "issue" | "feedback" =
+        this._activeTab === "feedback" ? "feedback" : "issue";
+      const rating =
+        this._activeTab === "feedback"
+          ? Number(formData.rating) || undefined
+          : undefined;
 
       await submitIssue(
         this.installationId,
@@ -311,16 +311,17 @@ export class MyElement extends LitElement {
         submissionType,
       );
 
-      // Success handling
       alert("Feedback submitted successfully!");
       resetState();
       this.isModalOpen = false;
-
-      // Optional: Reset form? Not easily possible with current architecture without forcing re-render of child
     } catch (error) {
       console.error("Wafir: Submit failed", error);
       alert("Failed to submit feedback. Please try again.");
     }
+  }
+
+  private _renderTabIcon(iconName: string) {
+    return unsafeHTML(TAB_ICONS[iconName] || "");
   }
 
   render() {
@@ -394,28 +395,20 @@ export class MyElement extends LitElement {
                       Loading configuration...
                     </div>`
                   : html`
-                      ${this._widgetMode === "both"
-                        ? html`
-                            <div class="mode-tabs">
-                              <button
-                                class="mode-tab ${this._activeTab === "issue"
-                                  ? "active"
-                                  : ""}"
-                                @click="${() => this._switchTab("issue")}"
-                              >
-                                ${unsafeHTML(bugIcon)} Report Issue
-                              </button>
-                              <button
-                                class="mode-tab ${this._activeTab === "feedback"
-                                  ? "active"
-                                  : ""}"
-                                @click="${() => this._switchTab("feedback")}"
-                              >
-                                ${unsafeHTML(thumbsupIcon)} Give Feedback
-                              </button>
-                            </div>
-                          `
-                        : ""}
+                      <div class="mode-tabs">
+                        ${this._availableTabs.map(
+                          (tab) => html`
+                            <button
+                              class="mode-tab ${this._activeTab === tab.id
+                                ? "active"
+                                : ""}"
+                              @click="${() => this._switchTab(tab.id)}"
+                            >
+                              ${this._renderTabIcon(tab.icon)} ${tab.label}
+                            </button>
+                          `,
+                        )}
+                      </div>
                       <wafir-form
                         .fields="${this._getActiveFormConfig()}"
                         .showBrowserInfo="${this._activeTab === "issue" &&
