@@ -97,7 +97,7 @@ const UPDATE_PROJECT_FIELD_MUTATION = `
  * Parses the incoming request, handling both Multipart and JSON bodies.
  */
 async function parseSubmitRequest(
-  request: FastifyRequest
+  request: FastifyRequest,
 ): Promise<ParsedRequestData> {
   const result: Partial<ParsedRequestData> = {};
 
@@ -151,10 +151,11 @@ async function parseSubmitRequest(
     !result.owner ||
     !result.repo ||
     !result.title ||
-    !result.body
+    result.body === undefined ||
+    result.body === null
   ) {
     throw new Error(
-      "Missing required fields (installationId, owner, repo, title, or body)"
+      "Missing required fields (installationId, owner, repo, title, or body)",
     );
   }
 
@@ -168,7 +169,7 @@ async function getWafirConfig(
   octokit: any,
   owner: string,
   repo: string,
-  log: any
+  log: any,
 ): Promise<WafirConfig> {
   try {
     const { data: configData } = await octokit.rest.repos.getContent({
@@ -179,7 +180,7 @@ async function getWafirConfig(
 
     if ("content" in configData) {
       const yamlContent = Buffer.from(configData.content, "base64").toString(
-        "utf-8"
+        "utf-8",
       );
       const config = (yaml.load(yamlContent) as WafirConfig) || {};
       log.info({ config }, "Loaded wafir.yaml config");
@@ -203,7 +204,7 @@ async function uploadScreenshot(
   bucketName: string | undefined,
   buffer: Buffer,
   mime: string,
-  region: string | undefined
+  region: string | undefined,
 ): Promise<string> {
   if (!bucketName) return "";
 
@@ -215,7 +216,7 @@ async function uploadScreenshot(
       Body: buffer,
       ContentType: mime,
       ACL: "public-read",
-    })
+    }),
   );
 
   const publicUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${fileKey}`;
@@ -231,7 +232,7 @@ async function findProjectNodeId(
   userOctokit: any | null,
   owner: string,
   number: number,
-  log: any
+  log: any,
 ): Promise<{
   nodeId: string | undefined;
   shouldUseUserToken: boolean;
@@ -253,7 +254,7 @@ async function findProjectNodeId(
   } catch (error: any) {
     log.debug(
       { error: error.message },
-      "App token project lookup failed, trying user token..."
+      "App token project lookup failed, trying user token...",
     );
   }
 
@@ -264,7 +265,7 @@ async function findProjectNodeId(
         `query FindUserProject($owner: String!, $number: Int!) {
           user(login: $owner) { projectV2(number: $number) { id } }
         }`,
-        { owner, number }
+        { owner, number },
       );
       if (userResult.user?.projectV2?.id) {
         log.info("Found project using User Token");
@@ -318,7 +319,7 @@ async function handleProjectLogic(params: {
     userOctokit,
     projectOwner,
     projectNumber,
-    log
+    log,
   );
 
   if (!projectId) return { added: false, error: lookupError };
@@ -371,7 +372,7 @@ async function setProjectRatingField(params: {
 
     const fields = fieldsResult.node?.fields?.nodes || [];
     const ratingField = fields.find(
-      (f: any) => f?.name?.toLowerCase() === ratingFieldName.toLowerCase()
+      (f: any) => f?.name?.toLowerCase() === ratingFieldName.toLowerCase(),
     );
 
     if (!ratingField) {
@@ -383,7 +384,7 @@ async function setProjectRatingField(params: {
     const targetEmoji = starEmojis[Math.min(Math.max(rating - 1, 0), 4)];
 
     const matchingOption = ratingField.options?.find(
-      (opt: any) => opt.name === targetEmoji
+      (opt: any) => opt.name === targetEmoji,
     );
 
     if (!matchingOption) {
@@ -413,7 +414,7 @@ async function setProjectRatingField(params: {
 
 const submitRoute: FastifyPluginAsync = async (
   fastify,
-  opts
+  opts,
 ): Promise<void> => {
   const s3Client = new S3Client({ region: process.env.AWS_REGION });
   const bucketName = process.env.S3_BUCKET_NAME;
@@ -447,7 +448,7 @@ const submitRoute: FastifyPluginAsync = async (
           appOctokit,
           owner,
           repo,
-          request.log
+          request.log,
         );
         const storageType = config.storage?.type || "issue";
         const projectNumber = config.storage?.projectNumber;
@@ -461,12 +462,12 @@ const submitRoute: FastifyPluginAsync = async (
               bucketName,
               input.screenshotBuffer,
               input.screenshotMime,
-              process.env.AWS_REGION
+              process.env.AWS_REGION,
             );
             finalBody += imageMd;
           } catch (e) {
             request.log.warn(
-              "Failed to upload screenshot, continuing without it."
+              "Failed to upload screenshot, continuing without it.",
             );
           }
         }
@@ -542,7 +543,7 @@ const submitRoute: FastifyPluginAsync = async (
           if (projectResult.error) {
             request.log.warn(
               { error: projectResult.error },
-              "Project operation failed"
+              "Project operation failed",
             );
           }
         } else if (shouldCreateFeedbackDraft) {
@@ -558,7 +559,7 @@ const submitRoute: FastifyPluginAsync = async (
             userOctokit,
             feedbackProjectOwner,
             feedbackProjectNumber,
-            request.log
+            request.log,
           );
 
           if (!feedbackProjId) {
@@ -598,8 +599,28 @@ const submitRoute: FastifyPluginAsync = async (
           projectResult.error =
             "Project storage requested but no projectNumber configured";
         } else if (isFeedbackSubmission && !feedbackProjectNumber) {
-          projectResult.error =
-            "Feedback submission requires a project configured";
+          request.log.info(
+            "No feedback project configured, creating issue instead...",
+          );
+
+          let issueBody = finalBody;
+          if (input.rating) {
+            const stars = "⭐".repeat(input.rating);
+            issueBody = `**Rating:** ${stars} (${input.rating}/5)\n\n${issueBody}`;
+          }
+
+          const issue = await appOctokit.rest.issues.create({
+            owner,
+            repo,
+            title,
+            body: issueBody,
+            labels: labels || ["feedback"],
+          });
+          issueData = {
+            number: issue.data.number,
+            url: issue.data.html_url,
+            nodeId: issue.data.node_id,
+          };
         }
 
         // Send Response
@@ -615,7 +636,7 @@ const submitRoute: FastifyPluginAsync = async (
       } catch (error: any) {
         request.log.error(
           { error: error.message, stack: error.stack },
-          "Submit failed"
+          "Submit failed",
         );
 
         // Handle Validation Error specially
@@ -627,7 +648,7 @@ const submitRoute: FastifyPluginAsync = async (
           .code(500)
           .send({ error: "Submission Failed", message: error.message });
       }
-    }
+    },
   );
 };
 
