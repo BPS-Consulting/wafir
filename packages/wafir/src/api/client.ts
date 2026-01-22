@@ -2,7 +2,7 @@ import createClient from "openapi-fetch";
 import type { paths } from ".";
 
 const DEFAULT_API_URL =
-  "https://pdi7xmy0di.execute-api.us-east-2.amazonaws.com";
+  "https://v6hvmahyx2.execute-api.us-east-2.amazonaws.com";
 
 let currentBridgeUrl = import.meta.env.VITE_WAFIR_API_URL || DEFAULT_API_URL;
 
@@ -23,7 +23,7 @@ export const getWafirConfig = async (
   installationId: number,
   owner: string,
   repo: string,
-  bridgeUrl?: string
+  bridgeUrl?: string,
 ) => {
   if (bridgeUrl) {
     setBridgeUrl(bridgeUrl);
@@ -56,7 +56,7 @@ export const submitIssue = async (
   screenshot?: Blob,
   bridgeUrl?: string,
   rating?: number,
-  submissionType?: "issue" | "feedback"
+  submissionType?: "issue" | "feedback",
 ) => {
   if (bridgeUrl) {
     setBridgeUrl(bridgeUrl);
