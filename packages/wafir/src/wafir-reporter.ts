@@ -65,12 +65,6 @@ export class MyElement extends LitElement {
 
   @property({ type: Array })
   formConfig: FieldConfig[] = [
-    {
-      id: "mode",
-      label: "I'm reporting",
-      type: "switch",
-      options: ["Issue", "Feedback"],
-    },
     { id: "title", label: "Title", type: "text", required: true },
     {
       id: "description",
@@ -131,7 +125,7 @@ export class MyElement extends LitElement {
         this.installationId,
         this.owner,
         this.repo,
-        this.bridgeUrl || undefined
+        this.bridgeUrl || undefined,
       );
 
       if (config) {
@@ -178,8 +172,9 @@ export class MyElement extends LitElement {
     } catch (error) {
       console.warn(
         "Wafir: Failed to fetch remote config, using defaults",
-        error
+        error,
       );
+      this._widgetMode = "both";
     } finally {
       this.isConfigLoading = false;
     }
@@ -244,7 +239,7 @@ export class MyElement extends LitElement {
     // Config validation
     if (!this.installationId || !this.owner || !this.repo) {
       console.error(
-        "Wafir: Missing configuration (installationId, owner, or repo)"
+        "Wafir: Missing configuration (installationId, owner, or repo)",
       );
       alert("Widget configuration error");
       return;
@@ -313,7 +308,7 @@ export class MyElement extends LitElement {
         screenshotBlob,
         this.bridgeUrl || undefined,
         rating,
-        submissionType
+        submissionType,
       );
 
       // Success handling
