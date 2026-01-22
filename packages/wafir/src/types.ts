@@ -17,4 +17,5 @@ export interface FieldConfig {
   options?: string[]; // For select lists (e.g., project status)
   hidden?: boolean; // For auto-collected data like logs
   defaultValue?: string;
+  ratingLabels?: string[];
 }

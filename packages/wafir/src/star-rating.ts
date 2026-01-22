@@ -1,6 +1,7 @@
 import { LitElement, html, unsafeCSS } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import starRatingStyles from "./styles/wafir-star-rating.css?inline";
+import { RATING_LABELS } from "./default-config.js";
 
 @customElement("wafir-star-rating")
 export class WafirStarRating extends LitElement {
@@ -12,6 +13,9 @@ export class WafirStarRating extends LitElement {
 
   @property({ type: Boolean })
   readonly = false;
+
+  @property({ type: Array })
+  labels: string[] = RATING_LABELS;
 
   @state()
   private _hoverValue = 0;
@@ -27,7 +31,7 @@ export class WafirStarRating extends LitElement {
         detail: { value: rating },
         bubbles: true,
         composed: true,
-      })
+      }),
     );
   }
 
@@ -57,8 +61,17 @@ export class WafirStarRating extends LitElement {
     }
   }
 
+  private _getLabelForRating(rating: number): string {
+    if (this.labels && this.labels[rating - 1]) {
+      return this.labels[rating - 1];
+    }
+    return `${rating} star${rating !== 1 ? "s" : ""}`;
+  }
+
   render() {
     const displayValue = this._hoverValue || this.value;
+    const hoverLabel =
+      this._hoverValue > 0 ? this._getLabelForRating(this._hoverValue) : "";
 
     return html`
       <div
@@ -80,7 +93,7 @@ export class WafirStarRating extends LitElement {
                 : ""}"
               role="radio"
               aria-checked="${isActive}"
-              aria-label="${rating} star${rating !== 1 ? "s" : ""}"
+              aria-label="${this._getLabelForRating(rating)}"
               tabindex="${rating === 1 || rating === this.value ? 0 : -1}"
               ?disabled="${this.readonly}"
               @click="${() => this._handleClick(rating)}"
@@ -100,9 +113,13 @@ export class WafirStarRating extends LitElement {
             </button>
           `;
         })}
-        ${this.value > 0
-          ? html`<span class="rating-text">${this.value} / ${this.max}</span>`
-          : ""}
+        ${hoverLabel
+          ? html`<span class="rating-text hover-label">${hoverLabel}</span>`
+          : this.value > 0
+            ? html`<span class="rating-text"
+                >${this._getLabelForRating(this.value)}</span
+              >`
+            : ""}
       </div>
     `;
   }
