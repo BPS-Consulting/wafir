@@ -1,37 +1,26 @@
 # WAFIR Configuration Example - Privacy Focused
 # Minimal data collection for privacy-conscious applications
 
-# Widget mode
-mode: issue
+title: "Send Feedback"
 
 storage:
   type: issue
 
-feedback:
-  title: "Send Feedback"
-  labels: ["feedback"]
-
-# Disable all automatic collection
-issue:
-  screenshot: false # No screenshots
-  browserInfo: false # No browser/device info
-  consoleLog: false # No console logs
-  labels: ["user-report"]
-
-# Simple anonymous form
-fields:
-  - name: title
-    label: "Subject"
-    type: text
-    required: true
-
-  - name: description
-    label: "Your Feedback"
-    type: textarea
-    required: true
-
-  - name: category
-    label: "Type"
-    type: select
-    options: ["Bug Report", "Feature Request", "General Feedback"]
-    required: false
+tabs:
+  - id: feedback
+    label: Feedback
+    icon: thumbsup
+    fields:
+      - name: title
+        label: "Subject"
+        type: text
+        required: true
+      - name: description
+        label: "Your Feedback"
+        type: textarea
+        required: true
+      - name: category
+        label: "Type"
+        type: select
+        options: ["Bug Report", "Feature Request", "General Feedback"]
+        required: false

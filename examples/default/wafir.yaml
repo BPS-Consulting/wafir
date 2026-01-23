@@ -1,0 +1,49 @@
+# WAFIR Configuration Example - Default
+# This example shows what the widget displays when no tabs are specified.
+# Use this as a reference for the default behavior.
+
+title: "Contact Us"
+
+storage:
+  type: issue
+
+tabs:
+  - id: feedback
+    label: Feedback
+    icon: thumbsup
+    isFeedback: true
+    fields:
+      - name: rating
+        label: "How satisfied are you with our website?"
+        type: rating
+        required: true
+      - name: description
+        label: "What is the main reason for this rating?"
+        type: textarea
+        required: false
+
+  - id: suggestion
+    label: Suggestion
+    icon: lightbulb
+    fields:
+      - name: title
+        label: "What is your suggestion?"
+        type: text
+        required: true
+      - name: description
+        label: "Additional information:"
+        type: textarea
+        required: false
+
+  - id: issue
+    label: Issue
+    icon: bug
+    fields:
+      - name: title
+        label: "What issue did you encounter?"
+        type: text
+        required: true
+      - name: description
+        label: "Additional information:"
+        type: textarea
+        required: true

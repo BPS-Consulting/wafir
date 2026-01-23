@@ -9,13 +9,23 @@ export type FieldType =
   | "rating";
 
 export interface FieldConfig {
-  id: string; // The key for the data (e.g., 'description', 'browser_info')
-  label: string; // Display text
+  id: string;
+  label: string;
   type: FieldType;
   required?: boolean;
   placeholder?: string;
-  options?: string[]; // For select lists (e.g., project status)
-  hidden?: boolean; // For auto-collected data like logs
+  options?: string[];
+  hidden?: boolean;
   defaultValue?: string;
   ratingLabels?: string[];
+}
+
+export type TabIcon = "thumbsup" | "lightbulb" | "bug";
+
+export interface TabConfig {
+  id: string;
+  label: string;
+  icon?: TabIcon;
+  isFeedback?: boolean;
+  fields: FieldConfig[];
 }

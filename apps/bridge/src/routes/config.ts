@@ -8,10 +8,7 @@ interface ConfigQuery {
   repo: string;
 }
 
-const configRoute: FastifyPluginAsync = async (
-  fastify,
-  opts
-): Promise<void> => {
+const configRoute: FastifyPluginAsync = async (fastify): Promise<void> => {
   fastify.get<{ Querystring: ConfigQuery }>(
     "/config",
     {
@@ -60,38 +57,33 @@ const configRoute: FastifyPluginAsync = async (
 
         // Decode Base64 and parse YAML
         const yamlContent = Buffer.from(data.content, "base64").toString(
-          "utf-8"
+          "utf-8",
         );
         const parsedConfig = yaml.load(yamlContent) as any;
 
-        // Fetch issue types from organization (if enabled, default: true)
-        // Only works for organization repos, not user repos
+        // Fetch issue types from organization (if available)
         let issueTypes: { id: number; name: string; color: string }[] = [];
-        const shouldFetchTypes = parsedConfig?.issue?.types !== false;
 
-        if (shouldFetchTypes) {
-          try {
-            // Check if owner is an organization
-            const { data: ownerData } = await octokit.rest.users.getByUsername({
-              username: owner,
-            });
+        try {
+          const { data: ownerData } = await octokit.rest.users.getByUsername({
+            username: owner,
+          });
 
-            if (ownerData.type === "Organization") {
-              const { data: orgTypes } = await octokit.request(
-                "GET /orgs/{org}/issue-types",
-                { org: owner }
-              );
-              issueTypes = orgTypes.map((t: any) => ({
-                id: t.id,
-                name: t.name,
-                color: t.color,
-              }));
-            }
-          } catch (typeError: any) {
-            request.log.debug(
-              "Could not fetch issue types (org may not support them)"
+          if (ownerData.type === "Organization") {
+            const { data: orgTypes } = await octokit.request(
+              "GET /orgs/{org}/issue-types",
+              { org: owner },
             );
+            issueTypes = orgTypes.map((t: any) => ({
+              id: t.id,
+              name: t.name,
+              color: t.color,
+            }));
           }
+        } catch (typeError: any) {
+          request.log.debug(
+            "Could not fetch issue types (org may not support them)",
+          );
         }
 
         return {
@@ -111,7 +103,7 @@ const configRoute: FastifyPluginAsync = async (
           message: "Failed to fetch config",
         });
       }
-    }
+    },
   );
 };
 

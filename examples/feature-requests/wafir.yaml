@@ -1,46 +1,39 @@
 # WAFIR Configuration Example - Feature Requests
 # Optimized for collecting feature ideas and suggestions
 
-# Widget mode
-mode: issue
+title: "Suggest a Feature"
 
 storage:
   type: issue
 
-feedback:
-  title: "Suggest a Feature"
-  labels: ["enhancement", "feature-request"]
-
-issue:
-  screenshot: true # Screenshots help illustrate ideas
-  browserInfo: false # Usually not needed for features
-  consoleLog: false
-  labels: ["enhancement"]
-
-fields:
-  - name: title
-    label: "Feature Title"
-    type: text
-    required: true
-
-  - name: description
-    label: "Describe your idea"
-    type: textarea
-    required: true
-
-  - name: use_case
-    label: "What problem would this solve?"
-    type: textarea
-    required: true
-
-  - name: priority
-    label: "How important is this to you?"
-    type: select
-    options:
-      ["Nice to have", "Would improve my workflow", "Critical for my use case"]
-    required: true
-
-  - name: alternatives
-    label: "Any workarounds you're currently using?"
-    type: textarea
-    required: false
+tabs:
+  - id: suggestion
+    label: Suggest
+    icon: lightbulb
+    fields:
+      - name: title
+        label: "Feature Title"
+        type: text
+        required: true
+      - name: description
+        label: "Describe your idea"
+        type: textarea
+        required: true
+      - name: use_case
+        label: "What problem would this solve?"
+        type: textarea
+        required: true
+      - name: priority
+        label: "How important is this to you?"
+        type: select
+        options:
+          [
+            "Nice to have",
+            "Would improve my workflow",
+            "Critical for my use case",
+          ]
+        required: true
+      - name: alternatives
+        label: "Any workarounds you're currently using?"
+        type: textarea
+        required: false

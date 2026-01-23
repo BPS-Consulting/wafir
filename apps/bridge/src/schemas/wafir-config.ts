@@ -1,13 +1,66 @@
+const fieldSchema = {
+  type: "object",
+  required: ["name", "label", "type"],
+  properties: {
+    name: { type: "string", description: "Field ID/key for form data" },
+    label: { type: "string", description: "Display label for the field" },
+    type: {
+      type: "string",
+      enum: ["text", "email", "textarea", "select", "checkbox", "rating"],
+      description: "Input type",
+    },
+    required: { type: "boolean", default: false },
+    placeholder: { type: "string" },
+    options: {
+      type: "array",
+      items: { type: "string" },
+      description: "Options for select type",
+    },
+    ratingLabels: {
+      type: "array",
+      items: { type: "string" },
+      description: "Labels for each rating star (1-5)",
+    },
+  },
+};
+
+const tabSchema = {
+  type: "object",
+  required: ["id"],
+  properties: {
+    id: { type: "string", description: "Unique tab identifier" },
+    label: {
+      type: "string",
+      description: "Display label (defaults to capitalized id)",
+    },
+    icon: {
+      type: "string",
+      enum: ["thumbsup", "lightbulb", "bug"],
+      description: "Tab icon",
+    },
+    isFeedback: {
+      type: "boolean",
+      default: false,
+      description:
+        "If true, rating from this tab populates project Rating field",
+    },
+    fields: {
+      type: "array",
+      items: fieldSchema,
+      description:
+        "Form fields for this tab. If omitted, defaults are used for known tab IDs (feedback, issue, suggestion)",
+    },
+  },
+};
+
 export const wafirConfigSchema = {
   $id: "wafirConfig",
   type: "object",
   properties: {
-    mode: {
+    title: {
       type: "string",
-      enum: ["issue", "feedback", "both"],
-      default: "issue",
-      description:
-        "Widget mode: 'issue' for bug reports, 'feedback' for ratings, 'both' for both options",
+      default: "Contact Us",
+      description: "Modal title",
     },
     storage: {
       type: "object",
@@ -22,67 +75,22 @@ export const wafirConfigSchema = {
         projectNumber: { type: "number" },
       },
     },
-    feedback: {
-      type: "object",
-      properties: {
-        title: { type: "string", default: "Feedback" },
-        labels: {
-          type: "array",
-          items: { type: "string" },
-          default: ["feedback"],
-        },
-      },
-      additionalProperties: false,
-    },
-    issue: {
-      type: "object",
-      properties: {
-        screenshot: { type: "boolean", default: false },
-        browserInfo: { type: "boolean", default: false },
-        consoleLog: { type: "boolean", default: false },
-        types: {
-          type: "boolean",
-          default: true,
-          description: "Fetch and display issue types from organization",
-        },
-        labels: {
-          type: "array",
-          items: { type: "string" },
-          default: ["bug"],
-        },
-      },
-      additionalProperties: false,
+    tabs: {
+      type: "array",
+      items: tabSchema,
+      description:
+        "Widget tabs configuration. Defaults to feedback, suggestion, issue if omitted.",
     },
     issueTypes: {
       type: "array",
-      description: "Available issue types from the organization",
+      description:
+        "Available issue types from the organization (auto-populated)",
       items: {
         type: "object",
         properties: {
           id: { type: "number" },
           name: { type: "string" },
           color: { type: "string" },
-        },
-      },
-    },
-    fields: {
-      type: "array",
-      items: {
-        type: "object",
-        required: ["name", "label", "type"],
-        properties: {
-          name: { type: "string" },
-          label: { type: "string" },
-          type: {
-            type: "string",
-            enum: ["text", "textarea", "select", "checkbox"],
-          },
-          required: { type: "boolean", default: false },
-          options: {
-            type: "array",
-            items: { type: "string" },
-            description: "Options for select type",
-          },
         },
       },
     },

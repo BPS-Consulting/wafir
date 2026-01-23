@@ -1,73 +1,79 @@
 # WAFIR Configuration Example - Full Featured
 # Demonstrates all available configuration options
 
-# Widget mode - issue reporting (options: issue, feedback, both)
-mode: issue
+title: "Submit Feedback or Report a Bug"
 
-# Storage settings
 storage:
-  type: issue # Options: issue, project, both
-  # owner: different-org    # Optional: target a different repository
-  # repo: different-repo    # Optional: target a different repository
-  # projectId: 123          # Optional: GitHub Project ID for project storage
+  type: issue
 
-# Feedback modal settings
-feedback:
-  title: "Submit Feedback or Report a Bug"
-  labels: ["wafir", "user-feedback"]
+tabs:
+  - id: feedback
+    label: Feedback
+    icon: thumbsup
+    isFeedback: true
+    fields:
+      - name: rating
+        label: "How satisfied are you?"
+        type: rating
+        required: true
+      - name: description
+        label: "What is the main reason for this rating?"
+        type: textarea
+        required: false
 
-# Issue collection settings (for automatic data)
-issue:
-  screenshot: true # Enable screenshot capture
-  browserInfo: true # Collect URL, user agent, viewport, language
-  consoleLog: true # Capture console messages
-  labels: ["bug", "needs-triage"]
+  - id: suggestion
+    label: Suggestion
+    icon: lightbulb
+    fields:
+      - name: title
+        label: "What is your suggestion?"
+        type: text
+        required: true
+      - name: description
+        label: "Additional details"
+        type: textarea
+        required: false
 
-# Custom form fields - full variety
-fields:
-  - name: title
-    label: "Issue Title"
-    type: text
-    required: true
-
-  - name: description
-    label: "Detailed Description"
-    type: textarea
-    required: true
-
-  - name: priority
-    label: "Priority"
-    type: select
-    options: ["Low", "Medium", "High", "Critical"]
-    required: true
-
-  - name: category
-    label: "Category"
-    type: select
-    options: ["Bug", "Feature Request", "Documentation", "Question", "Other"]
-    required: true
-
-  - name: steps_to_reproduce
-    label: "Steps to Reproduce"
-    type: textarea
-    required: false
-
-  - name: expected_behavior
-    label: "Expected Behavior"
-    type: text
-    required: false
-
-  - name: actual_behavior
-    label: "Actual Behavior"
-    type: text
-    required: false
-
-  - name: contact_email
-    label: "Your Email (optional for follow-up)"
-    type: text
-    required: false
-
-  - name: accepts_contact
-    label: "I'm okay with follow-up questions"
-    type: checkbox
-    required: false
+  - id: issue
+    label: Issue
+    icon: bug
+    fields:
+      - name: title
+        label: "Issue Title"
+        type: text
+        required: true
+      - name: description
+        label: "Detailed Description"
+        type: textarea
+        required: true
+      - name: priority
+        label: "Priority"
+        type: select
+        options: ["Low", "Medium", "High", "Critical"]
+        required: true
+      - name: category
+        label: "Category"
+        type: select
+        options:
+          ["Bug", "Feature Request", "Documentation", "Question", "Other"]
+        required: true
+      - name: steps_to_reproduce
+        label: "Steps to Reproduce"
+        type: textarea
+        required: false
+      - name: expected_behavior
+        label: "Expected Behavior"
+        type: text
+        required: false
+      - name: actual_behavior
+        label: "Actual Behavior"
+        type: text
+        required: false
+      - name: contact_email
+        label: "Your Email (optional for follow-up)"
+        type: email
+        required: false
+      - name: accepts_contact
+        label: "I'm okay with follow-up questions"
+        type: checkbox
+        required: false

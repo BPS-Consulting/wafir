@@ -1,32 +1,22 @@
 # WAFIR Configuration Example - Basic Usage
 # Place this file in .github/wafir.yaml in your repository
 
-# Widget mode - issue reporting
-mode: issue
+title: "Report a Bug"
 
-# Storage settings - where to store feedback
 storage:
-  type: issue # Creates GitHub issues
+  type: issue
 
-# Feedback title shown in the modal
-feedback:
-  title: "Report a Bug"
-  labels: ["bug", "user-feedback"]
-
-# Automatic data collection settings
-issue:
-  screenshot: true
-  browserInfo: true
-  consoleLog: false
-  labels: ["bug"]
-
-# Form fields users will fill out
-fields:
-  - name: title
-    label: "Issue Title"
-    type: text
-    required: true
-  - name: description
-    label: "Description"
-    type: textarea
-    required: true
+# Widget tabs - only showing issue tab for basic bug reporting
+tabs:
+  - id: issue
+    label: Issue
+    icon: bug
+    fields:
+      - name: title
+        label: "Issue Title"
+        type: text
+        required: true
+      - name: description
+        label: "Description"
+        type: textarea
+        required: true
