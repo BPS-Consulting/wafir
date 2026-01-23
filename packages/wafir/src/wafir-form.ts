@@ -27,6 +27,9 @@ export class WafirForm extends LitElement {
   showConsoleLog = false;
 
   @property({ type: Boolean })
+  showScreenshot = true;
+
+  @property({ type: Boolean })
   loading = false;
 
   private _capturedImageController = new StoreController(this, capturedImage);

@@ -6,6 +6,11 @@ title: "Send Feedback"
 storage:
   type: issue
 
+telemetry:
+  screenshot: false
+  browserInfo: false
+  consoleLog: false
+
 tabs:
   - id: feedback
     label: Feedback

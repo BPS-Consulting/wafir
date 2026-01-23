@@ -71,6 +71,13 @@ export class WafirReporter extends LitElement {
   @state()
   private _activeTabId: string = "feedback";
 
+  @state()
+  private _telemetry = {
+    screenshot: true,
+    browserInfo: true,
+    consoleLog: false,
+  };
+
   static styles = [unsafeCSS(reporterStyles)];
 
   connectedCallback() {
@@ -163,6 +170,14 @@ export class WafirReporter extends LitElement {
         if (remoteConfig.title) {
           this.modalTitle = remoteConfig.title;
         }
+
+        if (remoteConfig.telemetry) {
+          this._telemetry = {
+            screenshot: remoteConfig.telemetry.screenshot ?? true,
+            browserInfo: remoteConfig.telemetry.browserInfo ?? true,
+            consoleLog: remoteConfig.telemetry.consoleLog ?? false,
+          };
+        }
       }
     } catch (error) {
       console.warn(
@@ -232,12 +247,12 @@ export class WafirReporter extends LitElement {
         ? dataURLtoBlob(screenshotDataUrl)
         : undefined;
 
-      if (browserInfo.get()) {
+      if (this._telemetry.browserInfo && browserInfo.get()) {
         const info = browserInfo.get()!;
         finalBody += `\n\n# Browser Info\n| Field | Value |\n| :--- | :--- |\n| URL | ${info.url} |\n| User Agent | \`${info.userAgent}\` |\n| Viewport | ${info.viewportWidth}x${info.viewportHeight} |\n| Language | ${info.language} |`;
       }
 
-      if (consoleLogs.get().length > 0) {
+      if (this._telemetry.consoleLog && consoleLogs.get().length > 0) {
         const logs = consoleLogs.get();
         finalBody += `\n\n# Console Logs\n\`\`\`\n${logs
           .map((l: ConsoleLog) => `[${l.type.toUpperCase()}] ${l.message}`)
@@ -366,8 +381,9 @@ export class WafirReporter extends LitElement {
                       </div>
                       <wafir-form
                         .fields="${this._getActiveFormConfig()}"
-                        .showBrowserInfo="${true}"
-                        .showConsoleLog="${true}"
+                        .showBrowserInfo="${this._telemetry.browserInfo}"
+                        .showConsoleLog="${this._telemetry.consoleLog}"
+                        .showScreenshot="${this._telemetry.screenshot}"
                         @form-submit="${this._handleSubmit}"
                       ></wafir-form>
                     `}

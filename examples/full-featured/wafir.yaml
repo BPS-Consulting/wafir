@@ -6,6 +6,11 @@ title: "Submit Feedback or Report a Bug"
 storage:
   type: issue
 
+telemetry:
+  screenshot: true
+  browserInfo: true
+  consoleLog: true
+
 tabs:
   - id: feedback
     label: Feedback

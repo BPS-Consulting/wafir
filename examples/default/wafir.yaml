@@ -5,7 +5,21 @@
 title: "Contact Us"
 
 storage:
-  type: issue
+  type: issue # Options: issue, project, both
+  # owner: different-org    # Optional: target a different repository
+  # repo: different-repo    # Optional: target a different repository
+  # projectNumber: 1        # Required for project storage
+
+# Optional: Dedicated project for feedback with rating field
+# feedbackProject:
+#   projectNumber: 1          # Your feedback project number
+#   owner: org-name           # Project owner (defaults to repo owner)
+#   ratingField: "Rating"     # Name of the Rating field in your project
+
+telemetry:
+  screenshot: true
+  browserInfo: true
+  consoleLog: false
 
 tabs:
   - id: feedback

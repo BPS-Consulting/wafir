@@ -75,6 +75,27 @@ export const wafirConfigSchema = {
         projectNumber: { type: "number" },
       },
     },
+    telemetry: {
+      type: "object",
+      description: "Automatic data collection settings",
+      properties: {
+        screenshot: {
+          type: "boolean",
+          default: true,
+          description: "Enable screenshot capture",
+        },
+        browserInfo: {
+          type: "boolean",
+          default: true,
+          description: "Collect URL, user agent, viewport, language",
+        },
+        consoleLog: {
+          type: "boolean",
+          default: false,
+          description: "Capture console messages",
+        },
+      },
+    },
     tabs: {
       type: "array",
       items: tabSchema,

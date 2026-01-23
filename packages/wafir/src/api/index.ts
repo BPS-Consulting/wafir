@@ -213,6 +213,24 @@ export interface paths {
                                 repo?: string;
                                 projectNumber?: number;
                             };
+                            /** @description Automatic data collection settings */
+                            telemetry?: {
+                                /**
+                                 * @description Enable screenshot capture
+                                 * @default true
+                                 */
+                                screenshot: boolean;
+                                /**
+                                 * @description Collect URL, user agent, viewport, language
+                                 * @default true
+                                 */
+                                browserInfo: boolean;
+                                /**
+                                 * @description Capture console messages
+                                 * @default false
+                                 */
+                                consoleLog: boolean;
+                            };
                             /** @description Widget tabs configuration. Defaults to feedback, suggestion, issue if omitted. */
                             tabs?: {
                                 /** @description Unique tab identifier */
