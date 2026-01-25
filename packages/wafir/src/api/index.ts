@@ -4,6 +4,41 @@
  */
 
 export interface paths {
+  "/health": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Health Check
+     * @description Returns the health status of the bridge service
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              status: string;
+              timestamp: string;
+            };
+          };
+        };
+      };
+    };
+  };
   "/config": {
     parameters: {
       query?: never;
