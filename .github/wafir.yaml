@@ -3,7 +3,7 @@
 
 # Storage settings
 storage:
-  type: both # Options: issue, project, both
+  type: project # Options: issue, project, both
   # owner: optional-other-owner
   # repo: optional-other-repo
 
@@ -14,9 +14,9 @@ feedback:
 
 # Issue settings (for automatic data collection)
 issue:
-  screenshot: true
-  browserInfo: true
-  consoleLog: true
+  screenshot: false
+  browserInfo: false
+  consoleLog: false
   labels: ["bug"]
 
 # Custom form fields
@@ -34,7 +34,4 @@ fields:
     type: select
     options: ["Low", "Medium", "High", "Critical"]
     required: false
-  - name: contact_email
-    label: "Your Email (optional)"
-    type: text
-    required: false
+
