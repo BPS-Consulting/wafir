@@ -310,7 +310,14 @@ export class MyElement extends LitElement {
           .map((l: ConsoleLog) => `[${l.type.toUpperCase()}] ${l.message}`)
           .join("\n")}\n\`\`\``;
       }
-
+      if (
+        this._activeTab === "issue" &&
+        this._remoteConfig?.issue?.screenshot &&
+        screenshotBlob
+      ) {
+        finalBody += `\n\n# Screenshot`;
+      }
+      
       const submissionType: "issue" | "feedback" =
         this._activeTab === "feedback" ? "feedback" : "issue";
       const rating =
@@ -331,7 +338,7 @@ export class MyElement extends LitElement {
         submissionType,
       );
 
-      alert("Feedback submitted successfully!");
+      alert("Thank you for your input!");
       resetState();
       this.isModalOpen = false;
     } catch (error) {
