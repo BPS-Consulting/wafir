@@ -52,9 +52,14 @@ const ADD_DRAFT_TO_PROJECT_MUTATION = `
   }
 `;
 
-const FIND_PROJECT_QUERY = `
-  query FindProject($owner: String!, $number: Int!) {
+const FIND_ORG_PROJECT_QUERY = `
+  query FindOrgProject($owner: String!, $number: Int!) {
     organization(login: $owner) { projectV2(number: $number) { id } }
+  }
+`;
+
+const FIND_USER_PROJECT_QUERY = `
+  query FindUserProject($owner: String!, $number: Int!) {
     user(login: $owner) { projectV2(number: $number) { id } }
   }
 `;
@@ -94,7 +99,7 @@ const UPDATE_PROJECT_FIELD_MUTATION = `
 `;
 
 /**
- * Parses the incoming request, handling both Multipart and JSON bodies.
+ * Parses the incoming request, handling both Multipart (with screenshot) and JSON (text only) bodies.
  */
 async function parseSubmitRequest(
   request: FastifyRequest,
@@ -238,23 +243,39 @@ async function findProjectNodeId(
   shouldUseUserToken: boolean;
   error?: string;
 }> {
-  // Try with App Token (Org or User)
+  // Try with App Token - Organization first
+  log.info({ owner, number }, "Looking up project with App token...");
   try {
-    const result = await appOctokit.graphql(FIND_PROJECT_QUERY, {
+    const result = await appOctokit.graphql(FIND_ORG_PROJECT_QUERY, {
       owner,
       number,
     });
+    log.info({ result }, "GraphQL org project lookup result");
     if (result.organization?.projectV2?.id)
       return {
         nodeId: result.organization.projectV2.id,
         shouldUseUserToken: false,
       };
+  } catch (error: any) {
+    log.debug(
+      { error: error.message, owner, number },
+      "Org project lookup failed, trying user project...",
+    );
+  }
+
+  // Try with App Token - User project
+  try {
+    const result = await appOctokit.graphql(FIND_USER_PROJECT_QUERY, {
+      owner,
+      number,
+    });
+    log.info({ result }, "GraphQL user project lookup result");
     if (result.user?.projectV2?.id)
       return { nodeId: result.user.projectV2.id, shouldUseUserToken: true }; // User projects usually need user token for mutations
   } catch (error: any) {
     log.debug(
-      { error: error.message },
-      "App token project lookup failed, trying user token...",
+      { error: error.message, owner, number },
+      "App token user project lookup failed, trying with user token...",
     );
   }
 
@@ -412,6 +433,47 @@ async function setProjectRatingField(params: {
 
 // --- Main Route Handler ---
 
+/**
+ * Fastify route plugin for handling WAFIR feedback and issue submissions.
+ *
+ * This route processes POST requests to `/submit` and supports two types of submissions:
+ * - **Issue submissions**: Creates GitHub issues and optionally adds them to projects
+ * - **Feedback submissions**: Creates project drafts with optional ratings
+ *
+ * @remarks
+ * The route handles:
+ * - Multipart form data parsing including optional screenshot uploads
+ * - S3 storage for screenshots (if provided)
+ * - GitHub issue creation based on storage configuration
+ * - GitHub project integration (adding issues or creating drafts)
+ * - Rating field assignment for feedback submissions
+ * - Flexible storage types: `issue`, `project`, or `both`
+ *
+ * Configuration is read from `.github/wafir.yml` in the target repository and supports:
+ * - `storage.type`: Determines where issue submissions are stored
+ * - `storage.projectNumber`: Project number for issue submissions
+ * - `feedbackProject.projectNumber`: Separate project for feedback submissions
+ * - `feedbackProject.ratingField`: Custom field name for rating (defaults to "Rating")
+ *
+ * @param fastify - Fastify instance with GitHub client extensions
+ * @param opts - Plugin options
+ * @returns Promise that resolves when the route is registered
+ *
+ * @throws {400} When required fields are missing in the request
+ * @throws {500} When submission processing fails
+ *
+ * @example
+ * Response format:
+ * ```json
+ * {
+ *   "success": true,
+ *   "issueUrl": "https://github.com/owner/repo/issues/123",
+ *   "issueNumber": 123,
+ *   "projectAdded": true,
+ *   "warning": "Optional warning message"
+ * }
+ * ```
+ */
 const submitRoute: FastifyPluginAsync = async (
   fastify,
   opts,
@@ -506,6 +568,10 @@ const submitRoute: FastifyPluginAsync = async (
             url: issue.data.html_url,
             nodeId: issue.data.node_id,
           };
+          request.log.info(
+            { issueNumber: issueData.number, issueUrl: issueData.url },
+            "GitHub issue created successfully",
+          );
         }
 
         // Handle Project (Draft or Add Issue)
@@ -544,6 +610,11 @@ const submitRoute: FastifyPluginAsync = async (
             request.log.warn(
               { error: projectResult.error },
               "Project operation failed",
+            );
+          } else {
+            request.log.info(
+              { projectNumber, projectOwner },
+              "Successfully added to project",
             );
           }
         } else if (shouldCreateFeedbackDraft) {
@@ -585,6 +656,13 @@ const submitRoute: FastifyPluginAsync = async (
               (projectResult as any).itemId &&
               input.rating
             ) {
+              request.log.info(
+                {
+                  itemId: (projectResult as any).itemId,
+                  feedbackProjectNumber,
+                },
+                "Feedback draft created in project",
+              );
               await setProjectRatingField({
                 octokit: client,
                 projectId: feedbackProjId,
@@ -593,6 +671,11 @@ const submitRoute: FastifyPluginAsync = async (
                 rating: input.rating,
                 log: request.log,
               });
+            } else if (projectResult.added) {
+              request.log.info(
+                { feedbackProjectNumber },
+                "Feedback draft created in project (no rating)",
+              );
             }
           }
         } else if (storageType === "project" && !projectNumber) {
@@ -621,6 +704,10 @@ const submitRoute: FastifyPluginAsync = async (
             url: issue.data.html_url,
             nodeId: issue.data.node_id,
           };
+          request.log.info(
+            { issueNumber: issueData.number, issueUrl: issueData.url },
+            "Feedback issue created (no project configured)",
+          );
         }
 
         // Send Response
@@ -631,6 +718,11 @@ const submitRoute: FastifyPluginAsync = async (
           projectAdded: projectResult.added,
           warning: projectResult.error,
         };
+
+        request.log.info(
+          { response, submissionType: input.submissionType },
+          "Submission completed successfully",
+        );
 
         return reply.code(201).send(response);
       } catch (error: any) {
