@@ -4,6 +4,7 @@
 # Storage settings
 storage:
   type: project # Options: issue, project, both
+  projectNumber: 9
   # owner: optional-other-owner
   # repo: optional-other-repo
 
