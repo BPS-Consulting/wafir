@@ -29,6 +29,9 @@ export class WafirForm extends LitElement {
   @property({ type: Boolean })
   loading = false;
 
+  @property({ type: Boolean })
+  bridgeAvailable = true;
+
   private _capturedImageController = new StoreController(this, capturedImage);
   private _formDataController = new StoreController(this, formData);
   private _browserInfoController = new StoreController(this, browserInfo);
@@ -272,9 +275,11 @@ export class WafirForm extends LitElement {
           `;
         })}
 
-        <button class="submit-button" type="submit" ?disabled="${this.loading}">
+        <button class="submit-button" type="submit" ?disabled="${this.loading || !this.bridgeAvailable}">
           ${this.loading
             ? html`<span class="spinner"></span> Submitting...`
+            : !this.bridgeAvailable
+            ? "Service Unavailable"
             : "Submit"}
         </button>
 
