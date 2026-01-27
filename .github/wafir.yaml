@@ -15,9 +15,9 @@ feedback:
 
 # Issue settings (for automatic data collection)
 issue:
-  screenshot: false
-  browserInfo: false
-  consoleLog: false
+  screenshot: true
+  browserInfo: true
+  consoleLog: trye
   labels: ["bug"]
 
 # Custom form fields
