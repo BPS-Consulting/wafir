@@ -17,7 +17,7 @@ feedback:
 issue:
   screenshot: true
   browserInfo: true
-  consoleLog: trye
+  consoleLog: false
   labels: ["bug"]
 
 # Custom form fields
