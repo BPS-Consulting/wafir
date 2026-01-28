@@ -8,6 +8,7 @@
     ".": {
       "import": "./dist/wafir.js"
     },
+    "./browser": "./dist-browser/wafir.browser.js",
     "./styles/reporter.css": "./dist/styles/wafir-reporter.css",
     "./styles/form.css": "./dist/styles/wafir-form.css",
     "./styles/highlighter.css": "./dist/styles/wafir-highlighter.css"
@@ -15,6 +16,8 @@
   "scripts": {
     "dev": "vite build --watch",
     "build": "tsc && vite build",
+    "build:browser": "vite build --mode browser",
+    "build:all": "pnpm run build && pnpm run build:browser",
     "generate:api": "openapi-typescript ../../apps/bridge/swagger.json -o src/api/schema.d.ts"
   },
   "dependencies": {

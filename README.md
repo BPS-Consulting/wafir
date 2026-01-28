@@ -95,6 +95,13 @@ To build all packages for production:
 pnpm build
 ```
 
+To build the browser version of the Wafir widget and copy it to the www site:
+
+```bash
+cd packages/wafir && pnpm run build:browser
+cd apps/www && pnpm run build
+```
+
 ## 🔧 Configuration
 
 ### Bridge Environment Variables
