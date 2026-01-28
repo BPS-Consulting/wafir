@@ -11,8 +11,10 @@ export default defineConfig(({ command, mode }) => {
     define: isBrowserBundle
       ? {
           // Replace Node.js globals for browser compatibility
-          // Using "undefined" makes typeof checks work correctly
-          "process": "undefined",
+          "process.env.NODE_ENV": JSON.stringify("production"),
+          "process.env": "{}",
+          "process.versions": "undefined",
+          "process.version": "undefined",
         }
       : {},
     build: {
@@ -26,6 +28,12 @@ export default defineConfig(({ command, mode }) => {
         // Only externalize lit for ES module build (npm consumers)
         // Bundle everything for browser build
         external: isBrowserBundle ? [] : /^lit/,
+        output: isBrowserBundle
+          ? {
+              // Add a process shim banner for browser builds
+              banner: `if(typeof globalThis.process==="undefined"){globalThis.process={env:{NODE_ENV:"production"},versions:{node:""},version:""};}`,
+            }
+          : {},
       },
       // For browser bundle, output to a separate directory
       outDir: isBrowserBundle ? "dist-browser" : "dist",
