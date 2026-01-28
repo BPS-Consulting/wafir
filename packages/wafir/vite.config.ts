@@ -8,6 +8,13 @@ export default defineConfig(({ command, mode }) => {
   const isBrowserBundle = mode === "browser";
 
   return {
+    define: isBrowserBundle
+      ? {
+          // Replace Node.js globals for browser compatibility
+          // Using "undefined" makes typeof checks work correctly
+          "process": "undefined",
+        }
+      : {},
     build: {
       lib: {
         entry: "src/wafir-reporter.ts",
