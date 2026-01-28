@@ -6,6 +6,7 @@ import { copyFileSync, mkdirSync, existsSync } from "fs";
 export default defineConfig(({ command, mode }) => {
   return {
     build: {
+      emptyOutDir: false, // Don't empty dist/ to preserve TypeScript declarations
       lib: {
         entry: "src/wafir-reporter.ts",
         formats: ["es"],
