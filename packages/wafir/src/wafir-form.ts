@@ -1,3 +1,4 @@
+// Copyright (c) BPS-Consulting. Licensed under the AGPLv3 License.
 import { LitElement, html, unsafeCSS } from "lit";
 import formStyles from "./styles/wafir-form.css?inline";
 import "./star-rating.js";
