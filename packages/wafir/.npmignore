@@ -32,7 +32,6 @@ __tests__/
 # Documentation (keep only README and LICENSE)
 *.md
 !README.md
-PUBLISHING.md
 
 # Misc
 .DS_Store

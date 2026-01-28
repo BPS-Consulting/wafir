@@ -17,7 +17,7 @@ A lightweight feedback and issue reporting widget that seamlessly connects user 
 - 🎯 **GitHub Integration** - Creates issues directly in your GitHub repository
 - 🎨 **Highly Customizable** - Extensive CSS custom properties for theming
 - 📝 **Configurable Forms** - Customize feedback forms to match your needs
-- 🚀 **Lightweight** - Small bundle size (~25kB gzipped)
+- 🚀 **Lightweight** - Small bundle size (main widget ~24kB gzipped)
 
 ## 📦 Installation
 
