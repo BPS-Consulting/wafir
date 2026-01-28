@@ -1,0 +1,38 @@
+# Source files
+src/
+
+# Config files
+tsconfig.json
+tsconfig.build.json
+vite.config.ts
+redocly.yml
+
+# Development files
+.gitignore
+public/
+
+# Build artifacts (keep only dist/)
+node_modules/
+*.log
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test files
+**/*.test.ts
+**/*.spec.ts
+test/
+tests/
+__tests__/
+
+# Documentation (keep only README and LICENSE)
+*.md
+!README.md
+
+# Misc
+.DS_Store
+*.local
