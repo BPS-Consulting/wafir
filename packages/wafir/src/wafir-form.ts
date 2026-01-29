@@ -22,6 +22,8 @@ import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
 @customElement("wafir-form")
 export class WafirForm extends LitElement {
+  @property({ type: String })
+  formLabel = "";
   private _fields: FieldConfig[] = [];
 
   @property({ type: Array })
@@ -259,6 +261,9 @@ export class WafirForm extends LitElement {
   render() {
     return html`
       <form @submit="${this._handleSubmit}">
+        ${this.formLabel
+          ? html`<h2 class="form-title">${this.formLabel}</h2>`
+          : ""}
         ${this.fields.map((field) => {
           if (field.type === "checkboxes")
             return html`<div class="form-group">

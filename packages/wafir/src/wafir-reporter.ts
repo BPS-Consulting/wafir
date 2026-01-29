@@ -396,6 +396,7 @@ export class WafirReporter extends LitElement {
                       </div>
                       <wafir-form
                         .fields="${this._getActiveFormConfig()}"
+                        .formLabel="${this._getActiveTab()?.label || ""}"
                         .showBrowserInfo="${this._telemetry.browserInfo}"
                         .showConsoleLog="${this._telemetry.consoleLog}"
                         .showScreenshot="${this._telemetry.screenshot}"

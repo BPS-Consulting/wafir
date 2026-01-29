@@ -13,19 +13,6 @@ export const RATING_LABELS = [
 
 export const DEFAULT_FEEDBACK_FIELDS: FieldConfig[] = [
   {
-    id: "instructions-block",
-    type: "markdown",
-    attributes: {
-      value: `# Welcome to the Feedback Form
-
-We value your feedback! Please provide as much detail as possible.
-- **Your feedback is anonymous** unless you include personal details.
-- Use the star rating below and describe your experience.
-
-Thank you!`,
-    },
-  },
-  {
     id: "rating",
     type: "rating",
     attributes: {
