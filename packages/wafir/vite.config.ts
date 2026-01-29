@@ -19,10 +19,11 @@ export default defineConfig(({ command, mode }) => {
       : {},
     build: {
       lib: {
-        entry: "src/wafir-reporter.ts",
+        entry: "src/wafir-widget.ts",
         formats: isBrowserBundle ? ["iife"] : ["es"],
         name: "Wafir", // Global name for IIFE build
-        fileName: (format) => (format === "iife" ? "wafir.browser.js" : "wafir.js"),
+        fileName: (format) =>
+          format === "iife" ? "wafir.browser.js" : "wafir.js",
       },
       rollupOptions: {
         // Only externalize lit for ES module build (npm consumers)
@@ -45,21 +46,21 @@ export default defineConfig(({ command, mode }) => {
         closeBundle() {
           // Only copy CSS files for the main ES build
           if (isBrowserBundle) return;
-          
+
           const distStyles = resolve(__dirname, "dist/styles");
           if (!existsSync(distStyles)) {
             mkdirSync(distStyles, { recursive: true });
           }
           const cssFiles = [
             "reset.css",
-            "wafir-reporter.css",
+            "wafir-widget.css",
             "wafir-form.css",
             "wafir-highlighter.css",
           ];
           cssFiles.forEach((file) => {
             copyFileSync(
               resolve(__dirname, `src/styles/${file}`),
-              resolve(distStyles, file)
+              resolve(distStyles, file),
             );
           });
         },

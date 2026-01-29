@@ -1,6 +1,6 @@
 /* Wafir Form Component Styles
  * Override these CSS custom properties to customize the appearance.
- * Set variables on the wafir-reporter element to customize.
+ * Set variables on the wafir-widget element to customize.
  */
 
 @import "./reset.css";

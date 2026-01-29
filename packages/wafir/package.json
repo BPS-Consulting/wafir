@@ -9,7 +9,7 @@
       "import": "./dist/wafir.js"
     },
     "./browser": "./dist-browser/wafir.browser.js",
-    "./styles/reporter.css": "./dist/styles/wafir-reporter.css",
+    "./styles/widget.css": "./dist/styles/wafir-widget.css",
     "./styles/form.css": "./dist/styles/wafir-form.css",
     "./styles/highlighter.css": "./dist/styles/wafir-highlighter.css"
   },

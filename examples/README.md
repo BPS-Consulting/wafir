@@ -21,9 +21,9 @@ This directory contains example `wafir.yaml` configuration files for different u
 
 ```tsx
 // React
-import { WafirReporter } from "@wafir/react";
+import { WafirWidget } from "@wafir/react";
 
-<WafirReporter
+<WafirWidget
   installationId={YOUR_INSTALLATION_ID}
   owner="your-username"
   repo="your-repo"
@@ -33,11 +33,11 @@ import { WafirReporter } from "@wafir/react";
 ```html
 <!-- Vanilla HTML -->
 <script type="module" src="https://unpkg.com/wafir"></script>
-<wafir-reporter
+<wafir-widget
   installationId="YOUR_INSTALLATION_ID"
   owner="your-username"
   repo="your-repo"
-></wafir-reporter>
+></wafir-widget>
 ```
 
 ## Configuration Reference

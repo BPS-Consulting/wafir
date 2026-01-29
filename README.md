@@ -1,13 +1,15 @@
 # Wafir - The Web App Feedback and Issue Reporter
 
-Wafir is a lightweight feedback and issue reporting tool that seamlessly connects input from users and testers to your GitHub-based development workflow. It captures user input, screenshots, console logs, and essential browser telemetry to accelerate debugging.  See details at https://bps-consulting.github.io/wafir/.
+Wafir is a lightweight feedback and issue reporting tool that seamlessly connects input from users and testers to your GitHub-based development workflow. It captures user input, screenshots, console logs, and essential browser telemetry to accelerate debugging. See details at https://bps-consulting.github.io/wafir/.
 
 ## What's in this Repo
-This repository contains everything needed to build, use, and support Wafir.  You don't need to clone the repo to use Wafir: simply get the widget code and add it to your web application as described in the [Quickstart Guide](QUICKSTART.md).
+
+This repository contains everything needed to build, use, and support Wafir. You don't need to clone the repo to use Wafir: simply get the widget code and add it to your web application as described in the [Quickstart Guide](QUICKSTART.md).
 
 The repo includes source code for the following:
+
 - **Wafir Widget** (packages/wafir): A web component built with Lit that you can embed in any web application to collect user feedback.
-- **Bridge Service** (apps/bridge): A Fastify-based backend service that handles feedback submissions, file uploads, and GitHub integration.  See the [wafir-infrastructure](https://github.com/bps-consulting/wafir-infrastructure) repo for deployment and infrastructure details.
+- **Bridge Service** (apps/bridge): A Fastify-based backend service that handles feedback submissions, file uploads, and GitHub integration. See the [wafir-infrastructure](https://github.com/bps-consulting/wafir-infrastructure) repo for deployment and infrastructure details.
 - **Test Web Page** (packages/wafir/index.html): A simple HTML page to test the Wafir widget in isolation.
 - **React Consumer** (internal/react-consumer): A sample React application demonstrating how to integrate the Wafir widget. {TODO: Update or remove if needed}
 - **Framework Wrappers** (packages/react, packages/vue): Sample React and Vue wrappers demonstrating how to integrate the Wafir widget into popular frameworks.
@@ -117,7 +119,7 @@ The widget can be configured via attributes or JavaScript initialization. See th
 
 ### CSS Customization
 
-Wafir uses Shadow DOM for isolation but exposes CSS custom properties for theming. Set these on the `wafir-reporter` element:
+Wafir uses Shadow DOM for isolation but exposes CSS custom properties for theming. Set these on the `wafir-widget` element:
 
 #### Reporter Variables
 
@@ -183,7 +185,7 @@ Wafir uses Shadow DOM for isolation but exposes CSS custom properties for themin
 #### Example
 
 ```css
-wafir-reporter {
+wafir-widget {
   --wafir-primary-color: #6366f1;
   --wafir-primary-hover: #818cf8;
   --wafir-modal-bg: #ffffff;

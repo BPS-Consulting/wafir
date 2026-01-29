@@ -1,41 +1,50 @@
 # Bridge Service Health Check - Design Document
 
 ## Overview
+
 This enhancement provides users with an indication when the Wafir bridge service is unavailable by implementing a health check system and conditionally disabling the submit button.
 
 ## Architecture
 
 ### 1. Health Endpoint (Bridge Service)
+
 **File:** `apps/bridge/src/routes/health.ts`
 
 A new lightweight endpoint that returns service status:
+
 - **Route:** `GET /health`
 - **Response:** `{ status: "ok", timestamp: "2026-01-24T..." }`
 - **Purpose:** Allows clients to quickly verify the bridge service is reachable
 - **No Authentication Required:** Public endpoint for status checks
 
 ### 2. Health Check Function (Client API)
+
 **File:** `packages/wafir/src/api/client.ts`
 
 New function `checkBridgeHealth()`:
+
 - Calls the `/health` endpoint
 - 5-second timeout to prevent long hangs
 - Returns boolean: `true` if service is available, `false` otherwise
 - Handles network errors gracefully with console warnings
 
 ### 3. Bridge Availability State (Widget)
-**File:** `packages/wafir/src/wafir-reporter.ts`
+
+**File:** `packages/wafir/src/wafir-widget.ts`
 
 Added state management:
+
 - **State:** `isBridgeAvailable` (boolean, default: true)
 - **Health Check Trigger:** Runs when modal opens via `_openModal()`
 - **Check Method:** `_checkBridgeHealth()` - calls API and updates state
 - **State Propagation:** Passes `bridgeAvailable` prop to `wafir-form`
 
 ### 4. Conditional Submit Button (Form)
+
 **File:** `packages/wafir/src/wafir-form.ts`
 
 Updated form component:
+
 - **New Prop:** `bridgeAvailable` (boolean, default: true)
 - **Submit Button Behavior:**
   - Disabled when `!bridgeAvailable` or `loading`
@@ -43,6 +52,7 @@ Updated form component:
   - Visual state clearly indicates the service is unreachable
 
 ### 5. OpenAPI Schema Update
+
 **File:** `packages/wafir/src/api/index.ts`
 
 Added `/health` endpoint to TypeScript types for type safety across the client.
@@ -79,16 +89,19 @@ Added `/health` endpoint to TypeScript types for type safety across the client.
 ## Technical Details
 
 ### Timeout Handling
+
 - Uses `AbortSignal.timeout(5000)` for 5-second timeout
 - Prevents indefinite waiting on network issues
 - Falls back to unavailable state on timeout
 
 ### Error Handling
+
 - All errors logged to console with warnings
 - Never throws errors to user interface
 - Defaults to "unavailable" on any error for safety
 
 ### Performance
+
 - Lightweight endpoint (no database queries)
 - Parallel execution with config fetch
 - Minimal impact on modal open speed
@@ -105,7 +118,7 @@ Added `/health` endpoint to TypeScript types for type safety across the client.
 
 1. ✅ `apps/bridge/src/routes/health.ts` - New health endpoint
 2. ✅ `packages/wafir/src/api/client.ts` - Health check function
-3. ✅ `packages/wafir/src/wafir-reporter.ts` - State management & health check trigger
+3. ✅ `packages/wafir/src/wafir-widget.ts` - State management & health check trigger
 4. ✅ `packages/wafir/src/wafir-form.ts` - Conditional submit button
 5. ✅ `packages/wafir/src/api/index.ts` - OpenAPI schema update
 

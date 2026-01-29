@@ -124,7 +124,7 @@ Key scripts for major packages:
 - **Vars/const:** `camelCase`
 - **Classes/types/enums:** `PascalCase`
 - **Functions:** `camelCase`
-- **Lit custom elements:** Use dash, e.g., `<wafir-reporter>`
+- **Lit custom elements:** Use dash, e.g., `<wafir-widget>`
 - **React components:** `PascalCase`, default export unless reason not to.
 
 ---

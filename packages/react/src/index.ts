@@ -1,2 +1,2 @@
-export { WafirReporter, default } from "./WafirReporter";
-export type { WafirReporterProps, WafirPosition } from "./WafirReporter";
+export { WafirWidget, default } from "./WafirWidget";
+export type { WafirWidgetProps, WafirPosition } from "./WafirWidget";

@@ -8,7 +8,7 @@ export type WafirPosition =
   | "top-right"
   | "top-left";
 
-export interface WafirReporterProps {
+export interface WafirWidgetProps {
   installationId: number;
   owner: string;
   repo: string;
@@ -19,7 +19,7 @@ export interface WafirReporterProps {
   buttonText?: string;
 }
 
-interface WafirReporterElement extends HTMLElement {
+interface WafirWidgetElement extends HTMLElement {
   installationId?: number;
   owner?: string;
   repo?: string;
@@ -30,11 +30,11 @@ interface WafirReporterElement extends HTMLElement {
   buttonText?: string;
 }
 
-const props = withDefaults(defineProps<WafirReporterProps>(), {
+const props = withDefaults(defineProps<WafirWidgetProps>(), {
   position: "bottom-right",
 });
 
-const elementRef = ref<WafirReporterElement | null>(null);
+const elementRef = ref<WafirWidgetElement | null>(null);
 
 onMounted(() => {
   watchEffect(() => {
@@ -53,7 +53,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <component :is="'wafir-reporter'" ref="elementRef">
+  <component :is="'wafir-widget'" ref="elementRef">
     <template v-if="$slots.default">
       <div slot="trigger">
         <slot></slot>

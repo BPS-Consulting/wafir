@@ -95,11 +95,11 @@ This runs:
 Update `wafir/index.html` with your test details:
 
 ```html
-<wafir-reporter
+<wafir-widget
   installationId="YOUR_INSTALLATION_ID"
   owner="YOUR_GITHUB_USERNAME"
   repo="YOUR_REPO_NAME"
-></wafir-reporter>
+></wafir-widget>
 ```
 
 Or use the **React Consumer** in `react-consumer/src/App.tsx`:
@@ -110,7 +110,7 @@ import "wafir";
 function App() {
   return (
     <>
-      <wafir-reporter installationId={12345678} owner="owner" repo="repo" />
+      <wafir-widget installationId={12345678} owner="owner" repo="repo" />
       <h1>Wafir Test</h1>
     </>
   );
@@ -205,18 +205,18 @@ docker run -p 3000:3000 --env-file .env wafir-bridge
 Configure the widget to use your self-hosted bridge:
 
 ```html
-<wafir-reporter
+<wafir-widget
   installationId="YOUR_INSTALLATION_ID"
   owner="YOUR_GITHUB_USERNAME"
   repo="YOUR_REPO_NAME"
   bridgeUrl="https://your-bridge.example.com"
-></wafir-reporter>
+></wafir-widget>
 ```
 
 Or in React:
 
 ```tsx
-<wafir-reporter
+<wafir-widget
   installationId={12345678}
   owner="owner"
   repo="repo"

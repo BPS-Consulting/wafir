@@ -26,21 +26,21 @@ Import and use the web component in your application:
   import 'wafir';
 </script>
 
-<wafir-reporter
+<wafir-widget
   installation-id="123"
   owner="your-org"
   repo="your-repo"
-></wafir-reporter>
+></wafir-widget>
 \`\`\`
 
 For React applications, use the \`@wafir/react\` wrapper:
 
 \`\`\`tsx
-import { WafirReporter } from '@wafir/react';
+import { WafirWidget } from '@wafir/react';
 
 function App() {
   return (
-    <WafirReporter
+    <WafirWidget
       installationId={123}
       owner="your-org"
       repo="your-repo"
@@ -59,7 +59,7 @@ function App() {
 Wafir uses CSS custom properties for easy theming. Override these in your stylesheet:
 
 \`\`\`css
-wafir-reporter {
+wafir-widget {
   --wafir-primary-color: #7c3aed;
   --wafir-primary-hover: #6d28d9;
   --wafir-button-size: 56px;
@@ -83,7 +83,7 @@ wafir-reporter {
     content: `
 ## Component Props
 
-### WafirReporter
+### WafirWidget
 
 | Prop | Type | Required | Description |
 |------|------|----------|-------------|
@@ -96,7 +96,7 @@ wafir-reporter {
 The component emits custom events you can listen to:
 
 \`\`\`javascript
-const reporter = document.querySelector('wafir-reporter');
+const reporter = document.querySelector('wafir-widget');
 
 reporter.addEventListener('wafir-submit', (e) => {
   console.log('Bug report submitted:', e.detail);
@@ -243,7 +243,7 @@ function DocContent({ content }: { content: string }) {
           <code className={`language-${lang} text-sm text-surface-200`}>
             {code}
           </code>
-        </pre>
+        </pre>,
       );
     }
   }

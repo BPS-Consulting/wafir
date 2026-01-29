@@ -1,5 +1,5 @@
-import reporterStyles from "./wafir-reporter.css?inline";
+import widgetStyles from "./wafir-widget.css?inline";
 import formStyles from "./wafir-form.css?inline";
 import highlighterStyles from "./wafir-highlighter.css?inline";
 
-export { reporterStyles, formStyles, highlighterStyles };
+export { widgetStyles, formStyles, highlighterStyles };

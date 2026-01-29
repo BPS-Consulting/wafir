@@ -1,7 +1,7 @@
 import { LitElement, html, unsafeCSS } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
-import reporterStyles from "./styles/wafir-reporter.css?inline";
+import widgetStyles from "./styles/wafir-widget.css?inline";
 import bugIcon from "./assets/bug.svg?raw";
 import thumbsupIcon from "./assets/thumbsup.svg?raw";
 import lightbulbIcon from "./assets/lightbulb.svg?raw";
@@ -34,8 +34,8 @@ const TAB_ICONS: Record<string, string> = {
   bug: bugIcon,
 };
 
-@customElement("wafir-reporter")
-export class WafirReporter extends LitElement {
+@customElement("wafir-widget")
+export class WafirWidget extends LitElement {
   @property({ type: String })
   buttonText = "";
 
@@ -46,7 +46,7 @@ export class WafirReporter extends LitElement {
   position: WidgetPosition = "bottom-right";
 
   @property({ type: String })
-  tooltipText = "Open Issue Reporter";
+  tooltipText = "Open Issue Widget";
 
   @property({ type: Array })
   tabs: TabConfig[] = [];
@@ -83,7 +83,7 @@ export class WafirReporter extends LitElement {
     consoleLog: false,
   };
 
-  static styles = [unsafeCSS(reporterStyles)];
+  static styles = [unsafeCSS(widgetStyles)];
 
   connectedCallback() {
     super.connectedCallback();
@@ -419,6 +419,6 @@ export class WafirReporter extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "wafir-reporter": WafirReporter;
+    "wafir-widget": WafirWidget;
   }
 }

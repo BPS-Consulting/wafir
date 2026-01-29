@@ -8,7 +8,7 @@ Wafir uses Shadow DOM for isolation, but exposes CSS custom properties and `::pa
 
 ### CSS Custom Properties
 
-Override these variables on the `wafir-reporter` element to customize the widget's appearance.
+Override these variables on the `wafir-widget` element to customize the widget's appearance.
 
 #### Reporter Variables
 
@@ -74,7 +74,7 @@ Override these variables on the `wafir-reporter` element to customize the widget
 ### Example
 
 ```css
-wafir-reporter {
+wafir-widget {
   --wafir-primary-color: #6366f1;
   --wafir-primary-hover: #818cf8;
   --wafir-modal-bg: #ffffff;
@@ -91,12 +91,12 @@ Use `::part()` to style specific elements:
 
 ```css
 /* Style the trigger button */
-wafir-reporter::part(button) {
+wafir-widget::part(button) {
   background: #10b981;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
-wafir-reporter::part(button):hover {
+wafir-widget::part(button):hover {
   background: #059669;
 }
 ```
@@ -122,14 +122,14 @@ Replace the default floating button with your own custom trigger element using t
 ### React Example
 
 ```jsx
-import { WafirReporter } from "@wafir/react";
+import { WafirWidget } from "@wafir/react";
 
 function App() {
   return (
-    <WafirReporter installationId={12345} owner="your-org" repo="your-repo">
+    <WafirWidget installationId={12345} owner="your-org" repo="your-repo">
       {/* Your custom trigger */}
       <button className="my-custom-button">Report an Issue</button>
-    </WafirReporter>
+    </WafirWidget>
   );
 }
 ```
@@ -138,19 +138,19 @@ function App() {
 
 ```vue
 <template>
-  <WafirReporter :installation-id="12345" owner="your-org" repo="your-repo">
+  <WafirWidget :installation-id="12345" owner="your-org" repo="your-repo">
     <!-- Your custom trigger -->
     <button class="my-custom-button">Report an Issue</button>
-  </WafirReporter>
+  </WafirWidget>
 </template>
 ```
 
 ### Vanilla HTML Example
 
 ```html
-<wafir-reporter installationId="12345" owner="your-org" repo="your-repo">
+<wafir-widget installationId="12345" owner="your-org" repo="your-repo">
   <button slot="trigger" class="my-custom-button">Report an Issue</button>
-</wafir-reporter>
+</wafir-widget>
 ```
 
 > **Tip:** Your custom trigger element should handle its own styling. The widget will automatically open/close the modal when clicked.
