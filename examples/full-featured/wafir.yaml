@@ -13,65 +13,142 @@ telemetry:
 
 tabs:
   - id: feedback
-    label: Feedback
-    icon: thumbsup
+    label: "Product Feedback"
+    icon: "star"
     isFeedback: true
     fields:
+      - id: intro
+        type: markdown
+        attributes:
+          value: |
+            # 📝 Share Your Feedback
+            _Thank you for helping us improve!_
+            Please tell us about your experience.
       - id: rating
         type: rating
         attributes:
-          label: "How satisfied are you?"
+          label: "Overall Experience"
+          ratingLabels:
+            - "Very Unsatisfied"
+            - "Unsatisfied"
+            - "Neutral"
+            - "Satisfied"
+            - "Excellent"
         validations:
           required: true
-      - id: description
-        type: textarea
+      - id: highlights
+        type: checkboxes
         attributes:
-          label: "What is the main reason for this rating?"
+          label: "What stood out to you?"
+          options:
+            - label: "Speed"
+            - label: "Features"
+            - label: "UI/Design"
+            - label: "Ease of Use"
+            - label: "Support"
+            - label: "Other"
         validations:
           required: false
-
-  - id: suggestion
-    label: Suggestion
-    icon: lightbulb
+      - id: detailed_feedback
+        type: textarea
+        attributes:
+          label: "Please tell us more"
+          description: "What could we do better? Which features do you want?"
+          placeholder: "E.g. The app was fast but it was hard to find the export button..."
+        validations:
+          required: false
+      - id: consent
+        type: checkboxes
+        attributes:
+          label: "May we contact you for more info?"
+          options:
+            - label: "Yes, you may email me"
+        validations:
+          required: false
+      - id: email
+        type: email
+        attributes:
+          label: "Your Email (optional)"
+          placeholder: "you@example.com"
+        validations:
+          required: false
+  - id: bug
+    label: "Bug Report"
+    icon: "bug"
+    isFeedback: false
     fields:
+      - id: bug_intro
+        type: markdown
+        attributes:
+          value: |
+            ## 🐛 Report a Bug
+            Please fill out **all required fields** and add screenshots if possible.
       - id: title
         type: input
         attributes:
-          label: "What is your suggestion?"
+          label: "Short Description"
+          placeholder: "What went wrong?"
         validations:
           required: true
-      - id: description
+      - id: steps
         type: textarea
         attributes:
-          label: "Additional details"
-        validations:
-          required: false
-
-  - id: issue
-    label: Issue
-    icon: bug
-    fields:
-      - id: title
-        type: input
-        attributes:
-          label: "Issue Title"
+          label: "Steps to Reproduce"
+          description: "Help us trigger the bug by describing it in detail."
+          placeholder: |
+            1. Go to settings page
+            2. Click 'Save'
+            3. See error message
         validations:
           required: true
-      - id: description
+      - id: expected
         type: textarea
         attributes:
-          label: "Detailed Description"
+          label: "Expected Behavior"
+          placeholder: "Describe what you expected to happen"
         validations:
           required: true
-      - id: priority
+      - id: actual
+        type: textarea
+        attributes:
+          label: "Actual Behavior"
+          placeholder: "Describe what actually happened"
+        validations:
+          required: true
+      - id: browser
         type: dropdown
         attributes:
-          label: "Priority"
+          label: "Browser/Platform"
           options:
-            - "Low"
-            - "Medium"
-            - "High"
-            - "Critical"
+            - "Chrome"
+            - "Firefox"
+            - "Safari"
+            - "Edge"
+            - "Mobile"
+            - "Other"
+        validations:
+          required: false
+      - id: screenshot_tip
+        type: markdown
+        attributes:
+          value: |
+            _Tip: Attach a screenshot on the next screen for faster diagnosis!_
+  - id: suggestion
+    label: "Suggest a Feature"
+    icon: "lightbulb"
+    isFeedback: false
+    fields:
+      - id: idea_intro
+        type: markdown
+        attributes:
+          value: |
+            # 💡 Feature Suggestion
+            Tell us about your idea! We love hearing from you.
+      - id: summary
+        type: input
+        attributes:
+          label: "Feature Title"
+          placeholder: "Give your idea a catchy name"
         validations:
           required: true
       - id: category
@@ -79,40 +156,114 @@ tabs:
         attributes:
           label: "Category"
           options:
-            - "Bug"
-            - "Feature Request"
-            - "Documentation"
-            - "Question"
+            - "UI/UX"
+            - "Performance"
+            - "Integration"
+            - "Developer Tools"
+            - "Security"
+            - "Other"
+        validations:
+          required: false
+      - id: impact
+        type: textarea
+        attributes:
+          label: "Who or what will this help?"
+          placeholder: "Tell us how this will make things better!"
+        validations:
+          required: false
+      - id: detail
+        type: textarea
+        attributes:
+          label: "Describe your idea"
+          description: "Add as much detail as you like, including example flows or mockups."
+        validations:
+          required: true
+  - id: docs
+    label: "Docs Issue"
+    icon: "book"
+    isFeedback: false
+    fields:
+      - id: docs_intro
+        type: markdown
+        attributes:
+          value: |
+            # 📚 Documentation Issue
+            Help us spot and fix docs errors. Be as specific as possible!
+      - id: doc_section
+        type: dropdown
+        attributes:
+          label: "Affected Section"
+          options:
+            - "Getting Started"
+            - "API Reference"
+            - "Tutorials"
+            - "FAQ"
             - "Other"
         validations:
           required: true
-      - id: steps_to_reproduce
+      - id: doc_url
+        type: input
+        attributes:
+          label: "Relevant URL"
+          placeholder: "Paste the docs link (optional)"
+        validations:
+          required: false
+      - id: doc_problem
         type: textarea
         attributes:
-          label: "Steps to Reproduce"
+          label: "What's wrong or missing?"
+          placeholder: "Explain the confusion or error"
         validations:
-          required: false
-      - id: expected_behavior
-        type: input
+          required: true
+      - id: doc_suggestion
+        type: textarea
         attributes:
-          label: "Expected Behavior"
+          label: "Suggestion"
+          description: "How should this section be improved or clarified?"
         validations:
           required: false
-      - id: actual_behavior
-        type: input
+  - id: privacy
+    label: "Privacy Question"
+    icon: "lock"
+    isFeedback: false
+    fields:
+      - id: privacy_intro
+        type: markdown
         attributes:
-          label: "Actual Behavior"
+          value: |
+            # 🔒 Privacy Inquiry
+            Learn how your data is used, request removal, or give privacy feedback.
+      - id: subject
+        type: dropdown
+        attributes:
+          label: "Subject"
+          options:
+            - "GDPR Request"
+            - "Data Removal"
+            - "Cookie Policy"
+            - "Data Sharing/Third-Party"
+            - "General Privacy Feedback"
         validations:
-          required: false
+          required: true
+      - id: privacy_detail
+        type: textarea
+        attributes:
+          label: "Question or Request"
+          description: "Include as much detail as you're comfortable sharing."
+        validations:
+          required: true
       - id: contact_email
         type: email
         attributes:
-          label: "Your Email (optional for follow-up)"
+          label: "Contact Email (optional)"
+          placeholder: "you@private.com"
         validations:
           required: false
-      - id: accepts_contact
+      - id: consent_feedback
         type: checkboxes
         attributes:
-          label: "I'm okay with follow-up questions"
+          label: "May we follow up?"
+          options:
+            - label: "Yes, I'd like a reply"
         validations:
           required: false
