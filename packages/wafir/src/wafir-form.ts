@@ -6,6 +6,9 @@ import { customElement, property } from "lit/decorators.js";
 import { StoreController } from "@nanostores/lit";
 import { formData, setFormData, browserInfo, consoleLogs } from "./store";
 import type { FieldConfigApi as FieldConfig } from "./api/client";
+import { marked } from "marked";
+import DOMPurify from "dompurify";
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
 @customElement("wafir-form")
 export class WafirForm extends LitElement {
@@ -88,8 +91,6 @@ export class WafirForm extends LitElement {
   // Render form field input for all supported types
   private _renderFieldInput(field: FieldConfig) {
     const value = this._formDataController.value[String(field.id)] || "";
-
-    // Helper: options can be string[] OR {label:string}[]
     const opts = field.attributes?.options;
     function isOptionObjectArray(
       opts: FieldConfig["attributes"] extends undefined
@@ -106,6 +107,17 @@ export class WafirForm extends LitElement {
     }
 
     switch (field.type) {
+      case "markdown": {
+        // Render block with markdown (no label for markdown)
+        const markdown =
+          field.attributes?.value || field.attributes?.label || "";
+        // Render markdown as HTML, sanitized
+        // Render markdown as HTML, sanitized
+        // TypeScript: marked.parse can return string | Promise<string>, but
+        // we only use it in synchronous mode so a string is guaranteed.
+        const htmlString = DOMPurify.sanitize(marked.parse(markdown) as string);
+        return html`<div class="form-markdown">${unsafeHTML(htmlString)}</div>`;
+      }
       case "textarea":
         return html`
           <textarea
@@ -117,7 +129,6 @@ export class WafirForm extends LitElement {
               this._handleInputChange(e, String(field.id))}"
           ></textarea>
         `;
-
       case "dropdown": // GitHub Issue Forms (was select)
         return html`
           <select
@@ -140,7 +151,6 @@ export class WafirForm extends LitElement {
                 : ""}
           </select>
         `;
-
       case "checkboxes": // GitHub Issue Forms (was checkbox group; multi-select)
         return html`
           <div class="checkboxes-group">
@@ -203,7 +213,6 @@ export class WafirForm extends LitElement {
                 : ""}
           </div>
         `;
-
       case "rating":
         return html`
           <wafir-star-rating
@@ -239,13 +248,14 @@ export class WafirForm extends LitElement {
     return html`
       <form @submit="${this._handleSubmit}">
         ${this.fields.map((field) => {
-          // (hidden is not in API schema, so this check is skipped)
-          // (was: if (field.type === "checkbox"))
           if (field.type === "checkboxes")
             return html`<div class="form-group">
               ${this._renderFieldInput(field)}
             </div>`;
-
+          if (field.type === "markdown")
+            return html`<div class="form-markdown-group">
+              ${this._renderFieldInput(field)}
+            </div>`;
           return html`
             <div class="form-group">
               <label for="${String(field.id)}">
