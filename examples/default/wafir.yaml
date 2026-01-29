@@ -42,7 +42,7 @@ tabs:
     fields:
       - name: title
         label: "What is your suggestion?"
-        type: text
+        type: input
         required: true
       - name: description
         label: "Additional information:"
@@ -55,7 +55,7 @@ tabs:
     fields:
       - name: title
         label: "What issue did you encounter?"
-        type: text
+        type: input
         required: true
       - name: description
         label: "Additional information:"

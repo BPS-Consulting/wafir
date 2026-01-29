@@ -6,20 +6,30 @@ const fieldSchema = {
     label: { type: "string", description: "Display label for the field" },
     type: {
       type: "string",
-      enum: ["text", "email", "textarea", "select", "checkbox", "rating"],
-      description: "Input type",
+      enum: [
+        "input",
+        "email",
+        "textarea",
+        "dropdown",
+        "checkboxes",
+        "markdown",
+        "rating",
+      ],
+      description:
+        "Field input type. Allowed types:\n- input: Single-line text (GitHub Issue Forms type)\n- textarea: Multiline text (GitHub Issue Forms type)\n- dropdown: Single-select options (GitHub Issue Forms type)\n- checkboxes: Multi-select options (GitHub Issue Forms type)\n- markdown: For headings, descriptions (GitHub Issue Forms type)\n- email: Single-line email input (Wafir extension, not in GitHub Issue Forms)\n- rating: Star rating field (Wafir extension, not in GitHub Issue Forms)",
     },
     required: { type: "boolean", default: false },
     placeholder: { type: "string" },
     options: {
       type: "array",
       items: { type: "string" },
-      description: "Options for select type",
+      description: "Options for dropdown or checkboxes field types only.",
     },
     ratingLabels: {
       type: "array",
       items: { type: "string" },
-      description: "Labels for each rating star (1-5)",
+      description:
+        "Labels for each rating star (1-5). Only used for rating field (Wafir extension).",
     },
   },
 };

@@ -18,14 +18,14 @@ tabs:
     fields:
       - name: title
         label: "Subject"
-        type: text
+         type: input
         required: true
       - name: description
         label: "Your Feedback"
-        type: textarea
+         type: textarea
         required: true
       - name: category
         label: "Type"
-        type: select
+         type: dropdown
         options: ["Bug Report", "Feature Request", "General Feedback"]
         required: false

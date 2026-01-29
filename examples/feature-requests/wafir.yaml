@@ -13,7 +13,7 @@ tabs:
     fields:
       - name: title
         label: "Feature Title"
-        type: text
+        type: input
         required: true
       - name: description
         label: "Describe your idea"
@@ -25,7 +25,7 @@ tabs:
         required: true
       - name: priority
         label: "How important is this to you?"
-        type: select
+        type: dropdown
         options:
           [
             "Nice to have",

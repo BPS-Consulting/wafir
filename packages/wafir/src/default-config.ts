@@ -28,7 +28,7 @@ export const DEFAULT_SUGGESTION_FIELDS: FieldConfig[] = [
   {
     id: "title",
     label: "What is your suggestion?",
-    type: "text",
+    type: "input",
     required: true,
   },
   {
@@ -43,7 +43,7 @@ export const DEFAULT_ISSUE_FIELDS: FieldConfig[] = [
   {
     id: "title",
     label: "What issue did you encounter?",
-    type: "text",
+    type: "input",
     required: true,
   },
   {

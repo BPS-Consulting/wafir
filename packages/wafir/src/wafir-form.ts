@@ -103,7 +103,7 @@ export class WafirForm extends LitElement {
           ></textarea>
         `;
 
-      case "select":
+      case "dropdown": // GitHub Issue Forms (was select)
         return html`
           <select
             id="${field.id}"
@@ -118,7 +118,45 @@ export class WafirForm extends LitElement {
           </select>
         `;
 
-      case "switch":
+      case "checkboxes": // GitHub Issue Forms (was checkbox group; multi-select)
+        return html`
+          <div class="checkboxes-group">
+            ${field.options?.map(
+              (opt) => html`
+                <label>
+                  <input
+                    type="checkbox"
+                    name="${field.id}"
+                    .checked="${(value || []).includes(opt)}"
+                    @change="${(e: Event) => {
+                      const checked = (e.target as HTMLInputElement).checked;
+                      let arr = Array.isArray(value) ? [...value] : [];
+                      if (checked) arr.push(opt);
+                      else arr = arr.filter((v) => v !== opt);
+                      setFormData({ ...formData.get(), [field.id]: arr });
+                    }}"
+                  />
+                  ${opt}
+                </label>
+              `,
+            )}
+          </div>
+        `;
+        return html`
+          <select
+            id="${field.id}"
+            .value="${value}"
+            ?required="${field.required}"
+            @change="${(e: Event) => this._handleInputChange(e, field.id)}"
+          >
+            <option value="" disabled selected>Select an option</option>
+            ${field.options?.map(
+              (opt) => html`<option value="${opt}">${opt}</option>`,
+            )}
+          </select>
+        `;
+
+        // removed unsupported legacy: case "switch":
         const currentValue = value || field.options?.[0] || "";
         return html`
           <div class="switch-container">
@@ -138,7 +176,8 @@ export class WafirForm extends LitElement {
           </div>
         `;
 
-      case "checkbox":
+        // (was: case "checkbox":)
+
         return html`
           <div class="checkbox-group">
             <input
@@ -151,7 +190,7 @@ export class WafirForm extends LitElement {
           </div>
         `;
 
-      case "screenshot":
+        // removed unsupported legacy: case "screenshot":
         return html`
           <div>
             ${this._capturedImageController.value
@@ -242,7 +281,8 @@ export class WafirForm extends LitElement {
           ></wafir-star-rating>
         `;
 
-      case "text":
+      case "input": // GitHub Issue Forms (was text)
+
       case "email":
       default:
         return html`
@@ -264,7 +304,8 @@ export class WafirForm extends LitElement {
       <form @submit="${this._handleSubmit}">
         ${this.fields.map((field) => {
           if (field.hidden) return this._renderFieldInput(field);
-          if (field.type === "checkbox")
+          // (was: if (field.type === "checkbox"))
+          if (field.type === "checkboxes")
             return html`<div class="form-group">
               ${this._renderFieldInput(field)}
             </div>`;
@@ -279,12 +320,16 @@ export class WafirForm extends LitElement {
           `;
         })}
 
-        <button class="submit-button" type="submit" ?disabled="${this.loading || !this.bridgeAvailable}">
+        <button
+          class="submit-button"
+          type="submit"
+          ?disabled="${this.loading || !this.bridgeAvailable}"
+        >
           ${this.loading
             ? html`<span class="spinner"></span> Submitting...`
             : !this.bridgeAvailable
-            ? "Service Unavailable"
-            : "Submit"}
+              ? "Service Unavailable"
+              : "Submit"}
         </button>
 
         ${this.showBrowserInfo && this._browserInfoController.value

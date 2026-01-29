@@ -32,7 +32,7 @@ tabs:
     fields:
       - name: title
         label: "What is your suggestion?"
-        type: text
+        type: input
         required: true
       - name: description
         label: "Additional details"
@@ -45,7 +45,7 @@ tabs:
     fields:
       - name: title
         label: "Issue Title"
-        type: text
+        type: input
         required: true
       - name: description
         label: "Detailed Description"
@@ -53,12 +53,12 @@ tabs:
         required: true
       - name: priority
         label: "Priority"
-        type: select
+        type: dropdown
         options: ["Low", "Medium", "High", "Critical"]
         required: true
       - name: category
         label: "Category"
-        type: select
+        type: dropdown
         options:
           ["Bug", "Feature Request", "Documentation", "Question", "Other"]
         required: true
@@ -68,11 +68,11 @@ tabs:
         required: false
       - name: expected_behavior
         label: "Expected Behavior"
-        type: text
+        type: input
         required: false
       - name: actual_behavior
         label: "Actual Behavior"
-        type: text
+        type: input
         required: false
       - name: contact_email
         label: "Your Email (optional for follow-up)"
@@ -80,5 +80,5 @@ tabs:
         required: false
       - name: accepts_contact
         label: "I'm okay with follow-up questions"
-        type: checkbox
+        type: checkboxes
         required: false

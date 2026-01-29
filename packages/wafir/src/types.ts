@@ -1,12 +1,11 @@
 export type FieldType =
-  | "text"
-  | "email"
-  | "textarea"
-  | "select"
-  | "checkbox"
-  | "screenshot"
-  | "switch"
-  | "rating";
+  | "input" // GitHub Issue Forms (text)
+  | "email" // Wafir extension
+  | "textarea" // GitHub Issue Forms
+  | "dropdown" // GitHub Issue Forms (select)
+  | "checkboxes" // GitHub Issue Forms (checkbox)
+  | "markdown" // GitHub Issue Forms (markdown/informational)
+  | "rating"; // Wafir extension
 
 export interface FieldConfig {
   id: string;

@@ -14,7 +14,11 @@ tabs:
     fields:
       - name: title
         label: "Issue Title"
-        type: text
+        type: input
+        required: true
+      - name: description
+        label: "Description"
+        type: textarea
         required: true
       - name: description
         label: "Description"

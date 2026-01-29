@@ -14,24 +14,24 @@ tabs:
     fields:
       - name: title
         label: "Summary"
-        type: text
+         type: input
         required: true
       - name: description
         label: "Details"
-        type: textarea
+         type: textarea
         required: true
       - name: type
         label: "Type"
-        type: select
+         type: dropdown
         options: ["Bug", "Feature Request", "Improvement", "Question"]
         required: true
       - name: priority
         label: "Priority"
-        type: select
+         type: dropdown
         options: ["Low", "Medium", "High"]
         required: false
       - name: area
         label: "Affected Area"
-        type: select
+         type: dropdown
         options: ["UI/UX", "Backend", "API", "Documentation", "Other"]
         required: false
