@@ -38,6 +38,7 @@ export default defineConfig(({ command, mode }) => {
       },
       outDir: "dist",
       emptyOutDir: isBrowserBundle ? false : true,
+      minify: "terser",
     },
     plugins: [
       {
