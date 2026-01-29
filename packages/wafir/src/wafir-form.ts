@@ -4,22 +4,21 @@ import formStyles from "./styles/wafir-form.css?inline";
 import "./star-rating.js";
 import { customElement, property } from "lit/decorators.js";
 import { StoreController } from "@nanostores/lit";
-import {
-  startSelection,
-  capturedImage,
-  setCapturedImage,
-  formData,
-  setFormData,
-  browserInfo,
-  consoleLogs,
-} from "./store";
-import { takeFullPageScreenshot } from "./utils/screenshot";
-import type { FieldConfig } from "./types";
+import { formData, setFormData, browserInfo, consoleLogs } from "./store";
+import type { FieldConfigApi as FieldConfig } from "./api/client";
+import { normalizeField } from "./default-config";
 
 @customElement("wafir-form")
 export class WafirForm extends LitElement {
+  private _fields: FieldConfig[] = [];
+
   @property({ type: Array })
-  fields: FieldConfig[] = [];
+  get fields(): FieldConfig[] {
+    return this._fields;
+  }
+  set fields(val: FieldConfig[]) {
+    this._fields = (val || []).map(normalizeField);
+  }
 
   @property({ type: Boolean })
   showBrowserInfo = false;
@@ -36,7 +35,6 @@ export class WafirForm extends LitElement {
   @property({ type: Boolean })
   bridgeAvailable = true;
 
-  private _capturedImageController = new StoreController(this, capturedImage);
   private _formDataController = new StoreController(this, formData);
   private _browserInfoController = new StoreController(this, browserInfo);
   private _consoleLogsController = new StoreController(this, consoleLogs);
@@ -50,8 +48,8 @@ export class WafirForm extends LitElement {
       const newData = { ...currentData };
 
       this.fields.forEach((field) => {
-        if (field.attributes.value && !newData[field.id]) {
-          newData[field.id] = field.attributes.value;
+        if (field.attributes!.value && !newData[String(field.id) || ""]) {
+          newData[String(field.id) || ""] = field.attributes!.value;
           hasChanges = true;
         }
       });
@@ -88,185 +86,122 @@ export class WafirForm extends LitElement {
   }
 
   // Helper to render specific input types
+  // Render form field input for all supported types
   private _renderFieldInput(field: FieldConfig) {
-    const value = this._formDataController.value[field.id] || "";
+    const value = this._formDataController.value[String(field.id)] || "";
+
+    // Helper: options can be string[] OR {label:string}[]
+    const opts = field.attributes?.options;
+    function isOptionObjectArray(
+      opts: FieldConfig["attributes"] extends undefined
+        ? undefined
+        : NonNullable<FieldConfig["attributes"]>["options"],
+    ): opts is Array<{ label: string; required?: boolean }> {
+      return (
+        Array.isArray(opts) &&
+        opts.length > 0 &&
+        typeof opts[0] === "object" &&
+        opts[0] !== null &&
+        "label" in opts[0]
+      );
+    }
 
     switch (field.type) {
       case "textarea":
         return html`
           <textarea
-            id="${field.id}"
+            id="${String(field.id)}"
             .value="${value}"
-            placeholder="${field.attributes.placeholder || ""}"
+            placeholder="${field.attributes!.placeholder || ""}"
             ?required="${field.validations?.required}"
-            @input="${(e: Event) => this._handleInputChange(e, field.id)}"
+            @input="${(e: Event) =>
+              this._handleInputChange(e, String(field.id))}"
           ></textarea>
         `;
 
       case "dropdown": // GitHub Issue Forms (was select)
         return html`
           <select
-            id="${field.id}"
+            id="${String(field.id)}"
             .value="${value}"
             ?required="${field.validations?.required}"
-            @change="${(e: Event) => this._handleInputChange(e, field.id)}"
+            @change="${(e: Event) =>
+              this._handleInputChange(e, String(field.id))}"
           >
             <option value="" disabled selected>Select an option</option>
-            ${field.attributes.options?.map(
-              (opt) => html`<option value="${opt}">${opt}</option>`,
-            )}
+            ${opts && isOptionObjectArray(opts)
+              ? opts.map(
+                  (opt) =>
+                    html`<option value="${opt.label}">${opt.label}</option>`,
+                )
+              : Array.isArray(opts)
+                ? opts.map(
+                    (opt) => html`<option value="${opt}">${opt}</option>`,
+                  )
+                : ""}
           </select>
         `;
 
       case "checkboxes": // GitHub Issue Forms (was checkbox group; multi-select)
         return html`
           <div class="checkboxes-group">
-            ${field.attributes.options?.map(
-              (opt) => html`
-                <label>
-                  <input
-                    type="checkbox"
-                    name="${field.id}"
-                    .checked="${(value || []).includes(opt)}"
-                    @change="${(e: Event) => {
-                      const checked = (e.target as HTMLInputElement).checked;
-                      let arr = Array.isArray(value) ? [...value] : [];
-                      if (checked) arr.push(opt);
-                      else arr = arr.filter((v) => v !== opt);
-                      setFormData({ ...formData.get(), [field.id]: arr });
-                    }}"
-                  />
-                  ${opt}
-                </label>
-              `,
-            )}
-          </div>
-        `;
-        return html`
-          <select
-            id="${field.id}"
-            .value="${value}"
-            ?required="${field.validations?.required}"
-            @change="${(e: Event) => this._handleInputChange(e, field.id)}"
-          >
-            <option value="" disabled selected>Select an option</option>
-            ${field.attributes.options?.map(
-              (opt) => html`<option value="${opt}">${opt}</option>`,
-            )}
-          </select>
-        `;
-
-        // removed unsupported legacy: case "switch":
-        const currentValue = value || field.attributes.options?.[0] || "";
-        return html`
-          <div class="switch-container">
-            ${field.attributes.options?.map(
-              (opt) => html`
-                <button
-                  type="button"
-                  class="switch-option ${currentValue === opt ? "active" : ""}"
-                  @click="${() => {
-                    setFormData({ ...formData.get(), [field.id]: opt });
-                  }}"
-                >
-                  ${opt}
-                </button>
-              `,
-            )}
-          </div>
-        `;
-
-        // (was: case "checkbox":)
-
-        return html`
-          <div class="checkbox-group">
-            <input
-              type="checkbox"
-              id="${field.id}"
-              .checked="${!!value}"
-              @change="${(e: Event) => this._handleInputChange(e, field.id)}"
-            />
-            <label for="${field.id}">${field.attributes.label}</label>
-          </div>
-        `;
-
-        // removed unsupported legacy: case "screenshot":
-        return html`
-          <div>
-            ${this._capturedImageController.value
-              ? html`
-                  <div class="screenshot-preview">
-                    <img
-                      src="${this._capturedImageController.value}"
-                      alt="Captured screenshot"
-                    />
-                    <button
-                      type="button"
-                      class="screenshot-clear"
-                      @click="${() => setCapturedImage(null)}"
-                    >
-                      &times;
-                    </button>
-                  </div>
-                  <div class="screenshot-actions">
-                    <button
-                      type="button"
-                      @click="${() => takeFullPageScreenshot()}"
-                    >
-                      Retake
-                    </button>
-                    <button
-                      type="button"
-                      class="highlight-btn"
-                      @click="${() => startSelection()}"
-                    >
-                      <svg
-                        width="14"
-                        height="14"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+            ${opts && isOptionObjectArray(opts)
+              ? opts.map(
+                  (opt) => html`
+                    <label>
+                      <input
+                        type="checkbox"
+                        name="${String(field.id)}"
+                        .checked="${(value || []).includes(String(opt.label))}"
+                        @change="${(e: Event) => {
+                          const checked = (e.target as HTMLInputElement)
+                            .checked;
+                          let arr = Array.isArray(value) ? [...value] : [];
+                          if (checked) arr.push(opt.label);
+                          else
+                            arr = arr.filter(
+                              (v) => String(v) !== String(opt.label),
+                            );
+                          setFormData({
+                            ...formData.get(),
+                            [String(field.id)]: arr,
+                          });
+                        }}"
+                      />
+                      ${opt.label}
+                    </label>
+                  `,
+                )
+              : Array.isArray(opts)
+                ? opts.map(
+                    (opt) => html`
+                      <label>
+                        <input
+                          type="checkbox"
+                          name="${String(field.id)}"
+                          .checked="${(value || []).includes(
+                            String(opt ?? ""),
+                          )}"
+                          @change="${(e: Event) => {
+                            const checked = (e.target as HTMLInputElement)
+                              .checked;
+                            let arr = Array.isArray(value) ? [...value] : [];
+                            if (checked) arr.push(opt);
+                            else
+                              arr = arr.filter(
+                                (v) => String(v) !== String(opt),
+                              );
+                            setFormData({
+                              ...formData.get(),
+                              [String(field.id)]: arr,
+                            });
+                          }}"
                         />
-                      </svg>
-                      Highlight
-                    </button>
-                  </div>
-                `
-              : html`
-                  <button
-                    type="button"
-                    class="capture-button"
-                    @click="${() => takeFullPageScreenshot()}"
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                      />
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
-                    Take Screenshot
-                  </button>
-                `}
+                        ${opt}
+                      </label>
+                    `,
+                  )
+                : ""}
           </div>
         `;
 
@@ -274,26 +209,28 @@ export class WafirForm extends LitElement {
         return html`
           <wafir-star-rating
             .value="${Number(value) || 0}"
-            .labels="${field.attributes.ratingLabels || []}"
+            .labels="${field.attributes!.ratingLabels || []}"
             @rating-change="${(e: CustomEvent) => {
-              setFormData({ ...formData.get(), [field.id]: e.detail.value });
+              setFormData({
+                ...formData.get(),
+                [String(field.id)]: e.detail.value,
+              });
             }}"
           ></wafir-star-rating>
         `;
 
-      case "input": // GitHub Issue Forms (was text)
-
+      case "input":
       case "email":
       default:
         return html`
           <input
             type="${field.type}"
-            id="${field.id}"
+            id="${String(field.id)}"
             .value="${value}"
-            placeholder="${field.attributes.placeholder || ""}"
+            placeholder="${field.attributes!.placeholder || ""}"
             ?required="${field.validations?.required}"
-            ?hidden="${field.attributes.hidden}"
-            @input="${(e: Event) => this._handleInputChange(e, field.id)}"
+            @input="${(e: Event) =>
+              this._handleInputChange(e, String(field.id))}"
           />
         `;
     }
@@ -303,7 +240,7 @@ export class WafirForm extends LitElement {
     return html`
       <form @submit="${this._handleSubmit}">
         ${this.fields.map((field) => {
-          if (field.attributes.hidden) return this._renderFieldInput(field);
+          // (hidden is not in API schema, so this check is skipped)
           // (was: if (field.type === "checkbox"))
           if (field.type === "checkboxes")
             return html`<div class="form-group">
@@ -312,8 +249,8 @@ export class WafirForm extends LitElement {
 
           return html`
             <div class="form-group">
-              <label for="${field.id}">
-                ${field.attributes.label}
+              <label for="${String(field.id)}">
+                ${field.attributes?.label ?? field.id}
                 ${field.validations?.required ? "*" : ""}
               </label>
               ${this._renderFieldInput(field)}

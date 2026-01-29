@@ -18,11 +18,18 @@ import {
   consoleLogs,
 } from "./store.js";
 import { StoreController } from "@nanostores/lit";
-import type { FieldConfig, TabConfig } from "./types.js";
+import type {
+  TabConfigApi as TabConfig,
+  FieldConfigApi as FieldConfig,
+} from "./api/client.js";
 import { dataURLtoBlob } from "./utils/file.js";
 import type { ConsoleLog } from "./utils/telemetry.js";
 import { getBrowserInfo, consoleInterceptor } from "./utils/telemetry.js";
-import { getDefaultTabs, getDefaultFields } from "./default-config.js";
+import {
+  getDefaultTabs,
+  getDefaultFields,
+  normalizeField,
+} from "./default-config.js";
 
 type WidgetPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 
@@ -171,15 +178,7 @@ export class WafirReporter extends LitElement {
             isFeedback: tab.isFeedback ?? false,
             fields:
               tab.fields && tab.fields.length > 0
-                ? tab.fields.map((f: any) => ({
-                    id: f.name || f.id,
-                    label: f.label,
-                    type: f.type,
-                    required: f.required,
-                    options: f.options,
-                    placeholder: f.placeholder,
-                    ratingLabels: f.ratingLabels,
-                  }))
+                ? tab.fields.map(normalizeField)
                 : getDefaultFields(tab.id),
           }));
           if (this._tabs.length > 0) {

@@ -1,4 +1,7 @@
-import type { FieldConfig } from "./types.js";
+import type {
+  FieldConfigApi as FieldConfig,
+  TabConfigApi as TabConfig,
+} from "./api/client";
 
 export const RATING_LABELS = [
   "Very Unsatisfied",
@@ -78,8 +81,6 @@ export const DEFAULT_ISSUE_FIELDS: FieldConfig[] = [
   },
 ];
 
-import type { TabConfig } from "./types.js";
-
 export const DEFAULT_TABS: TabConfig[] = [
   {
     id: "feedback",
@@ -92,29 +93,58 @@ export const DEFAULT_TABS: TabConfig[] = [
     id: "suggestion",
     label: "Suggestion",
     icon: "lightbulb",
+    isFeedback: false,
     fields: DEFAULT_SUGGESTION_FIELDS,
   },
   {
     id: "issue",
     label: "Issue",
     icon: "bug",
+    isFeedback: false,
     fields: DEFAULT_ISSUE_FIELDS,
   },
 ];
 
+/**
+ * Ensures all fields and tabs have required subobjects (attributes, validations, fields as array)
+ */
+export function normalizeTab(tab: Partial<TabConfig>): TabConfig {
+  return {
+    id: tab.id || "",
+    label: tab.label || tab.id || "",
+    icon: tab.icon,
+    isFeedback: tab.isFeedback ?? false,
+    fields: (tab.fields || []).map(normalizeField),
+  };
+}
+
+export function normalizeField(field: Partial<FieldConfig>): FieldConfig {
+  return {
+    ...field,
+    id: field.id || "",
+    type: field.type || "input",
+    attributes: {
+      ...field.attributes,
+      label: field.attributes?.label || field.id || "",
+      // fill other defaults here as needed
+    },
+    validations: { ...field.validations },
+  };
+}
+
 export function getDefaultFields(tabId: string): FieldConfig[] {
   switch (tabId) {
     case "feedback":
-      return [...DEFAULT_FEEDBACK_FIELDS];
+      return DEFAULT_FEEDBACK_FIELDS.map(normalizeField);
     case "suggestion":
-      return [...DEFAULT_SUGGESTION_FIELDS];
+      return DEFAULT_SUGGESTION_FIELDS.map(normalizeField);
     case "issue":
-      return [...DEFAULT_ISSUE_FIELDS];
+      return DEFAULT_ISSUE_FIELDS.map(normalizeField);
     default:
       return [];
   }
 }
 
 export function getDefaultTabs(): TabConfig[] {
-  return DEFAULT_TABS.map((tab) => ({ ...tab, fields: [...tab.fields] }));
+  return DEFAULT_TABS.map(normalizeTab);
 }

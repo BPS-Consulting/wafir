@@ -19,11 +19,15 @@ const getClient = () => {
 export type WafirConfig =
   paths["/config"]["get"]["responses"][200]["content"]["application/json"];
 
+// Canonical tab and field types from API schema
+export type TabConfigApi = NonNullable<WafirConfig["tabs"]>[number];
+export type FieldConfigApi = NonNullable<TabConfigApi["fields"]>[number];
+
 export const checkBridgeHealth = async (
   bridgeUrl?: string,
 ): Promise<boolean> => {
   const urlToCheck = bridgeUrl || currentBridgeUrl;
-  
+
   try {
     const response = await fetch(`${urlToCheck}/health`, {
       method: "GET",
