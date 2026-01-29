@@ -170,10 +170,13 @@ Configure the feedback form fields in your `.github/wafir.yaml` file. **With the
 | `textarea`   | Multi-line text area                      | label, description?, placeholder?, value?, render?                    |
 | `dropdown`   | Dropdown selection                        | label, description?, placeholder?, value?, options, multiple?         |
 | `checkboxes` | Multiple checkbox options                 | label, description?, options (array of objects with label, required?) |
-| `markdown`   | Read-only Markdown display                | label, description?, value (markdown)                                 |
+| `markdown`   | Read-only Markdown display                | label, description?, value (markdown, required)                       |
 | `rating`     | Likert (stars) Rating System (Wafir only) | label, description?, ratingLabels?                                    |
 
 ### Field Structure
+
+> **Schema Source & Novelty**  
+> The overall field schema is inspired by GitHub Issue Forms, but Wafir extends it with the ability to add non-input (static) markdown fields for contextual instructions, help text, sections, and rich formatting within a form.
 
 Each field must be defined as follows:
 
@@ -190,6 +193,19 @@ fields:
         - "Critical"
     validations:
       required: true
+```
+
+#### Markdown Field Example
+
+A markdown field can be used for headings, hints, or formatted instructions anywhere in your form. Markdown content is rendered securely (sanitized HTML) and is never included in submission data.
+
+```yaml
+- id: instructions
+  type: markdown
+  attributes:
+    value: |
+      ## Feedback Form
+      Please fill out all required fields. Your responses help us improve!
 ```
 
 #### Field Properties Table
