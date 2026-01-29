@@ -1,3 +1,4 @@
+// Copyright (c) BPS-Consulting. Licensed under the AGPLv3 License.
 import { LitElement, html, unsafeCSS } from "lit";
 import formStyles from "./styles/wafir-form.css?inline";
 import "./star-rating.js";
@@ -31,6 +32,9 @@ export class WafirForm extends LitElement {
 
   @property({ type: Boolean })
   loading = false;
+
+  @property({ type: Boolean })
+  bridgeAvailable = true;
 
   private _capturedImageController = new StoreController(this, capturedImage);
   private _formDataController = new StoreController(this, formData);
@@ -275,9 +279,11 @@ export class WafirForm extends LitElement {
           `;
         })}
 
-        <button class="submit-button" type="submit" ?disabled="${this.loading}">
+        <button class="submit-button" type="submit" ?disabled="${this.loading || !this.bridgeAvailable}">
           ${this.loading
             ? html`<span class="spinner"></span> Submitting...`
+            : !this.bridgeAvailable
+            ? "Service Unavailable"
             : "Submit"}
         </button>
 

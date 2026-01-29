@@ -114,6 +114,9 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      wafir:
+        specifier: workspace:*
+        version: link:../../packages/wafir
     devDependencies:
       '@tailwindcss/typography':
         specifier: ^0.5.19
@@ -173,6 +176,16 @@ importers:
       typescript-eslint:
         specifier: ^8.46.4
         version: 8.50.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
+      vite:
+        specifier: ^7.2.4
+        version: 7.2.4(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
+
+  internal/wafir-dev:
+    dependencies:
+      wafir:
+        specifier: workspace:*
+        version: link:../../packages/wafir
+    devDependencies:
       vite:
         specifier: ^7.2.4
         version: 7.2.4(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)

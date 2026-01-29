@@ -19,6 +19,23 @@ const getClient = () => {
 export type WafirConfig =
   paths["/config"]["get"]["responses"][200]["content"]["application/json"];
 
+export const checkBridgeHealth = async (
+  bridgeUrl?: string,
+): Promise<boolean> => {
+  const urlToCheck = bridgeUrl || currentBridgeUrl;
+  
+  try {
+    const response = await fetch(`${urlToCheck}/health`, {
+      method: "GET",
+      signal: AbortSignal.timeout(5000), // 5 second timeout
+    });
+    return response.ok;
+  } catch (error) {
+    console.warn("Wafir: Bridge health check failed", error);
+    return false;
+  }
+};
+
 export const getWafirConfig = async (
   installationId: number,
   owner: string,

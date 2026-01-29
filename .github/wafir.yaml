@@ -3,7 +3,8 @@
 
 # Storage settings
 storage:
-  type: both # Options: issue, project, both
+  type: project # Options: issue, project, both
+  projectNumber: 9
   # owner: optional-other-owner
   # repo: optional-other-repo
 
@@ -16,7 +17,7 @@ feedback:
 issue:
   screenshot: true
   browserInfo: true
-  consoleLog: true
+  consoleLog: false
   labels: ["bug"]
 
 # Custom form fields
@@ -34,7 +35,4 @@ fields:
     type: select
     options: ["Low", "Medium", "High", "Critical"]
     required: false
-  - name: contact_email
-    label: "Your Email (optional)"
-    type: text
-    required: false
+

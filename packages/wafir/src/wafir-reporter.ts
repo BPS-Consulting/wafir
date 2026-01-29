@@ -63,6 +63,9 @@ export class WafirReporter extends LitElement {
   configFetchError: string | null = null;
 
   @state()
+  isBridgeAvailable = true;
+
+  @state()
   private _hasCustomTrigger = false;
 
   @state()
@@ -115,6 +118,7 @@ export class WafirReporter extends LitElement {
     this.isModalOpen = true;
     setBrowserInfo(getBrowserInfo());
     setConsoleLogs(consoleInterceptor.getLogs());
+    await this._checkBridgeHealth();
     await this._fetchConfig();
   }
 
@@ -123,6 +127,22 @@ export class WafirReporter extends LitElement {
       this._closeModal();
     } else {
       await this._openModal();
+    }
+  }
+
+  private async _checkBridgeHealth() {
+    try {
+      const { checkBridgeHealth } = await import("./api/client.js");
+      this.isBridgeAvailable = await checkBridgeHealth(
+        this.bridgeUrl || undefined,
+      );
+
+      if (!this.isBridgeAvailable) {
+        console.warn("Wafir: Bridge service is not available");
+      }
+    } catch (error) {
+      console.warn("Wafir: Failed to check bridge health", error);
+      this.isBridgeAvailable = false;
     }
   }
 
@@ -280,12 +300,12 @@ export class WafirReporter extends LitElement {
         submissionType,
       );
 
-      alert("Feedback submitted successfully!");
+      alert("Thank you for your input!");
       resetState();
       this.isModalOpen = false;
     } catch (error) {
       console.error("Wafir: Submit failed", error);
-      alert("Failed to submit feedback. Please try again.");
+      alert("Failed to submit. Please check configuration.");
     }
   }
 

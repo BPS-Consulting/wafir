@@ -379,6 +379,35 @@
         }
       }
     },
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "tags": [
+          "Health"
+        ],
+        "description": "Returns the health status of the bridge service",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "timestamp": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/submit": {
       "post": {
         "summary": "Submit Feedback/Issue",

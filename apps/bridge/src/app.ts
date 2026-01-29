@@ -1,3 +1,4 @@
+// Copyright (C) 2024 BPS-Consulting - Licensed under AGPLv3
 import * as path from "node:path";
 import AutoLoad, { AutoloadPluginOptions } from "@fastify/autoload";
 import { FastifyPluginAsync } from "fastify";
