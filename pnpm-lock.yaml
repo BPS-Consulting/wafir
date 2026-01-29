@@ -280,9 +280,6 @@ importers:
       openapi-typescript:
         specifier: ^7.10.1
         version: 7.10.1(typescript@5.9.3)
-      size-limit:
-        specifier: ^11.2.0
-        version: 11.2.0
       typescript:
         specifier: ~5.9.3
         version: 5.9.3
