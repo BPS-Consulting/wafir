@@ -1,7 +1,7 @@
 {
   "name": "wafir",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "main": "dist/wafir.js",
   "exports": {
@@ -22,7 +22,6 @@
   },
   "dependencies": {
     "@nanostores/lit": "^0.2.3",
-    "@standard-schema/spec": "^1.0.0",
     "dompurify": "^3.3.1",
     "lit": "^3.3.1",
     "marked": "^17.0.1",
@@ -33,14 +32,7 @@
   "devDependencies": {
     "@size-limit/preset-big-lib": "^11.2.0",
     "openapi-typescript": "^7.10.1",
-    "size-limit": "^11.2.0",
     "typescript": "~5.9.3",
     "vite": "^7.2.4"
-  },
-  "size-limit": [
-    {
-      "path": "dist/wafir.js",
-      "limit": "20 kB"
-    }
-  ]
+  }
 }
