@@ -163,12 +163,13 @@ Configure which fields appear in the feedback form using your `.github/wafir.yam
 
 ### Field Types
 
-| Type       | Description            | Options                  |
-| ---------- | ---------------------- | ------------------------ |
-| `text`     | Single-line text input | -                        |
-| `textarea` | Multi-line text area   | -                        |
-| `select`   | Dropdown selection     | Requires `options` array |
-| `checkbox` | Boolean checkbox       | -                        |
+| Type         | Description                  | Options                  |
+| ------------ | ---------------------------- | ------------------------ |
+| `input`      | Single-line text input       | -                        |
+| `textarea`   | Multi-line text area         | -                        |
+| `dropdown`   | Dropdown selection           | Requires `options` array |
+| `checkboxes` | Boolean checkbox             | -                        |
+| `rating`     | Likert (stars) Rating System | -                        |
 
 ### Field Properties
 
