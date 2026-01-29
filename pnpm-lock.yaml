@@ -114,6 +114,9 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      wafir:
+        specifier: workspace:*
+        version: link:../../packages/wafir
     devDependencies:
       '@tailwindcss/typography':
         specifier: ^0.5.19

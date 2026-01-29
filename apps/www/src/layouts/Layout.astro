@@ -14,7 +14,10 @@ const {
 } = Astro.props;
 ---
 
-<!doctype html>
+<script>
+  import "wafir";
+</script>
+
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -29,7 +32,6 @@ const {
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
-    <script is:inline src="/wafir/wafir-widget/wafir.browser.js"></script>
   </head>
   <body>
     <Header />
@@ -37,5 +39,11 @@ const {
       <slot />
     </main>
     <Footer />
+    <wafir-reporter
+      installationId="105081464"
+      owner="BPS-Consulting"
+      repo="wafir"
+      position="bottom-right"
+      tooltip-text="Send Feedback"></wafir-reporter>
   </body>
 </html>

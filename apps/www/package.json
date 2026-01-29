@@ -4,7 +4,6 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-    "prebuild": "node scripts/copy-widget.js",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
@@ -14,7 +13,8 @@
     "@tailwindcss/vite": "^4.1.18",
     "astro": "^5.16.6",
     "tailwindcss": "^4.1.18",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "wafir": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19"
