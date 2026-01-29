@@ -8,17 +8,28 @@ interface SubmitBody {
   owner: string;
   repo: string;
   title: string;
-  body: string;
   labels?: string[];
   rating?: number;
   submissionType?: "issue" | "feedback";
+  formFields?: Record<string, unknown>;
+  fieldOrder?: string[];
+  browserInfo?: {
+    url?: string;
+    userAgent?: string;
+    viewportWidth?: number;
+    viewportHeight?: number;
+    language?: string;
+  };
+  consoleLogs?: Array<{
+    type: string;
+    message: string;
+    timestamp: string;
+  }>;
 }
 
 interface ParsedRequestData extends SubmitBody {
   screenshotBuffer?: Buffer;
   screenshotMime?: string;
-  rating?: number;
-  submissionType?: "issue" | "feedback";
 }
 
 interface WafirConfig {
@@ -35,6 +46,9 @@ interface WafirConfig {
     ratingField?: string;
   };
 }
+
+// Keys to exclude from the markdown body (used for other purposes)
+const EXCLUDED_FORM_KEYS = new Set(["title"]);
 
 const ADD_TO_PROJECT_MUTATION = `
   mutation AddToProject($projectId: ID!, $contentId: ID!) {
@@ -99,7 +113,108 @@ const UPDATE_PROJECT_FIELD_MUTATION = `
 `;
 
 /**
- * Parses the incoming request, handling both Multipart (with screenshot) and JSON (text only) bodies.
+ * Converts a numeric rating (1-5) to star emojis.
+ */
+function ratingToStars(rating: number): string {
+  const clampedRating = Math.min(Math.max(Math.round(rating), 1), 5);
+  return "⭐".repeat(clampedRating);
+}
+
+/**
+ * Formats a field label to be human-readable (capitalize, replace underscores).
+ */
+function formatFieldLabel(key: string): string {
+  return key
+    .replace(/([A-Z])/g, " $1")
+    .replace(/_/g, " ")
+    .replace(/^\w/, (c) => c.toUpperCase())
+    .trim();
+}
+
+/**
+ * Builds a markdown body from form fields.
+ * Format: **Label**\nValue\n\n for each field.
+ * - Excludes keys in EXCLUDED_FORM_KEYS
+ * - Converts rating to star emojis
+ * - Preserves field order if fieldOrder is provided
+ */
+function buildMarkdownFromFields(
+  formFields: Record<string, unknown>,
+  fieldOrder?: string[],
+): string {
+  const orderedKeys = fieldOrder?.length
+    ? fieldOrder.filter((key) => key in formFields)
+    : Object.keys(formFields);
+
+  const lines: string[] = [];
+
+  for (const key of orderedKeys) {
+    if (EXCLUDED_FORM_KEYS.has(key)) continue;
+
+    const value = formFields[key];
+    if (value === undefined || value === null || value === "") continue;
+
+    const label = formatFieldLabel(key);
+    let displayValue: string;
+
+    if (key === "rating" && typeof value === "number") {
+      displayValue = ratingToStars(value);
+    } else if (Array.isArray(value)) {
+      displayValue = value.join(", ");
+    } else {
+      displayValue = String(value);
+    }
+
+    lines.push(`**${label}**\n${displayValue}`);
+  }
+
+  return lines.join("\n\n");
+}
+
+/**
+ * Appends browser info as markdown if provided.
+ */
+function appendBrowserInfo(
+  body: string,
+  browserInfo?: SubmitBody["browserInfo"],
+): string {
+  if (!browserInfo) return body;
+
+  const infoLines: string[] = [];
+  if (browserInfo.url) infoLines.push(`| URL | ${browserInfo.url} |`);
+  if (browserInfo.userAgent)
+    infoLines.push(`| User Agent | \`${browserInfo.userAgent}\` |`);
+  if (browserInfo.viewportWidth && browserInfo.viewportHeight)
+    infoLines.push(
+      `| Viewport | ${browserInfo.viewportWidth}x${browserInfo.viewportHeight} |`,
+    );
+  if (browserInfo.language)
+    infoLines.push(`| Language | ${browserInfo.language} |`);
+
+  if (infoLines.length === 0) return body;
+
+  const browserSection = `\n\n---\n\n**Browser Info**\n| Field | Value |\n| :--- | :--- |\n${infoLines.join("\n")}`;
+  return body + browserSection;
+}
+
+/**
+ * Appends console logs as markdown if provided.
+ */
+function appendConsoleLogs(
+  body: string,
+  consoleLogs?: SubmitBody["consoleLogs"],
+): string {
+  if (!consoleLogs || consoleLogs.length === 0) return body;
+
+  const logsText = consoleLogs
+    .map((log) => `[${log.type.toUpperCase()}] ${log.message}`)
+    .join("\n");
+
+  return body + `\n\n---\n\n**Console Logs**\n\`\`\`\n${logsText}\n\`\`\``;
+}
+
+/**
+ * Parses the incoming request, handling both Multipart (with screenshot) and JSON bodies.
  */
 async function parseSubmitRequest(
   request: FastifyRequest,
@@ -127,9 +242,6 @@ async function parseSubmitRequest(
           case "title":
             result.title = val;
             break;
-          case "body":
-            result.body = val;
-            break;
           case "labels":
             try {
               result.labels = JSON.parse(val);
@@ -143,6 +255,34 @@ async function parseSubmitRequest(
           case "submissionType":
             result.submissionType = val as "issue" | "feedback";
             break;
+          case "formFields":
+            try {
+              result.formFields = JSON.parse(val);
+            } catch {
+              result.formFields = {};
+            }
+            break;
+          case "fieldOrder":
+            try {
+              result.fieldOrder = JSON.parse(val);
+            } catch {
+              result.fieldOrder = [];
+            }
+            break;
+          case "browserInfo":
+            try {
+              result.browserInfo = JSON.parse(val);
+            } catch {
+              result.browserInfo = undefined;
+            }
+            break;
+          case "consoleLogs":
+            try {
+              result.consoleLogs = JSON.parse(val);
+            } catch {
+              result.consoleLogs = [];
+            }
+            break;
         }
       }
     }
@@ -151,17 +291,17 @@ async function parseSubmitRequest(
   }
 
   // Validation
-  if (
-    !result.installationId ||
-    !result.owner ||
-    !result.repo ||
-    !result.title ||
-    result.body === undefined ||
-    result.body === null
-  ) {
-    throw new Error(
-      "Missing required fields (installationId, owner, repo, title, or body)",
-    );
+  if (!result.installationId || !result.owner || !result.repo) {
+    throw new Error("Missing required fields (installationId, owner, or repo)");
+  }
+
+  // Get title from formFields if not provided directly
+  if (!result.title && result.formFields?.title) {
+    result.title = String(result.formFields.title);
+  }
+
+  if (!result.title) {
+    throw new Error("Missing required field: title");
   }
 
   return result as ParsedRequestData;
@@ -229,8 +369,7 @@ async function uploadScreenshot(
 }
 
 /**
- * Finds the ProjectV2 Node ID. Handles complexity of checking Org vs User
- * and falling back to a User Token if necessary.
+ * Finds the ProjectV2 Node ID.
  */
 async function findProjectNodeId(
   appOctokit: any,
@@ -244,23 +383,19 @@ async function findProjectNodeId(
   error?: string;
 }> {
   // Try with App Token - Organization first
-  log.info({ owner, number }, "Looking up project with App token...");
   try {
     const result = await appOctokit.graphql(FIND_ORG_PROJECT_QUERY, {
       owner,
       number,
     });
-    log.info({ result }, "GraphQL org project lookup result");
-    if (result.organization?.projectV2?.id)
+    if (result.organization?.projectV2?.id) {
       return {
         nodeId: result.organization.projectV2.id,
         shouldUseUserToken: false,
       };
+    }
   } catch (error: any) {
-    log.debug(
-      { error: error.message, owner, number },
-      "Org project lookup failed, trying user project...",
-    );
+    log.debug({ error: error.message }, "Org project lookup failed");
   }
 
   // Try with App Token - User project
@@ -269,31 +404,22 @@ async function findProjectNodeId(
       owner,
       number,
     });
-    log.info({ result }, "GraphQL user project lookup result");
-    if (result.user?.projectV2?.id)
-      return { nodeId: result.user.projectV2.id, shouldUseUserToken: true }; // User projects usually need user token for mutations
+    if (result.user?.projectV2?.id) {
+      return { nodeId: result.user.projectV2.id, shouldUseUserToken: true };
+    }
   } catch (error: any) {
-    log.debug(
-      { error: error.message, owner, number },
-      "App token user project lookup failed, trying with user token...",
-    );
+    log.debug({ error: error.message }, "User project lookup failed");
   }
 
-  // Retry with User Token (specifically for User Projects)
+  // Retry with User Token
   if (userOctokit) {
     try {
-      const userResult = await userOctokit.graphql(
-        `query FindUserProject($owner: String!, $number: Int!) {
-          user(login: $owner) { projectV2(number: $number) { id } }
-        }`,
-        { owner, number },
-      );
-      if (userResult.user?.projectV2?.id) {
-        log.info("Found project using User Token");
-        return {
-          nodeId: userResult.user.projectV2.id,
-          shouldUseUserToken: true,
-        };
+      const result = await userOctokit.graphql(FIND_USER_PROJECT_QUERY, {
+        owner,
+        number,
+      });
+      if (result.user?.projectV2?.id) {
+        return { nodeId: result.user.projectV2.id, shouldUseUserToken: true };
       }
     } catch (error: any) {
       log.error({ error: error.message }, "User token project lookup failed");
@@ -303,21 +429,21 @@ async function findProjectNodeId(
   return {
     nodeId: undefined,
     shouldUseUserToken: false,
-    error: `Could not find project #${number} for owner ${owner}. Ensure permissions are correct.`,
+    error: `Could not find project #${number} for owner ${owner}`,
   };
 }
 
 /**
  * Adds an item (Draft or Existing Issue) to a Project V2.
  */
-async function handleProjectLogic(params: {
+async function addToProject(params: {
   appOctokit: any;
   userOctokit: any | null;
   projectOwner: string;
   projectNumber: number;
   title: string;
   body: string;
-  issueNodeId?: string; // If present, adds existing issue. If null, creates draft.
+  issueNodeId?: string;
   log: any;
 }): Promise<{ added: boolean; error?: string; itemId?: string }> {
   const {
@@ -349,14 +475,12 @@ async function handleProjectLogic(params: {
 
   try {
     if (issueNodeId) {
-      // Add existing issue
       await client.graphql(ADD_TO_PROJECT_MUTATION, {
         projectId,
         contentId: issueNodeId,
       });
       return { added: true };
     } else {
-      // Create draft
       const result: any = await client.graphql(ADD_DRAFT_TO_PROJECT_MUTATION, {
         projectId,
         title,
@@ -374,7 +498,6 @@ async function handleProjectLogic(params: {
 
 /**
  * Sets the Rating field on a project item.
- * Maps numeric rating (1-5) to emoji star options (⭐, ⭐⭐, etc.)
  */
 async function setProjectRatingField(params: {
   octokit: any;
@@ -397,7 +520,6 @@ async function setProjectRatingField(params: {
     );
 
     if (!ratingField) {
-      log.warn(`Rating field "${ratingFieldName}" not found in project`);
       return { success: false, error: `Field "${ratingFieldName}" not found` };
     }
 
@@ -409,7 +531,6 @@ async function setProjectRatingField(params: {
     );
 
     if (!matchingOption) {
-      log.warn(`No matching option for rating ${rating} (${targetEmoji})`);
       return {
         success: false,
         error: `No option matching "${targetEmoji}" in Rating field`,
@@ -433,47 +554,6 @@ async function setProjectRatingField(params: {
 
 // --- Main Route Handler ---
 
-/**
- * Fastify route plugin for handling WAFIR feedback and issue submissions.
- *
- * This route processes POST requests to `/submit` and supports two types of submissions:
- * - **Issue submissions**: Creates GitHub issues and optionally adds them to projects
- * - **Feedback submissions**: Creates project drafts with optional ratings
- *
- * @remarks
- * The route handles:
- * - Multipart form data parsing including optional screenshot uploads
- * - S3 storage for screenshots (if provided)
- * - GitHub issue creation based on storage configuration
- * - GitHub project integration (adding issues or creating drafts)
- * - Rating field assignment for feedback submissions
- * - Flexible storage types: `issue`, `project`, or `both`
- *
- * Configuration is read from `.github/wafir.yml` in the target repository and supports:
- * - `storage.type`: Determines where issue submissions are stored
- * - `storage.projectNumber`: Project number for issue submissions
- * - `feedbackProject.projectNumber`: Separate project for feedback submissions
- * - `feedbackProject.ratingField`: Custom field name for rating (defaults to "Rating")
- *
- * @param fastify - Fastify instance with GitHub client extensions
- * @param opts - Plugin options
- * @returns Promise that resolves when the route is registered
- *
- * @throws {400} When required fields are missing in the request
- * @throws {500} When submission processing fails
- *
- * @example
- * Response format:
- * ```json
- * {
- *   "success": true,
- *   "issueUrl": "https://github.com/owner/repo/issues/123",
- *   "issueNumber": 123,
- *   "projectAdded": true,
- *   "warning": "Optional warning message"
- * }
- * ```
- */
 const submitRoute: FastifyPluginAsync = async (
   fastify,
   opts,
@@ -488,7 +568,7 @@ const submitRoute: FastifyPluginAsync = async (
         tags: ["WAFIR"],
         summary: "Submit Feedback/Issue",
         description:
-          "Creates a new issue or project draft. Supports multipart/form-data.",
+          "Creates a GitHub issue or project draft from form fields. Supports multipart/form-data.",
       },
     },
     async (request, reply) => {
@@ -496,7 +576,18 @@ const submitRoute: FastifyPluginAsync = async (
         // Parse Input
         const input = await parseSubmitRequest(request);
         const { installationId, owner, repo, title, labels } = input;
-        let finalBody = input.body;
+
+        // Build markdown body from form fields
+        let finalBody = buildMarkdownFromFields(
+          input.formFields || {},
+          input.fieldOrder,
+        );
+
+        // Append browser info if provided
+        finalBody = appendBrowserInfo(finalBody, input.browserInfo);
+
+        // Append console logs if provided
+        finalBody = appendConsoleLogs(finalBody, input.consoleLogs);
 
         // Initialize Clients
         const appOctokit = await fastify.getGitHubClient(installationId);
@@ -516,7 +607,7 @@ const submitRoute: FastifyPluginAsync = async (
         const projectNumber = config.storage?.projectNumber;
         const projectOwner = config.storage?.owner || owner;
 
-        // Handle S3 Upload
+        // Handle Screenshot Upload
         if (input.screenshotBuffer && input.screenshotMime) {
           try {
             const imageMd = await uploadScreenshot(
@@ -529,33 +620,34 @@ const submitRoute: FastifyPluginAsync = async (
             finalBody += imageMd;
           } catch (e) {
             request.log.warn(
-              "Failed to upload screenshot, continuing without it.",
+              "Failed to upload screenshot, continuing without it",
             );
           }
         }
 
-        // Execute Storage Logic
-        let issueData = {
-          number: undefined as number | undefined,
-          url: undefined as string | undefined,
-          nodeId: undefined as string | undefined,
-        };
-        let projectResult: {
-          added: boolean;
-          error?: string;
-        } = {
-          added: false,
-          error: undefined as string | undefined,
-        };
+        // Determine submission targets
+        const isFeedback = input.submissionType === "feedback";
+        const feedbackProjectNumber =
+          config.feedbackProject?.projectNumber || projectNumber;
+        const feedbackProjectOwner =
+          config.feedbackProject?.owner || projectOwner;
+        const ratingFieldName = config.feedbackProject?.ratingField || "Rating";
 
-        // Create Issue (if type is issue or both AND this is an issue submission)
-        const isFeedbackSubmission = input.submissionType === "feedback";
+        let issueData: {
+          number?: number;
+          url?: string;
+          nodeId?: string;
+        } = {};
+        let projectResult: { added: boolean; error?: string; itemId?: string } =
+          {
+            added: false,
+          };
+
+        // Create GitHub Issue (for non-feedback or when no project is configured)
         const shouldCreateIssue =
-          !isFeedbackSubmission &&
-          (storageType === "issue" || storageType === "both");
+          !isFeedback && (storageType === "issue" || storageType === "both");
 
         if (shouldCreateIssue) {
-          request.log.info("Creating GitHub issue...");
           const issue = await appOctokit.rest.issues.create({
             owner,
             repo,
@@ -568,34 +660,20 @@ const submitRoute: FastifyPluginAsync = async (
             url: issue.data.html_url,
             nodeId: issue.data.node_id,
           };
-          request.log.info(
-            { issueNumber: issueData.number, issueUrl: issueData.url },
-            "GitHub issue created successfully",
-          );
+          request.log.info({ issueNumber: issueData.number }, "Issue created");
         }
 
-        // Handle Project (Draft or Add Issue)
-        // For feedback submissions, use feedbackProject config if available, otherwise use storage
-        const feedbackProjectNumber =
-          config.feedbackProject?.projectNumber || projectNumber;
-        const feedbackProjectOwner =
-          config.feedbackProject?.owner || projectOwner;
-        const ratingFieldName = config.feedbackProject?.ratingField || "Rating";
-
+        // Add to project (if configured)
         const shouldAddToProject =
           projectNumber &&
-          !isFeedbackSubmission &&
+          !isFeedback &&
           (storageType === "project" || storageType === "both");
 
-        const shouldCreateFeedbackDraft =
-          isFeedbackSubmission && feedbackProjectNumber;
-
         if (shouldAddToProject) {
-          // Regular issue/project handling
           const targetNodeId =
             storageType === "both" ? issueData.nodeId : undefined;
 
-          projectResult = await handleProjectLogic({
+          projectResult = await addToProject({
             appOctokit,
             userOctokit,
             projectOwner,
@@ -605,98 +683,55 @@ const submitRoute: FastifyPluginAsync = async (
             issueNodeId: targetNodeId,
             log: request.log,
           });
+        }
 
-          if (projectResult.error) {
-            request.log.warn(
-              { error: projectResult.error },
-              "Project operation failed",
+        // Handle feedback submissions (project draft with rating)
+        if (isFeedback && feedbackProjectNumber) {
+          const { nodeId: feedbackProjId, shouldUseUserToken } =
+            await findProjectNodeId(
+              appOctokit,
+              userOctokit,
+              feedbackProjectOwner,
+              feedbackProjectNumber,
+              request.log,
             );
-          } else {
-            request.log.info(
-              { projectNumber, projectOwner },
-              "Successfully added to project",
-            );
-          }
-        } else if (shouldCreateFeedbackDraft) {
-          // Feedback submission - create draft and set Rating
-          request.log.info("Creating feedback draft in project...");
 
-          const {
-            nodeId: feedbackProjId,
-            shouldUseUserToken,
-            error: projLookupError,
-          } = await findProjectNodeId(
-            appOctokit,
-            userOctokit,
-            feedbackProjectOwner,
-            feedbackProjectNumber,
-            request.log,
-          );
-
-          if (!feedbackProjId) {
-            projectResult.error =
-              projLookupError || "Could not find feedback project";
-          } else {
-            const client =
-              shouldUseUserToken && userOctokit ? userOctokit : appOctokit;
-
-            projectResult = await handleProjectLogic({
+          if (feedbackProjId) {
+            projectResult = await addToProject({
               appOctokit,
               userOctokit,
               projectOwner: feedbackProjectOwner,
               projectNumber: feedbackProjectNumber,
               title,
               body: finalBody,
-              issueNodeId: undefined,
               log: request.log,
             });
 
-            if (
-              projectResult.added &&
-              (projectResult as any).itemId &&
-              input.rating
-            ) {
-              request.log.info(
-                {
-                  itemId: (projectResult as any).itemId,
-                  feedbackProjectNumber,
-                },
-                "Feedback draft created in project",
-              );
+            // Set rating field if provided
+            if (projectResult.added && projectResult.itemId && input.rating) {
+              const client =
+                shouldUseUserToken && userOctokit ? userOctokit : appOctokit;
               await setProjectRatingField({
                 octokit: client,
                 projectId: feedbackProjId,
-                itemId: (projectResult as any).itemId,
+                itemId: projectResult.itemId,
                 ratingFieldName,
                 rating: input.rating,
                 log: request.log,
               });
-            } else if (projectResult.added) {
-              request.log.info(
-                { feedbackProjectNumber },
-                "Feedback draft created in project (no rating)",
-              );
             }
+          } else {
+            projectResult.error = "Could not find feedback project";
           }
-        } else if (storageType === "project" && !projectNumber) {
-          projectResult.error =
-            "Project storage requested but no projectNumber configured";
-        } else if (isFeedbackSubmission && !feedbackProjectNumber) {
-          request.log.info(
-            "No feedback project configured, creating issue instead...",
-          );
+        }
 
-          let issueBody = finalBody;
-          if (input.rating) {
-            const stars = "⭐".repeat(input.rating);
-            issueBody = `**Rating:** ${stars} (${input.rating}/5)\n\n${issueBody}`;
-          }
-
+        // Fallback: create issue for feedback if no project configured
+        if (isFeedback && !feedbackProjectNumber) {
           const issue = await appOctokit.rest.issues.create({
             owner,
             repo,
             title,
-            body: issueBody,
+            body: finalBody,
             labels: labels || ["feedback"],
           });
           issueData = {
@@ -705,34 +740,22 @@ const submitRoute: FastifyPluginAsync = async (
             nodeId: issue.data.node_id,
           };
           request.log.info(
-            { issueNumber: issueData.number, issueUrl: issueData.url },
+            { issueNumber: issueData.number },
             "Feedback issue created (no project configured)",
           );
         }
 
-        // Send Response
-        const response = {
+        return reply.code(201).send({
           success: true,
           issueUrl: issueData.url,
           issueNumber: issueData.number,
           projectAdded: projectResult.added,
           warning: projectResult.error,
-        };
-
-        request.log.info(
-          { response, submissionType: input.submissionType },
-          "Submission completed successfully",
-        );
-
-        return reply.code(201).send(response);
+        });
       } catch (error: any) {
-        request.log.error(
-          { error: error.message, stack: error.stack },
-          "Submit failed",
-        );
+        request.log.error({ error: error.message }, "Submit failed");
 
-        // Handle Validation Error specially
-        if (error.message.includes("Missing required fields")) {
+        if (error.message.includes("Missing required")) {
           return reply.code(400).send({ error: error.message });
         }
 

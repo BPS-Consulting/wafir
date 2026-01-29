@@ -67,18 +67,53 @@ export const getWafirConfig = async (
   return data;
 };
 
-export const submitIssue = async (
-  installationId: number,
-  owner: string,
-  repo: string,
-  title: string,
-  body: string,
-  labels?: string[],
-  screenshot?: Blob,
-  bridgeUrl?: string,
-  rating?: number,
-  submissionType?: "issue" | "feedback",
-) => {
+export interface BrowserInfo {
+  url?: string;
+  userAgent?: string;
+  viewportWidth?: number;
+  viewportHeight?: number;
+  language?: string;
+}
+
+export interface ConsoleLogEntry {
+  type: string;
+  message: string;
+  timestamp: string;
+}
+
+export interface SubmitIssueParams {
+  installationId: number;
+  owner: string;
+  repo: string;
+  title: string;
+  labels?: string[];
+  screenshot?: Blob;
+  bridgeUrl?: string;
+  rating?: number;
+  submissionType?: "issue" | "feedback";
+  formFields?: Record<string, unknown>;
+  fieldOrder?: string[];
+  browserInfo?: BrowserInfo;
+  consoleLogs?: ConsoleLogEntry[];
+}
+
+export const submitIssue = async (params: SubmitIssueParams) => {
+  const {
+    installationId,
+    owner,
+    repo,
+    title,
+    labels,
+    screenshot,
+    bridgeUrl,
+    rating,
+    submissionType,
+    formFields,
+    fieldOrder,
+    browserInfo,
+    consoleLogs,
+  } = params;
+
   if (bridgeUrl) {
     setBridgeUrl(bridgeUrl);
   }
@@ -88,7 +123,6 @@ export const submitIssue = async (
   formData.append("owner", owner);
   formData.append("repo", repo);
   formData.append("title", title);
-  formData.append("body", body);
   if (labels) {
     formData.append("labels", JSON.stringify(labels));
   }
@@ -100,6 +134,18 @@ export const submitIssue = async (
   }
   if (submissionType) {
     formData.append("submissionType", submissionType);
+  }
+  if (formFields) {
+    formData.append("formFields", JSON.stringify(formFields));
+  }
+  if (fieldOrder) {
+    formData.append("fieldOrder", JSON.stringify(fieldOrder));
+  }
+  if (browserInfo) {
+    formData.append("browserInfo", JSON.stringify(browserInfo));
+  }
+  if (consoleLogs) {
+    formData.append("consoleLogs", JSON.stringify(consoleLogs));
   }
 
   const response = await getClient().POST("/submit", {

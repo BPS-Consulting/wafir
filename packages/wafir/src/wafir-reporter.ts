@@ -23,7 +23,6 @@ import type {
   FieldConfigApi as FieldConfig,
 } from "./api/client.js";
 import { dataURLtoBlob } from "./utils/file.js";
-import type { ConsoleLog } from "./utils/telemetry.js";
 import { getBrowserInfo, consoleInterceptor } from "./utils/telemetry.js";
 import { getDefaultTabs, getDefaultFields } from "./default-config.js";
 
@@ -239,7 +238,7 @@ export class WafirReporter extends LitElement {
   bridgeUrl = "";
 
   private async _handleSubmit(event: CustomEvent) {
-    const formData = event.detail.formData;
+    const formData = event.detail.formData as Record<string, unknown>;
     const activeTab = this._getActiveTab();
 
     if (!this.installationId || !this.owner || !this.repo) {
@@ -251,8 +250,8 @@ export class WafirReporter extends LitElement {
     }
 
     try {
-      const title = formData.title || activeTab?.label || "Submission";
-      let finalBody = formData.description || "";
+      const title =
+        (formData.title as string) || activeTab?.label || "Submission";
       const labels: string[] = [this._activeTabId];
 
       const { submitIssue } = await import("./api/client.js");
@@ -262,18 +261,6 @@ export class WafirReporter extends LitElement {
         ? dataURLtoBlob(screenshotDataUrl)
         : undefined;
 
-      if (this._telemetry.browserInfo && browserInfo.get()) {
-        const info = browserInfo.get()!;
-        finalBody += `\n\n# Browser Info\n| Field | Value |\n| :--- | :--- |\n| URL | ${info.url} |\n| User Agent | \`${info.userAgent}\` |\n| Viewport | ${info.viewportWidth}x${info.viewportHeight} |\n| Language | ${info.language} |`;
-      }
-
-      if (this._telemetry.consoleLog && consoleLogs.get().length > 0) {
-        const logs = consoleLogs.get();
-        finalBody += `\n\n# Console Logs\n\`\`\`\n${logs
-          .map((l: ConsoleLog) => `[${l.type.toUpperCase()}] ${l.message}`)
-          .join("\n")}\n\`\`\``;
-      }
-
       const isFeedbackTab = activeTab?.isFeedback ?? false;
       const submissionType: "issue" | "feedback" = isFeedbackTab
         ? "feedback"
@@ -282,18 +269,35 @@ export class WafirReporter extends LitElement {
         ? Number(formData.rating) || undefined
         : undefined;
 
-      await submitIssue(
-        this.installationId,
-        this.owner,
-        this.repo,
+      // Filter out markdown fields before submission
+      const activeFields = this._getActiveFormConfig();
+      const submitFields = activeFields.filter((f) => f.type !== "markdown");
+      const fieldOrder = submitFields.map((f) => String(f.id));
+
+      // Only send user-data fields in formFields
+      const filteredFormData: Record<string, unknown> = {};
+      for (const field of submitFields) {
+        const id = String(field.id);
+        if (formData[id] !== undefined) filteredFormData[id] = formData[id];
+      }
+
+      await submitIssue({
+        installationId: this.installationId,
+        owner: this.owner,
+        repo: this.repo,
         title,
-        finalBody,
         labels,
-        screenshotBlob,
-        this.bridgeUrl || undefined,
+        screenshot: screenshotBlob,
+        bridgeUrl: this.bridgeUrl || undefined,
         rating,
         submissionType,
-      );
+        formFields: filteredFormData,
+        fieldOrder,
+        browserInfo: this._telemetry.browserInfo
+          ? (browserInfo.get() ?? undefined)
+          : undefined,
+        consoleLogs: this._telemetry.consoleLog ? consoleLogs.get() : undefined,
+      });
 
       alert("Thank you for your input!");
       resetState();

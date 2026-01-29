@@ -12,7 +12,6 @@ import {
   consoleLogs,
   capturedImage,
   setCapturedImage,
-  isCapturing,
 } from "./store";
 import { takeFullPageScreenshot } from "./utils/screenshot";
 import type { FieldConfigApi as FieldConfig } from "./api/client";
@@ -53,7 +52,6 @@ export class WafirForm extends LitElement {
   private _browserInfoController = new StoreController(this, browserInfo);
   private _consoleLogsController = new StoreController(this, consoleLogs);
   private _capturedImageController = new StoreController(this, capturedImage);
-  private _isCapturingController = new StoreController(this, isCapturing);
 
   static styles = [unsafeCSS(formStyles)];
 
