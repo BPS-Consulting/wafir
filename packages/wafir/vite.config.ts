@@ -4,7 +4,7 @@ import { copyFileSync, mkdirSync, existsSync } from "fs";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
-  // Check if we're building the browser bundle
+  // Determine the build format
   const isBrowserBundle = mode === "browser";
 
   return {
@@ -36,17 +36,13 @@ export default defineConfig(({ command, mode }) => {
             }
           : {},
       },
-      // For browser bundle, output to a separate directory
-      outDir: isBrowserBundle ? "dist-browser" : "dist",
-      emptyOutDir: true,
+      outDir: "dist",
+      emptyOutDir: isBrowserBundle ? false : true,
     },
     plugins: [
       {
         name: "copy-css-files",
         closeBundle() {
-          // Only copy CSS files for the main ES build
-          if (isBrowserBundle) return;
-
           const distStyles = resolve(__dirname, "dist/styles");
           if (!existsSync(distStyles)) {
             mkdirSync(distStyles, { recursive: true });
