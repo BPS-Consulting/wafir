@@ -35,7 +35,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build www
-        run: pnpm --filter www build
+        run: pnpm turbo run build --filter=www
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
