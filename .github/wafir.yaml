@@ -1,38 +1,75 @@
-# WAFIR Configuration Example
-# Place this file in .github/wafir.yaml in your repository
+# WAFIR Configuration Example - Default
+# This example shows what the widget displays when no tabs are specified.
+# Use this as a reference for the default behavior.
 
-# Storage settings
+title: "Contact Us"
+
 storage:
-  type: project # Options: issue, project, both
-  projectNumber: 9
-  # owner: optional-other-owner
-  # repo: optional-other-repo
+  type: issue # Options: issue, project, both
+  # owner: different-org    # Optional: target a different repository
+  # repo: different-repo    # Optional: target a different repository
+  projectNumber: 9        # Required for project storage
 
-# Feedback settings
-feedback:
-  title: "Submit a Bug or Feature"
-  labels: ["wafir", "user-feedback"]
+# Optional: Dedicated project for feedback with rating field
+# feedbackProject:
+#   projectNumber: 1          # Your feedback project number
+#   owner: org-name           # Project owner (defaults to repo owner)
+#   ratingField: "Rating"     # Name of the Rating field in your project
 
-# Issue settings (for automatic data collection)
-issue:
+telemetry:
   screenshot: true
   browserInfo: true
   consoleLog: false
-  labels: ["bug"]
 
-# Custom form fields
-fields:
-  - name: title
-    label: "Issue Title"
-    type: text
-    required: true
-  - name: description
-    label: "Detailed Description"
-    type: textarea
-    required: true
-  - name: priority
-    label: "Priority"
-    type: select
-    options: ["Low", "Medium", "High", "Critical"]
-    required: false
+tabs:
+  - id: feedback
+    label: Feedback
+    icon: thumbsup
+    isFeedback: true
+    fields:
+      - id: rating
+        type: rating
+        attributes:
+          label: "How satisfied are you with our website? (if you see this, then the config fetching works!)"
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: "What is the main reason for this rating?"
+        validations:
+          required: false
 
+  - id: suggestion
+    label: Suggestion
+    icon: lightbulb
+    fields:
+      - id: title
+        type: input
+        attributes:
+          label: "What is your suggestion?"
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: "Additional information:"
+        validations:
+          required: false
+
+  - id: issue
+    label: Issue
+    icon: bug
+    fields:
+      - id: title
+        type: input
+        attributes:
+          label: "What issue did you encounter?"
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: "Additional information:"
+        validations:
+          required: true

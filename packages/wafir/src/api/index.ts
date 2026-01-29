@@ -247,31 +247,41 @@ export interface paths {
                                  * @default false
                                  */
                                 isFeedback: boolean;
-                                /** @description Form fields for this tab. If omitted, defaults are used for known tab IDs (feedback, issue, suggestion) */
+                                /** @description Form fields for this tab. If omitted, defaults are used for known tab IDs. */
                                 fields?: {
-                                    /** @description Field ID/key for form data */
-                                    name: string;
-                                    /** @description Display label for the field */
-                                    label: string;
                                     /**
-                                     * @description Field input type. Allowed types:
-                                     *     - input: Single-line text (GitHub Issue Forms type)
-                                     *     - textarea: Multiline text (GitHub Issue Forms type)
-                                     *     - dropdown: Single-select options (GitHub Issue Forms type)
-                                     *     - checkboxes: Multi-select options (GitHub Issue Forms type)
-                                     *     - markdown: For headings, descriptions (GitHub Issue Forms type)
-                                     *     - email: Single-line email input (Wafir extension, not in GitHub Issue Forms)
-                                     *     - rating: Star rating field (Wafir extension, not in GitHub Issue Forms)
+                                     * @description Field input type. Matches GitHub Form Schema types plus Wafir extensions.
                                      * @enum {string}
                                      */
                                     type: "input" | "email" | "textarea" | "dropdown" | "checkboxes" | "markdown" | "rating";
-                                    /** @default false */
-                                    required: boolean;
-                                    placeholder?: string;
-                                    /** @description Options for dropdown or checkboxes field types only. */
-                                    options?: string[];
-                                    /** @description Labels for each rating star (1-5). Only used for rating field (Wafir extension). */
-                                    ratingLabels?: string[];
+                                    /** @description Unique identifier for the field (used as key in JSON output/issue body). */
+                                    id?: string;
+                                    /** @description Visual and behavioral attributes for the field. */
+                                    attributes?: {
+                                        /** @description Display label for the field. */
+                                        label?: string;
+                                        /** @description Helper text displayed below the label. */
+                                        description?: string;
+                                        /** @description Placeholder text (input, textarea, email only). */
+                                        placeholder?: string;
+                                        /** @description Default value or the Markdown content (markdown type). */
+                                        value?: string;
+                                        /** @description Syntax highlighting style for textarea (e.g., 'shell', 'javascript'). */
+                                        render?: string;
+                                        /** @description Allow multiple selections (dropdown type only). */
+                                        multiple?: boolean;
+                                        /** @description Options for dropdown or checkboxes. */
+                                        options?: string[] | {
+                                            label: string;
+                                            required?: boolean;
+                                        }[];
+                                        /** @description Custom labels for star rating (Wafir extension only). */
+                                        ratingLabels?: string[];
+                                    };
+                                    validations?: {
+                                        /** @description Whether the field is required. */
+                                        required?: boolean;
+                                    };
                                 }[];
                             }[];
                             /** @description Available issue types from the organization (auto-populated) */
