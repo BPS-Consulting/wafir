@@ -1,18 +1,7 @@
-import type { FieldConfig } from "./types.js";
-
-export type TabType = "feedback" | "suggestion" | "issue";
-
-export interface TabDefinition {
-  id: TabType;
-  label: string;
-  icon: "thumbsup" | "lightbulb" | "bug";
-}
-
-export const DEFAULT_TABS: TabDefinition[] = [
-  { id: "feedback", label: "Feedback", icon: "thumbsup" },
-  { id: "suggestion", label: "Suggestion", icon: "lightbulb" },
-  { id: "issue", label: "Issue", icon: "bug" },
-];
+import type {
+  FieldConfigApi as FieldConfig,
+  TabConfigApi as TabConfig,
+} from "./api/client";
 
 export const RATING_LABELS = [
   "Very Unsatisfied",
@@ -22,69 +11,117 @@ export const RATING_LABELS = [
   "Very Satisfied",
 ];
 
-export const DEFAULT_FEEDBACK_FORM: FieldConfig[] = [
+export const DEFAULT_FEEDBACK_FIELDS: FieldConfig[] = [
   {
     id: "rating",
-    label: "How satisfied are you with our website?",
     type: "rating",
-    required: true,
-    ratingLabels: RATING_LABELS,
+    attributes: {
+      label: "How satisfied are you with our website?",
+      ratingLabels: RATING_LABELS,
+    },
+    validations: {
+      required: true,
+    },
   },
   {
     id: "description",
-    label: "What is the main reason for this rating?",
     type: "textarea",
-    required: false,
+    attributes: {
+      label: "What is the main reason for this rating?",
+    },
+    validations: {
+      required: false,
+    },
   },
 ];
 
-export const DEFAULT_SUGGESTION_FORM: FieldConfig[] = [
+export const DEFAULT_SUGGESTION_FIELDS: FieldConfig[] = [
   {
     id: "title",
-    label: "What is your suggestion?",
-    type: "text",
-    required: true,
+    type: "input",
+    attributes: {
+      label: "What is your suggestion?",
+    },
+    validations: {
+      required: true,
+    },
   },
   {
     id: "description",
-    label: "Additional information:",
     type: "textarea",
-    required: false,
+    attributes: {
+      label: "Additional information:",
+    },
+    validations: {
+      required: false,
+    },
   },
 ];
 
-export const DEFAULT_ISSUE_FORM: FieldConfig[] = [
+export const DEFAULT_ISSUE_FIELDS: FieldConfig[] = [
   {
     id: "title",
-    label: "What issue did you encounter?",
-    type: "text",
-    required: true,
+    type: "input",
+    attributes: {
+      label: "What issue did you encounter?",
+    },
+    validations: {
+      required: true,
+    },
   },
   {
     id: "description",
-    label: "Additional information:",
     type: "textarea",
-    required: false,
+    attributes: {
+      label: "Additional information:",
+    },
+    validations: {
+      required: true,
+    },
   },
 ];
 
-export function getDefaultFormConfig(tabType: TabType): FieldConfig[] {
-  switch (tabType) {
+export const DEFAULT_TABS: TabConfig[] = [
+  {
+    id: "feedback",
+    label: "Feedback",
+    icon: "thumbsup",
+    isFeedback: true,
+    fields: DEFAULT_FEEDBACK_FIELDS,
+  },
+  {
+    id: "suggestion",
+    label: "Suggestion",
+    icon: "lightbulb",
+    isFeedback: false,
+    fields: DEFAULT_SUGGESTION_FIELDS,
+  },
+  {
+    id: "issue",
+    label: "Issue",
+    icon: "bug",
+    isFeedback: false,
+    fields: DEFAULT_ISSUE_FIELDS,
+  },
+];
+
+/**
+ * Ensures all fields and tabs have required subobjects (attributes, validations, fields as array)
+ */
+
+export function getDefaultFields(tabId: string): FieldConfig[] {
+  switch (tabId) {
     case "feedback":
-      return DEFAULT_FEEDBACK_FORM;
+      return DEFAULT_FEEDBACK_FIELDS;
     case "suggestion":
-      return DEFAULT_SUGGESTION_FORM;
+      return DEFAULT_SUGGESTION_FIELDS;
     case "issue":
-      return DEFAULT_ISSUE_FORM;
+      return DEFAULT_ISSUE_FIELDS;
+    default:
+      return [];
   }
 }
 
-export type TabConfigs = Record<TabType, FieldConfig[]>;
-
-export function getDefaultTabConfigs(): TabConfigs {
-  return {
-    feedback: [...DEFAULT_FEEDBACK_FORM],
-    suggestion: [...DEFAULT_SUGGESTION_FORM],
-    issue: [...DEFAULT_ISSUE_FORM],
-  };
+export function getDefaultTabs(): TabConfig[] {
+  return DEFAULT_TABS;
 }

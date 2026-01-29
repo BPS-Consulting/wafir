@@ -8,7 +8,7 @@ storage:
   type: issue # Options: issue, project, both
   # owner: different-org    # Optional: target a different repository
   # repo: different-repo    # Optional: target a different repository
-  projectNumber: 9        # Required for project storage
+  # projectNumber: 1        # Required for project storage
 
 # Optional: Dedicated project for feedback with rating field
 # feedbackProject:
@@ -30,7 +30,7 @@ tabs:
       - id: rating
         type: rating
         attributes:
-          label: "How satisfied are you with our website? (if you see this, then the config fetching works!)"
+          label: "How satisfied are you with our website?"
         validations:
           required: true
       - id: description

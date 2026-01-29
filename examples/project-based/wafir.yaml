@@ -1,54 +1,59 @@
 # WAFIR Configuration Example - GitHub Projects
-# Creates draft items directly on a GitHub Project board (no issues created)
-# Use "both" if you want issues AND project items
-# Place this file in .github/wafir.yaml in your repository
+# Creates draft items directly on a GitHub Project board
 
-# Widget mode
-mode: issue
+title: "Submit Feedback"
 
-# Storage settings - store as draft project items (not issues)
 storage:
-  type: project # Creates project items only; use "both" for issues + project items
-  projectNumber: 1 # Your GitHub Project number (from project URL)
+  type: project
+  projectNumber: 1
 
-# Feedback modal settings
-feedback:
-  title: "Submit Feedback"
-  labels: ["wafir"]
-
-# Automatic data collection
-issue:
-  screenshot: true
-  browserInfo: true
-  consoleLog: false
-  labels: ["feedback"]
-
-# Form fields mapped to project columns/fields
-fields:
-  - name: title
-    label: "Summary"
-    type: text
-    required: true
-
-  - name: description
-    label: "Details"
-    type: textarea
-    required: true
-
-  - name: type
-    label: "Type"
-    type: select
-    options: ["Bug", "Feature Request", "Improvement", "Question"]
-    required: true
-
-  - name: priority
-    label: "Priority"
-    type: select
-    options: ["Low", "Medium", "High"]
-    required: false
-
-  - name: area
-    label: "Affected Area"
-    type: select
-    options: ["UI/UX", "Backend", "API", "Documentation", "Other"]
-    required: false
+tabs:
+  - id: issue
+    label: Report
+    icon: bug
+    fields:
+      - id: title
+        type: input
+        attributes:
+          label: "Summary"
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: "Details"
+        validations:
+          required: true
+      - id: type
+        type: dropdown
+        attributes:
+          label: "Type"
+          options:
+            - "Bug"
+            - "Feature Request"
+            - "Improvement"
+            - "Question"
+        validations:
+          required: true
+      - id: priority
+        type: dropdown
+        attributes:
+          label: "Priority"
+          options:
+            - "Low"
+            - "Medium"
+            - "High"
+        validations:
+          required: false
+      - id: area
+        type: dropdown
+        attributes:
+          label: "Affected Area"
+          options:
+            - "UI/UX"
+            - "Backend"
+            - "API"
+            - "Documentation"
+            - "Other"
+        validations:
+          required: false

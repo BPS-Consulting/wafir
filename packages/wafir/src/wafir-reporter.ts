@@ -18,16 +18,13 @@ import {
   consoleLogs,
 } from "./store.js";
 import { StoreController } from "@nanostores/lit";
-import type { FieldConfig } from "./types.js";
+import type {
+  TabConfigApi as TabConfig,
+  FieldConfigApi as FieldConfig,
+} from "./api/client.js";
 import { dataURLtoBlob } from "./utils/file.js";
-import type { ConsoleLog } from "./utils/telemetry.js";
 import { getBrowserInfo, consoleInterceptor } from "./utils/telemetry.js";
-import {
-  type TabType,
-  type TabConfigs,
-  DEFAULT_TABS,
-  getDefaultTabConfigs,
-} from "./default-config.js";
+import { getDefaultTabs, getDefaultFields } from "./default-config.js";
 
 type WidgetPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 
@@ -38,7 +35,7 @@ const TAB_ICONS: Record<string, string> = {
 };
 
 @customElement("wafir-reporter")
-export class MyElement extends LitElement {
+export class WafirReporter extends LitElement {
   @property({ type: String })
   buttonText = "";
 
@@ -51,8 +48,8 @@ export class MyElement extends LitElement {
   @property({ type: String })
   tooltipText = "Open Issue Reporter";
 
-  @property({ type: Object })
-  config: Partial<TabConfigs> = {};
+  @property({ type: Array })
+  tabs: TabConfig[] = [];
 
   private _isSelectingController = new StoreController(this, isSelecting);
   private _isCapturingController = new StoreController(this, isCapturing);
@@ -74,38 +71,42 @@ export class MyElement extends LitElement {
   private _hasCustomTrigger = false;
 
   @state()
-  private _remoteConfig: any = null;
+  private _tabs: TabConfig[] = getDefaultTabs();
 
   @state()
-  private _tabConfigs: TabConfigs = getDefaultTabConfigs();
+  private _activeTabId: string = "feedback";
 
   @state()
-  private _activeTab: TabType = "feedback";
-
-  @state()
-  private _availableTabs = DEFAULT_TABS;
+  private _telemetry = {
+    screenshot: true,
+    browserInfo: true,
+    consoleLog: false,
+  };
 
   static styles = [unsafeCSS(reporterStyles)];
 
   connectedCallback() {
     super.connectedCallback();
     this._checkCustomTrigger();
-    this._mergeInlineConfig();
+    this._mergeInlineTabs();
   }
 
   private _checkCustomTrigger() {
     this._hasCustomTrigger = this.querySelector('[slot="trigger"]') !== null;
   }
 
-  private _mergeInlineConfig() {
-    if (this.config && Object.keys(this.config).length > 0) {
-      const merged = { ...this._tabConfigs };
-      for (const key of Object.keys(this.config) as TabType[]) {
-        if (this.config[key]) {
-          merged[key] = this.config[key]!;
-        }
+  private _mergeInlineTabs() {
+    if (this.tabs && this.tabs.length > 0) {
+      this._tabs = this.tabs.map((tab) => ({
+        ...tab,
+        fields:
+          tab.fields && tab.fields.length > 0
+            ? tab.fields
+            : getDefaultFields(tab.id),
+      }));
+      if (this._tabs.length > 0) {
+        this._activeTabId = this._tabs[0].id;
       }
-      this._tabConfigs = merged;
     }
   }
 
@@ -137,7 +138,7 @@ export class MyElement extends LitElement {
       this.isBridgeAvailable = await checkBridgeHealth(
         this.bridgeUrl || undefined,
       );
-      
+
       if (!this.isBridgeAvailable) {
         console.warn("Wafir: Bridge service is not available");
       }
@@ -163,45 +164,33 @@ export class MyElement extends LitElement {
       );
 
       if (config) {
-        this._remoteConfig = config;
-
-        if (config.fields) {
-          const issueFields: FieldConfig[] = config.fields.map(
-            (field: any) => ({
-              id: field.name,
-              label: field.label,
-              type: field.type,
-              required: field.required,
-              options: field.options,
-            }),
-          );
-
-          if (config.issueTypes && config.issueTypes.length > 0) {
-            issueFields.unshift({
-              id: "issueType",
-              label: "Issue Type",
-              type: "select",
-              required: true,
-              options: config.issueTypes.map((t: any) => t.name),
-            });
+        const remoteConfig = config;
+        if (remoteConfig.tabs && Array.isArray(remoteConfig.tabs)) {
+          this._tabs = remoteConfig.tabs.map((tab: any) => ({
+            id: tab.id,
+            label: tab.label || this._capitalize(tab.id),
+            icon: tab.icon,
+            isFeedback: tab.isFeedback ?? false,
+            fields:
+              tab.fields && tab.fields.length > 0
+                ? tab.fields
+                : getDefaultFields(tab.id),
+          }));
+          if (this._tabs.length > 0) {
+            this._activeTabId = this._tabs[0].id;
           }
-
-          if (config.issue && config.issue.screenshot) {
-            issueFields.push({
-              id: "screenshot",
-              label: "Screenshot",
-              type: "screenshot",
-            });
-          }
-
-          this._tabConfigs = {
-            ...this._tabConfigs,
-            issue: issueFields,
-          };
         }
 
-        if (config.feedback && config.feedback.title) {
-          this.modalTitle = config.feedback.title;
+        if (remoteConfig.title) {
+          this.modalTitle = remoteConfig.title;
+        }
+
+        if (remoteConfig.telemetry) {
+          this._telemetry = {
+            screenshot: remoteConfig.telemetry.screenshot ?? true,
+            browserInfo: remoteConfig.telemetry.browserInfo ?? true,
+            consoleLog: remoteConfig.telemetry.consoleLog ?? false,
+          };
         }
       }
     } catch (error) {
@@ -214,23 +203,26 @@ export class MyElement extends LitElement {
     }
   }
 
+  private _capitalize(str: string): string {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
   private _closeModal() {
     this.isModalOpen = false;
     resetState();
   }
 
+  private _getActiveTab(): TabConfig | undefined {
+    return this._tabs.find((t) => t.id === this._activeTabId);
+  }
+
   private _getActiveFormConfig(): FieldConfig[] {
-    return this._tabConfigs[this._activeTab] || [];
+    const tab = this._getActiveTab();
+    return tab?.fields || [];
   }
 
-  private _switchTab(tab: TabType) {
-    this._activeTab = tab;
-  }
-
-  updated(changedProperties: Map<string, any>) {
-    if (changedProperties.has("_isSelectingController")) {
-      // Logic handled by the fact that we check isSelecting in render
-    }
+  private _switchTab(tabId: string) {
+    this._activeTabId = tabId;
   }
 
   @property({ type: Number })
@@ -246,7 +238,8 @@ export class MyElement extends LitElement {
   bridgeUrl = "";
 
   private async _handleSubmit(event: CustomEvent) {
-    const formData = event.detail.formData;
+    const formData = event.detail.formData as Record<string, unknown>;
+    const activeTab = this._getActiveTab();
 
     if (!this.installationId || !this.owner || !this.repo) {
       console.error(
@@ -257,32 +250,9 @@ export class MyElement extends LitElement {
     }
 
     try {
-      let title: string;
-      let finalBody: string;
-      const labels: string[] = [this._activeTab];
-
-      if (this._activeTab === "feedback") {
-        const rating = Number(formData.rating) || 0;
-        const hasRatingField = this._tabConfigs.feedback.some(
-          (f) => f.id === "rating",
-        );
-        if (hasRatingField && rating > 0) {
-          title = formData.title || "Feedback";
-        } else {
-          title = `Feedback rating: ${rating}`;
-        }
-        finalBody = formData.description || "";
-      } else if (this._activeTab === "suggestion") {
-        title = formData.title || "Suggestion";
-        finalBody = formData.description || "";
-      } else {
-        title = formData.title || "No Title";
-        finalBody = formData.description || "";
-        const type = formData.type;
-        if (type) {
-          labels.push(type.toLowerCase());
-        }
-      }
+      const title =
+        (formData.title as string) || activeTab?.label || "Submission";
+      const labels: string[] = [this._activeTabId];
 
       const { submitIssue } = await import("./api/client.js");
 
@@ -291,52 +261,43 @@ export class MyElement extends LitElement {
         ? dataURLtoBlob(screenshotDataUrl)
         : undefined;
 
-      if (
-        this._activeTab === "issue" &&
-        this._remoteConfig?.issue?.browserInfo &&
-        browserInfo.get()
-      ) {
-        const info = browserInfo.get()!;
-        finalBody += `\n\n# Browser Info\n| Field | Value |\n| :--- | :--- |\n| URL | ${info.url} |\n| User Agent | \`${info.userAgent}\` |\n| Viewport | ${info.viewportWidth}x${info.viewportHeight} |\n| Language | ${info.language} |`;
+      const isFeedbackTab = activeTab?.isFeedback ?? false;
+      const submissionType: "issue" | "feedback" = isFeedbackTab
+        ? "feedback"
+        : "issue";
+      const rating = isFeedbackTab
+        ? Number(formData.rating) || undefined
+        : undefined;
+
+      // Filter out markdown fields before submission
+      const activeFields = this._getActiveFormConfig();
+      const submitFields = activeFields.filter((f) => f.type !== "markdown");
+      const fieldOrder = submitFields.map((f) => String(f.id));
+
+      // Only send user-data fields in formFields
+      const filteredFormData: Record<string, unknown> = {};
+      for (const field of submitFields) {
+        const id = String(field.id);
+        if (formData[id] !== undefined) filteredFormData[id] = formData[id];
       }
 
-      if (
-        this._activeTab === "issue" &&
-        this._remoteConfig?.issue?.consoleLog &&
-        consoleLogs.get().length > 0
-      ) {
-        const logs = consoleLogs.get();
-        finalBody += `\n\n# Console Logs\n\`\`\`\n${logs
-          .map((l: ConsoleLog) => `[${l.type.toUpperCase()}] ${l.message}`)
-          .join("\n")}\n\`\`\``;
-      }
-      if (
-        this._activeTab === "issue" &&
-        this._remoteConfig?.issue?.screenshot &&
-        screenshotBlob
-      ) {
-        finalBody += `\n\n# Screenshot`;
-      }
-      
-      const submissionType: "issue" | "feedback" =
-        this._activeTab === "feedback" ? "feedback" : "issue";
-      const rating =
-        this._activeTab === "feedback"
-          ? Number(formData.rating) || undefined
-          : undefined;
-
-      await submitIssue(
-        this.installationId,
-        this.owner,
-        this.repo,
+      await submitIssue({
+        installationId: this.installationId,
+        owner: this.owner,
+        repo: this.repo,
         title,
-        finalBody,
         labels,
-        screenshotBlob,
-        this.bridgeUrl || undefined,
+        screenshot: screenshotBlob,
+        bridgeUrl: this.bridgeUrl || undefined,
         rating,
         submissionType,
-      );
+        formFields: filteredFormData,
+        fieldOrder,
+        browserInfo: this._telemetry.browserInfo
+          ? (browserInfo.get() ?? undefined)
+          : undefined,
+        consoleLogs: this._telemetry.consoleLog ? consoleLogs.get() : undefined,
+      });
 
       alert("Thank you for your input!");
       resetState();
@@ -347,7 +308,8 @@ export class MyElement extends LitElement {
     }
   }
 
-  private _renderTabIcon(iconName: string) {
+  private _renderTabIcon(iconName: string | undefined) {
+    if (!iconName) return "";
     return unsafeHTML(TAB_ICONS[iconName] || "");
   }
 
@@ -423,10 +385,10 @@ export class MyElement extends LitElement {
                     </div>`
                   : html`
                       <div class="mode-tabs">
-                        ${this._availableTabs.map(
+                        ${this._tabs.map(
                           (tab) => html`
                             <button
-                              class="mode-tab ${this._activeTab === tab.id
+                              class="mode-tab ${this._activeTabId === tab.id
                                 ? "active"
                                 : ""}"
                               @click="${() => this._switchTab(tab.id)}"
@@ -438,11 +400,10 @@ export class MyElement extends LitElement {
                       </div>
                       <wafir-form
                         .fields="${this._getActiveFormConfig()}"
-                        .showBrowserInfo="${this._activeTab === "issue" &&
-                        !!this._remoteConfig?.issue?.browserInfo}"
-                        .showConsoleLog="${this._activeTab === "issue" &&
-                        !!this._remoteConfig?.issue?.consoleLog}"
-                        .bridgeAvailable="${this.isBridgeAvailable}"
+                        .formLabel="${this._getActiveTab()?.label || ""}"
+                        .showBrowserInfo="${this._telemetry.browserInfo}"
+                        .showConsoleLog="${this._telemetry.consoleLog}"
+                        .showScreenshot="${this._telemetry.screenshot}"
                         @form-submit="${this._handleSubmit}"
                       ></wafir-form>
                     `}
@@ -458,6 +419,6 @@ export class MyElement extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "wafir-reporter": MyElement;
+    "wafir-reporter": WafirReporter;
   }
 }

@@ -4,201 +4,417 @@
  */
 
 export interface paths {
-  "/health": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Health Check
-     * @description Returns the health status of the bridge service
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Default Response */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              status: string;
-              timestamp: string;
+    "/auth/github": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Initiate GitHub OAuth
+         * @description Redirects to GitHub OAuth for user authorization
+         */
+        get: {
+            parameters: {
+                query: {
+                    installationId: string;
+                    returnUrl?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
             };
-          };
-        };
-      };
-    };
-  };
-  "/config": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get WAFIR Configuration
-     * @description Fetches and parses .github/wafir.yaml from the target repository.
-     */
-    get: {
-      parameters: {
-        query: {
-          installationId: number;
-          owner: string;
-          repo: string;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Default Response */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              /**
-               * Widget mode: 'issue' for bug reports, 'feedback' for ratings, 'both' for both options
-               * @default issue
-               * @enum {string}
-               */
-              mode?: "issue" | "feedback" | "both";
-              storage?: {
-                /**
-                 * @default issue
-                 * @enum {string}
-                 */
-                type: "issue" | "project" | "both";
-                owner?: string;
-                repo?: string;
-                projectId?: number;
-              };
-              feedback?: {
-                /** @default Feedback */
-                title: string;
-                /**
-                 * @default [
-                 *       "feedback"
-                 *     ]
-                 */
-                labels: string[];
-              };
-              issue?: {
-                /** @default false */
-                screenshot: boolean;
-                /** @default false */
-                browserInfo: boolean;
-                /** @default false */
-                consoleLog: boolean;
-                /** @default true */
-                types: boolean;
-                /**
-                 * @default [
-                 *       "bug"
-                 *     ]
-                 */
-                labels: string[];
-              };
-              /** Available issue types from the organization */
-              issueTypes?: {
-                id: number;
-                name: string;
-                color: string;
-              }[];
-              fields?: {
-                name: string;
-                label: string;
-                /** @enum {string} */
-                type: "text" | "textarea" | "select" | "checkbox";
-                /** @default false */
-                required: boolean;
-                /** @description Options for select type */
-                options?: string[];
-              }[];
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
             };
-          };
         };
-        /** @description Default Response */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              error?: string;
-              message?: string;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/github/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * GitHub OAuth Callback
+         * @description Handles OAuth callback from GitHub
+         */
+        get: {
+            parameters: {
+                query: {
+                    code: string;
+                    state: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
             };
-          };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
         };
-      };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/submit": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Submit Feedback/Issue
-     * @description Creates a new issue in the target GitHub repository. Supports multipart/form-data for screenshots.
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Default Response */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
+    "/auth/status/{installationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-      };
+        /**
+         * Check Auth Status
+         * @description Check if user token exists for installation
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    installationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            connected?: boolean;
+                            installationId?: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
+    "/auth/{installationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Disconnect Auth
+         * @description Remove stored user token for installation
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    installationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get WAFIR Configuration
+         * @description Fetches and parses .github/wafir.yaml from the target repository.
+         */
+        get: {
+            parameters: {
+                query: {
+                    installationId: number;
+                    owner: string;
+                    repo: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Modal title
+                             * @default Contact Us
+                             */
+                            title: string;
+                            storage?: {
+                                /**
+                                 * @default issue
+                                 * @enum {string}
+                                 */
+                                type: "issue" | "project" | "both";
+                                owner?: string;
+                                repo?: string;
+                                projectNumber?: number;
+                            };
+                            /** @description Automatic data collection settings */
+                            telemetry?: {
+                                /**
+                                 * @description Enable screenshot capture
+                                 * @default true
+                                 */
+                                screenshot: boolean;
+                                /**
+                                 * @description Collect URL, user agent, viewport, language
+                                 * @default true
+                                 */
+                                browserInfo: boolean;
+                                /**
+                                 * @description Capture console messages
+                                 * @default false
+                                 */
+                                consoleLog: boolean;
+                            };
+                            /** @description Widget tabs configuration. Defaults to feedback, suggestion, issue if omitted. */
+                            tabs?: {
+                                /** @description Unique tab identifier */
+                                id: string;
+                                /** @description Display label (defaults to capitalized id) */
+                                label?: string;
+                                /**
+                                 * @description Tab icon
+                                 * @enum {string}
+                                 */
+                                icon?: "thumbsup" | "lightbulb" | "bug";
+                                /**
+                                 * @description If true, rating from this tab populates project Rating field
+                                 * @default false
+                                 */
+                                isFeedback: boolean;
+                                /** @description Form fields for this tab. If omitted, defaults are used for known tab IDs. */
+                                fields?: {
+                                    /**
+                                     * @description Field input type. Matches GitHub Form Schema types plus Wafir extensions.
+                                     * @enum {string}
+                                     */
+                                    type: "input" | "email" | "textarea" | "dropdown" | "checkboxes" | "markdown" | "rating";
+                                    /** @description Unique identifier for the field (used as key in JSON output/issue body). */
+                                    id?: string;
+                                    /** @description Visual and behavioral attributes for the field. */
+                                    attributes?: {
+                                        /** @description Display label for the field. */
+                                        label?: string;
+                                        /** @description Helper text displayed below the label. */
+                                        description?: string;
+                                        /** @description Placeholder text (input, textarea, email only). */
+                                        placeholder?: string;
+                                        /** @description Default value or the Markdown content (markdown type). */
+                                        value?: string;
+                                        /** @description Syntax highlighting style for textarea (e.g., 'shell', 'javascript'). */
+                                        render?: string;
+                                        /** @description Allow multiple selections (dropdown type only). */
+                                        multiple?: boolean;
+                                        /** @description Options for dropdown or checkboxes. */
+                                        options?: string[] | {
+                                            label: string;
+                                            required?: boolean;
+                                        }[];
+                                        /** @description Custom labels for star rating (Wafir extension only). */
+                                        ratingLabels?: string[];
+                                    };
+                                    validations?: {
+                                        /** @description Whether the field is required. */
+                                        required?: boolean;
+                                    };
+                                }[];
+                            }[];
+                            /** @description Available issue types from the organization (auto-populated) */
+                            issueTypes?: {
+                                id?: number;
+                                name?: string;
+                                color?: string;
+                            }[];
+                            /** @description Dedicated project for feedback submissions with star ratings */
+                            feedbackProject?: {
+                                /** @description GitHub Project number for feedback */
+                                projectNumber?: number;
+                                /** @description Project owner (defaults to repo owner) */
+                                owner?: string;
+                                /**
+                                 * @description Name of the Rating field in the project
+                                 * @default Rating
+                                 */
+                                ratingField: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                            message?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Health Check
+         * @description Returns the health status of the bridge service
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status?: string;
+                            timestamp?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit Feedback/Issue
+         * @description Creates a new issue or project draft. Supports multipart/form-data.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: never;
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    schemas: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;

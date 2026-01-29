@@ -9,6 +9,133 @@
     "schemas": {}
   },
   "paths": {
+    "/auth/github": {
+      "get": {
+        "summary": "Initiate GitHub OAuth",
+        "tags": [
+          "Auth"
+        ],
+        "description": "Redirects to GitHub OAuth for user authorization",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "installationId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "returnUrl",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/auth/github/callback": {
+      "get": {
+        "summary": "GitHub OAuth Callback",
+        "tags": [
+          "Auth"
+        ],
+        "description": "Handles OAuth callback from GitHub",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "code",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "state",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/auth/status/{installationId}": {
+      "get": {
+        "summary": "Check Auth Status",
+        "tags": [
+          "Auth"
+        ],
+        "description": "Check if user token exists for installation",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "installationId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connected": {
+                      "type": "boolean"
+                    },
+                    "installationId": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/{installationId}": {
+      "delete": {
+        "summary": "Disconnect Auth",
+        "tags": [
+          "Auth"
+        ],
+        "description": "Remove stored user token for installation",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "installationId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
     "/config": {
       "get": {
         "summary": "Get WAFIR Configuration",
@@ -50,6 +177,11 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "title": {
+                      "type": "string",
+                      "default": "Contact Us",
+                      "description": "Modal title"
+                    },
                     "storage": {
                       "type": "object",
                       "properties": {
@@ -68,93 +200,203 @@
                         "repo": {
                           "type": "string"
                         },
-                        "projectId": {
+                        "projectNumber": {
                           "type": "number"
                         }
                       }
                     },
-                    "feedback": {
+                    "telemetry": {
                       "type": "object",
-                      "properties": {
-                        "title": {
-                          "type": "string",
-                          "default": "Feedback"
-                        },
-                        "labels": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          },
-                          "default": [
-                            "feedback"
-                          ]
-                        }
-                      },
-                      "additionalProperties": false
-                    },
-                    "issue": {
-                      "type": "object",
+                      "description": "Automatic data collection settings",
                       "properties": {
                         "screenshot": {
                           "type": "boolean",
-                          "default": false
+                          "default": true,
+                          "description": "Enable screenshot capture"
                         },
                         "browserInfo": {
                           "type": "boolean",
-                          "default": false
+                          "default": true,
+                          "description": "Collect URL, user agent, viewport, language"
                         },
                         "consoleLog": {
                           "type": "boolean",
-                          "default": false
-                        },
-                        "labels": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          },
-                          "default": [
-                            "bug"
-                          ]
+                          "default": false,
+                          "description": "Capture console messages"
                         }
-                      },
-                      "additionalProperties": false
+                      }
                     },
-                    "fields": {
+                    "tabs": {
                       "type": "array",
                       "items": {
                         "type": "object",
                         "required": [
-                          "name",
-                          "label",
-                          "type"
+                          "id"
                         ],
                         "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Unique tab identifier"
+                          },
+                          "label": {
+                            "type": "string",
+                            "description": "Display label (defaults to capitalized id)"
+                          },
+                          "icon": {
+                            "type": "string",
+                            "enum": [
+                              "thumbsup",
+                              "lightbulb",
+                              "bug"
+                            ],
+                            "description": "Tab icon"
+                          },
+                          "isFeedback": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "If true, rating from this tab populates project Rating field"
+                          },
+                          "fields": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "required": [
+                                "type"
+                              ],
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "input",
+                                    "email",
+                                    "textarea",
+                                    "dropdown",
+                                    "checkboxes",
+                                    "markdown",
+                                    "rating"
+                                  ],
+                                  "description": "Field input type. Matches GitHub Form Schema types plus Wafir extensions."
+                                },
+                                "id": {
+                                  "type": "string",
+                                  "description": "Unique identifier for the field (used as key in JSON output/issue body)."
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "description": "Visual and behavioral attributes for the field.",
+                                  "properties": {
+                                    "label": {
+                                      "type": "string",
+                                      "description": "Display label for the field."
+                                    },
+                                    "description": {
+                                      "type": "string",
+                                      "description": "Helper text displayed below the label."
+                                    },
+                                    "placeholder": {
+                                      "type": "string",
+                                      "description": "Placeholder text (input, textarea, email only)."
+                                    },
+                                    "value": {
+                                      "type": "string",
+                                      "description": "Default value or the Markdown content (markdown type)."
+                                    },
+                                    "render": {
+                                      "type": "string",
+                                      "description": "Syntax highlighting style for textarea (e.g., 'shell', 'javascript')."
+                                    },
+                                    "multiple": {
+                                      "type": "boolean",
+                                      "description": "Allow multiple selections (dropdown type only)."
+                                    },
+                                    "options": {
+                                      "description": "Options for dropdown or checkboxes.",
+                                      "oneOf": [
+                                        {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "label"
+                                            ],
+                                            "properties": {
+                                              "label": {
+                                                "type": "string"
+                                              },
+                                              "required": {
+                                                "type": "boolean"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    "ratingLabels": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      },
+                                      "description": "Custom labels for star rating (Wafir extension only)."
+                                    }
+                                  }
+                                },
+                                "validations": {
+                                  "type": "object",
+                                  "properties": {
+                                    "required": {
+                                      "type": "boolean",
+                                      "description": "Whether the field is required."
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "description": "Form fields for this tab. If omitted, defaults are used for known tab IDs."
+                          }
+                        }
+                      },
+                      "description": "Widget tabs configuration. Defaults to feedback, suggestion, issue if omitted."
+                    },
+                    "issueTypes": {
+                      "type": "array",
+                      "description": "Available issue types from the organization (auto-populated)",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "number"
+                          },
                           "name": {
                             "type": "string"
                           },
-                          "label": {
+                          "color": {
                             "type": "string"
-                          },
-                          "type": {
-                            "type": "string",
-                            "enum": [
-                              "text",
-                              "textarea",
-                              "select",
-                              "checkbox"
-                            ]
-                          },
-                          "required": {
-                            "type": "boolean",
-                            "default": false
-                          },
-                          "options": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            },
-                            "description": "Options for select type"
                           }
+                        }
+                      }
+                    },
+                    "feedbackProject": {
+                      "type": "object",
+                      "description": "Dedicated project for feedback submissions with star ratings",
+                      "properties": {
+                        "projectNumber": {
+                          "type": "number",
+                          "description": "GitHub Project number for feedback"
+                        },
+                        "owner": {
+                          "type": "string",
+                          "description": "Project owner (defaults to repo owner)"
+                        },
+                        "ratingField": {
+                          "type": "string",
+                          "default": "Rating",
+                          "description": "Name of the Rating field in the project"
                         }
                       }
                     }
@@ -185,13 +427,42 @@
         }
       }
     },
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "tags": [
+          "Health"
+        ],
+        "description": "Returns the health status of the bridge service",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "timestamp": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/submit": {
       "post": {
         "summary": "Submit Feedback/Issue",
         "tags": [
           "WAFIR"
         ],
-        "description": "Creates a new issue in the target GitHub repository. Supports multipart/form-data for screenshots.",
+        "description": "Creates a new issue or project draft. Supports multipart/form-data.",
         "responses": {
           "200": {
             "description": "Default Response"

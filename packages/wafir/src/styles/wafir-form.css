@@ -48,18 +48,21 @@ textarea {
 }
 
 /* Checkbox specific styles */
-.checkbox-group {
+.checkboxes-group {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
 }
 
-.checkbox-group input {
-  width: auto;
+.checkboxes-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-bottom: 0;
 }
 
-.checkbox-group label {
-  margin-bottom: 0;
+.checkboxes-group input[type="checkbox"] {
+  width: auto;
 }
 
 .submit-button {

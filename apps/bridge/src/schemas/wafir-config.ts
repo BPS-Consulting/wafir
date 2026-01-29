@@ -1,13 +1,134 @@
+const fieldSchema = {
+  type: "object",
+  required: ["type"],
+  properties: {
+    type: {
+      type: "string",
+      enum: [
+        "input",
+        "email",
+        "textarea",
+        "dropdown",
+        "checkboxes",
+        "markdown",
+        "rating",
+      ],
+      description:
+        "Field input type. Matches GitHub Form Schema types plus Wafir extensions.",
+    },
+    id: {
+      type: "string",
+      description:
+        "Unique identifier for the field (used as key in JSON output/issue body).",
+    },
+    attributes: {
+      type: "object",
+      description: "Visual and behavioral attributes for the field.",
+      properties: {
+        label: {
+          type: "string",
+          description: "Display label for the field.",
+        },
+        description: {
+          type: "string",
+          description: "Helper text displayed below the label.",
+        },
+        placeholder: {
+          type: "string",
+          description: "Placeholder text (input, textarea, email only).",
+        },
+        value: {
+          type: "string",
+          description: "Default value or the Markdown content (markdown type).",
+        },
+        render: {
+          type: "string",
+          description:
+            "Syntax highlighting style for textarea (e.g., 'shell', 'javascript').",
+        },
+        multiple: {
+          type: "boolean",
+          description: "Allow multiple selections (dropdown type only).",
+        },
+        options: {
+          description: "Options for dropdown or checkboxes.",
+          oneOf: [
+            {
+              // Dropdown options are an array of strings
+              type: "array",
+              items: { type: "string" },
+            },
+            {
+              // Checkbox options are an array of objects
+              type: "array",
+              items: {
+                type: "object",
+                required: ["label"],
+                properties: {
+                  label: { type: "string" },
+                  required: { type: "boolean" },
+                },
+              },
+            },
+          ],
+        },
+        // Wafir Extension Attribute
+        ratingLabels: {
+          type: "array",
+          items: { type: "string" },
+          description: "Custom labels for star rating (Wafir extension only).",
+        },
+      },
+    },
+    validations: {
+      type: "object",
+      properties: {
+        required: {
+          type: "boolean",
+          description: "Whether the field is required.",
+        },
+      },
+    },
+  },
+};
+
+const tabSchema = {
+  type: "object",
+  required: ["id"],
+  properties: {
+    id: { type: "string", description: "Unique tab identifier" },
+    label: {
+      type: "string",
+      description: "Display label (defaults to capitalized id)",
+    },
+    icon: {
+      type: "string",
+      enum: ["thumbsup", "lightbulb", "bug"],
+      description: "Tab icon",
+    },
+    isFeedback: {
+      type: "boolean",
+      default: false,
+      description:
+        "If true, rating from this tab populates project Rating field",
+    },
+    fields: {
+      type: "array",
+      items: fieldSchema,
+      description:
+        "Form fields for this tab. If omitted, defaults are used for known tab IDs.",
+    },
+  },
+};
+
 export const wafirConfigSchema = {
   $id: "wafirConfig",
   type: "object",
   properties: {
-    mode: {
+    title: {
       type: "string",
-      enum: ["issue", "feedback", "both"],
-      default: "issue",
-      description:
-        "Widget mode: 'issue' for bug reports, 'feedback' for ratings, 'both' for both options",
+      default: "Contact Us",
+      description: "Modal title",
     },
     storage: {
       type: "object",
@@ -22,67 +143,43 @@ export const wafirConfigSchema = {
         projectNumber: { type: "number" },
       },
     },
-    feedback: {
+    telemetry: {
       type: "object",
+      description: "Automatic data collection settings",
       properties: {
-        title: { type: "string", default: "Feedback" },
-        labels: {
-          type: "array",
-          items: { type: "string" },
-          default: ["feedback"],
-        },
-      },
-      additionalProperties: false,
-    },
-    issue: {
-      type: "object",
-      properties: {
-        screenshot: { type: "boolean", default: false },
-        browserInfo: { type: "boolean", default: false },
-        consoleLog: { type: "boolean", default: false },
-        types: {
+        screenshot: {
           type: "boolean",
           default: true,
-          description: "Fetch and display issue types from organization",
+          description: "Enable screenshot capture",
         },
-        labels: {
-          type: "array",
-          items: { type: "string" },
-          default: ["bug"],
+        browserInfo: {
+          type: "boolean",
+          default: true,
+          description: "Collect URL, user agent, viewport, language",
+        },
+        consoleLog: {
+          type: "boolean",
+          default: false,
+          description: "Capture console messages",
         },
       },
-      additionalProperties: false,
+    },
+    tabs: {
+      type: "array",
+      items: tabSchema,
+      description:
+        "Widget tabs configuration. Defaults to feedback, suggestion, issue if omitted.",
     },
     issueTypes: {
       type: "array",
-      description: "Available issue types from the organization",
+      description:
+        "Available issue types from the organization (auto-populated)",
       items: {
         type: "object",
         properties: {
           id: { type: "number" },
           name: { type: "string" },
           color: { type: "string" },
-        },
-      },
-    },
-    fields: {
-      type: "array",
-      items: {
-        type: "object",
-        required: ["name", "label", "type"],
-        properties: {
-          name: { type: "string" },
-          label: { type: "string" },
-          type: {
-            type: "string",
-            enum: ["text", "textarea", "select", "checkbox"],
-          },
-          required: { type: "boolean", default: false },
-          options: {
-            type: "array",
-            items: { type: "string" },
-            description: "Options for select type",
-          },
         },
       },
     },
