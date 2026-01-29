@@ -6,7 +6,6 @@ import { customElement, property } from "lit/decorators.js";
 import { StoreController } from "@nanostores/lit";
 import { formData, setFormData, browserInfo, consoleLogs } from "./store";
 import type { FieldConfigApi as FieldConfig } from "./api/client";
-import { normalizeField } from "./default-config";
 
 @customElement("wafir-form")
 export class WafirForm extends LitElement {
@@ -17,7 +16,7 @@ export class WafirForm extends LitElement {
     return this._fields;
   }
   set fields(val: FieldConfig[]) {
-    this._fields = (val || []).map(normalizeField);
+    this._fields = val || [];
   }
 
   @property({ type: Boolean })

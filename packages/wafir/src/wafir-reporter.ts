@@ -25,11 +25,7 @@ import type {
 import { dataURLtoBlob } from "./utils/file.js";
 import type { ConsoleLog } from "./utils/telemetry.js";
 import { getBrowserInfo, consoleInterceptor } from "./utils/telemetry.js";
-import {
-  getDefaultTabs,
-  getDefaultFields,
-  normalizeField,
-} from "./default-config.js";
+import { getDefaultTabs, getDefaultFields } from "./default-config.js";
 
 type WidgetPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 
@@ -178,7 +174,7 @@ export class WafirReporter extends LitElement {
             isFeedback: tab.isFeedback ?? false,
             fields:
               tab.fields && tab.fields.length > 0
-                ? tab.fields.map(normalizeField)
+                ? tab.fields
                 : getDefaultFields(tab.id),
           }));
           if (this._tabs.length > 0) {

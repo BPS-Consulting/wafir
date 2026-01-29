@@ -108,43 +108,20 @@ export const DEFAULT_TABS: TabConfig[] = [
 /**
  * Ensures all fields and tabs have required subobjects (attributes, validations, fields as array)
  */
-export function normalizeTab(tab: Partial<TabConfig>): TabConfig {
-  return {
-    id: tab.id || "",
-    label: tab.label || tab.id || "",
-    icon: tab.icon,
-    isFeedback: tab.isFeedback ?? false,
-    fields: (tab.fields || []).map(normalizeField),
-  };
-}
-
-export function normalizeField(field: Partial<FieldConfig>): FieldConfig {
-  return {
-    ...field,
-    id: field.id || "",
-    type: field.type || "input",
-    attributes: {
-      ...field.attributes,
-      label: field.attributes?.label || field.id || "",
-      // fill other defaults here as needed
-    },
-    validations: { ...field.validations },
-  };
-}
 
 export function getDefaultFields(tabId: string): FieldConfig[] {
   switch (tabId) {
     case "feedback":
-      return DEFAULT_FEEDBACK_FIELDS.map(normalizeField);
+      return DEFAULT_FEEDBACK_FIELDS;
     case "suggestion":
-      return DEFAULT_SUGGESTION_FIELDS.map(normalizeField);
+      return DEFAULT_SUGGESTION_FIELDS;
     case "issue":
-      return DEFAULT_ISSUE_FIELDS.map(normalizeField);
+      return DEFAULT_ISSUE_FIELDS;
     default:
       return [];
   }
 }
 
 export function getDefaultTabs(): TabConfig[] {
-  return DEFAULT_TABS.map(normalizeTab);
+  return DEFAULT_TABS;
 }
