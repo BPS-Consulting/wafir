@@ -27,37 +27,49 @@ tabs:
     icon: thumbsup
     isFeedback: true
     fields:
-      - name: rating
-        label: "How satisfied are you with our website?"
+      - id: rating
         type: rating
-        required: true
-      - name: description
-        label: "What is the main reason for this rating?"
+        attributes:
+          label: "How satisfied are you with our website?"
+        validations:
+          required: true
+      - id: description
         type: textarea
-        required: false
+        attributes:
+          label: "What is the main reason for this rating?"
+        validations:
+          required: false
 
   - id: suggestion
     label: Suggestion
     icon: lightbulb
     fields:
-      - name: title
-        label: "What is your suggestion?"
+      - id: title
         type: input
-        required: true
-      - name: description
-        label: "Additional information:"
+        attributes:
+          label: "What is your suggestion?"
+        validations:
+          required: true
+      - id: description
         type: textarea
-        required: false
+        attributes:
+          label: "Additional information:"
+        validations:
+          required: false
 
   - id: issue
     label: Issue
     icon: bug
     fields:
-      - name: title
-        label: "What issue did you encounter?"
+      - id: title
         type: input
-        required: true
-      - name: description
-        label: "Additional information:"
+        attributes:
+          label: "What issue did you encounter?"
+        validations:
+          required: true
+      - id: description
         type: textarea
-        required: true
+        attributes:
+          label: "Additional information:"
+        validations:
+          required: true

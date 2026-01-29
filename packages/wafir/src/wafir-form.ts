@@ -50,8 +50,8 @@ export class WafirForm extends LitElement {
       const newData = { ...currentData };
 
       this.fields.forEach((field) => {
-        if (field.defaultValue && !newData[field.id]) {
-          newData[field.id] = field.defaultValue;
+        if (field.attributes.value && !newData[field.id]) {
+          newData[field.id] = field.attributes.value;
           hasChanges = true;
         }
       });
@@ -97,8 +97,8 @@ export class WafirForm extends LitElement {
           <textarea
             id="${field.id}"
             .value="${value}"
-            placeholder="${field.placeholder || ""}"
-            ?required="${field.required}"
+            placeholder="${field.attributes.placeholder || ""}"
+            ?required="${field.validations?.required}"
             @input="${(e: Event) => this._handleInputChange(e, field.id)}"
           ></textarea>
         `;
@@ -108,11 +108,11 @@ export class WafirForm extends LitElement {
           <select
             id="${field.id}"
             .value="${value}"
-            ?required="${field.required}"
+            ?required="${field.validations?.required}"
             @change="${(e: Event) => this._handleInputChange(e, field.id)}"
           >
             <option value="" disabled selected>Select an option</option>
-            ${field.options?.map(
+            ${field.attributes.options?.map(
               (opt) => html`<option value="${opt}">${opt}</option>`,
             )}
           </select>
@@ -121,7 +121,7 @@ export class WafirForm extends LitElement {
       case "checkboxes": // GitHub Issue Forms (was checkbox group; multi-select)
         return html`
           <div class="checkboxes-group">
-            ${field.options?.map(
+            ${field.attributes.options?.map(
               (opt) => html`
                 <label>
                   <input
@@ -146,21 +146,21 @@ export class WafirForm extends LitElement {
           <select
             id="${field.id}"
             .value="${value}"
-            ?required="${field.required}"
+            ?required="${field.validations?.required}"
             @change="${(e: Event) => this._handleInputChange(e, field.id)}"
           >
             <option value="" disabled selected>Select an option</option>
-            ${field.options?.map(
+            ${field.attributes.options?.map(
               (opt) => html`<option value="${opt}">${opt}</option>`,
             )}
           </select>
         `;
 
         // removed unsupported legacy: case "switch":
-        const currentValue = value || field.options?.[0] || "";
+        const currentValue = value || field.attributes.options?.[0] || "";
         return html`
           <div class="switch-container">
-            ${field.options?.map(
+            ${field.attributes.options?.map(
               (opt) => html`
                 <button
                   type="button"
@@ -186,7 +186,7 @@ export class WafirForm extends LitElement {
               .checked="${!!value}"
               @change="${(e: Event) => this._handleInputChange(e, field.id)}"
             />
-            <label for="${field.id}">${field.label}</label>
+            <label for="${field.id}">${field.attributes.label}</label>
           </div>
         `;
 
@@ -274,7 +274,7 @@ export class WafirForm extends LitElement {
         return html`
           <wafir-star-rating
             .value="${Number(value) || 0}"
-            .labels="${field.ratingLabels || []}"
+            .labels="${field.attributes.ratingLabels || []}"
             @rating-change="${(e: CustomEvent) => {
               setFormData({ ...formData.get(), [field.id]: e.detail.value });
             }}"
@@ -290,9 +290,9 @@ export class WafirForm extends LitElement {
             type="${field.type}"
             id="${field.id}"
             .value="${value}"
-            placeholder="${field.placeholder || ""}"
-            ?required="${field.required}"
-            ?hidden="${field.hidden}"
+            placeholder="${field.attributes.placeholder || ""}"
+            ?required="${field.validations?.required}"
+            ?hidden="${field.attributes.hidden}"
             @input="${(e: Event) => this._handleInputChange(e, field.id)}"
           />
         `;
@@ -303,7 +303,7 @@ export class WafirForm extends LitElement {
     return html`
       <form @submit="${this._handleSubmit}">
         ${this.fields.map((field) => {
-          if (field.hidden) return this._renderFieldInput(field);
+          if (field.attributes.hidden) return this._renderFieldInput(field);
           // (was: if (field.type === "checkbox"))
           if (field.type === "checkboxes")
             return html`<div class="form-group">
@@ -313,7 +313,8 @@ export class WafirForm extends LitElement {
           return html`
             <div class="form-group">
               <label for="${field.id}">
-                ${field.label} ${field.required ? "*" : ""}
+                ${field.attributes.label}
+                ${field.validations?.required ? "*" : ""}
               </label>
               ${this._renderFieldInput(field)}
             </div>

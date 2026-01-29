@@ -12,15 +12,15 @@ tabs:
     label: Issue
     icon: bug
     fields:
-      - name: title
-        label: "Issue Title"
+      - id: title
         type: input
-        required: true
-      - name: description
-        label: "Description"
+        attributes:
+          label: "Issue Title"
+        validations:
+          required: true
+      - id: description
         type: textarea
-        required: true
-      - name: description
-        label: "Description"
-        type: textarea
-        required: true
+        attributes:
+          label: "Description"
+        validations:
+          required: true

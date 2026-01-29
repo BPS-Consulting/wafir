@@ -1,9 +1,7 @@
 const fieldSchema = {
   type: "object",
-  required: ["name", "label", "type"],
+  required: ["type"],
   properties: {
-    name: { type: "string", description: "Field ID/key for form data" },
-    label: { type: "string", description: "Display label for the field" },
     type: {
       type: "string",
       enum: [
@@ -16,20 +14,80 @@ const fieldSchema = {
         "rating",
       ],
       description:
-        "Field input type. Allowed types:\n- input: Single-line text (GitHub Issue Forms type)\n- textarea: Multiline text (GitHub Issue Forms type)\n- dropdown: Single-select options (GitHub Issue Forms type)\n- checkboxes: Multi-select options (GitHub Issue Forms type)\n- markdown: For headings, descriptions (GitHub Issue Forms type)\n- email: Single-line email input (Wafir extension, not in GitHub Issue Forms)\n- rating: Star rating field (Wafir extension, not in GitHub Issue Forms)",
+        "Field input type. Matches GitHub Form Schema types plus Wafir extensions.",
     },
-    required: { type: "boolean", default: false },
-    placeholder: { type: "string" },
-    options: {
-      type: "array",
-      items: { type: "string" },
-      description: "Options for dropdown or checkboxes field types only.",
-    },
-    ratingLabels: {
-      type: "array",
-      items: { type: "string" },
+    id: {
+      type: "string",
       description:
-        "Labels for each rating star (1-5). Only used for rating field (Wafir extension).",
+        "Unique identifier for the field (used as key in JSON output/issue body).",
+    },
+    attributes: {
+      type: "object",
+      description: "Visual and behavioral attributes for the field.",
+      properties: {
+        label: {
+          type: "string",
+          description: "Display label for the field.",
+        },
+        description: {
+          type: "string",
+          description: "Helper text displayed below the label.",
+        },
+        placeholder: {
+          type: "string",
+          description: "Placeholder text (input, textarea, email only).",
+        },
+        value: {
+          type: "string",
+          description: "Default value or the Markdown content (markdown type).",
+        },
+        render: {
+          type: "string",
+          description:
+            "Syntax highlighting style for textarea (e.g., 'shell', 'javascript').",
+        },
+        multiple: {
+          type: "boolean",
+          description: "Allow multiple selections (dropdown type only).",
+        },
+        options: {
+          description: "Options for dropdown or checkboxes.",
+          oneOf: [
+            {
+              // Dropdown options are an array of strings
+              type: "array",
+              items: { type: "string" },
+            },
+            {
+              // Checkbox options are an array of objects
+              type: "array",
+              items: {
+                type: "object",
+                required: ["label"],
+                properties: {
+                  label: { type: "string" },
+                  required: { type: "boolean" },
+                },
+              },
+            },
+          ],
+        },
+        // Wafir Extension Attribute
+        ratingLabels: {
+          type: "array",
+          items: { type: "string" },
+          description: "Custom labels for star rating (Wafir extension only).",
+        },
+      },
+    },
+    validations: {
+      type: "object",
+      properties: {
+        required: {
+          type: "boolean",
+          description: "Whether the field is required.",
+        },
+      },
     },
   },
 };
@@ -58,7 +116,7 @@ const tabSchema = {
       type: "array",
       items: fieldSchema,
       description:
-        "Form fields for this tab. If omitted, defaults are used for known tab IDs (feedback, issue, suggestion)",
+        "Form fields for this tab. If omitted, defaults are used for known tab IDs.",
     },
   },
 };

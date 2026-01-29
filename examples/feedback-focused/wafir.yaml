@@ -17,11 +17,15 @@ tabs:
     icon: thumbsup
     isFeedback: true
     fields:
-      - name: rating
-        label: "How satisfied are you?"
+      - id: rating
         type: rating
-        required: true
-      - name: comment
-        label: "Tell us more (optional)"
+        attributes:
+          label: "How satisfied are you?"
+        validations:
+          required: true
+      - id: comment
         type: textarea
-        required: false
+        attributes:
+          label: "Tell us more (optional)"
+        validations:
+          required: false

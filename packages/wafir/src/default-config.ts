@@ -1,4 +1,4 @@
-import type { FieldConfig, TabConfig } from "./types.js";
+import type { FieldConfig } from "./types.js";
 
 export const RATING_LABELS = [
   "Very Unsatisfied",
@@ -11,48 +11,74 @@ export const RATING_LABELS = [
 export const DEFAULT_FEEDBACK_FIELDS: FieldConfig[] = [
   {
     id: "rating",
-    label: "How satisfied are you with our website?",
     type: "rating",
-    required: true,
-    ratingLabels: RATING_LABELS,
+    attributes: {
+      label: "How satisfied are you with our website?",
+      ratingLabels: RATING_LABELS,
+    },
+    validations: {
+      required: true,
+    },
   },
   {
     id: "description",
-    label: "What is the main reason for this rating?",
     type: "textarea",
-    required: false,
+    attributes: {
+      label: "What is the main reason for this rating?",
+    },
+    validations: {
+      required: false,
+    },
   },
 ];
 
 export const DEFAULT_SUGGESTION_FIELDS: FieldConfig[] = [
   {
     id: "title",
-    label: "What is your suggestion?",
     type: "input",
-    required: true,
+    attributes: {
+      label: "What is your suggestion?",
+    },
+    validations: {
+      required: true,
+    },
   },
   {
     id: "description",
-    label: "Additional information:",
     type: "textarea",
-    required: false,
+    attributes: {
+      label: "Additional information:",
+    },
+    validations: {
+      required: false,
+    },
   },
 ];
 
 export const DEFAULT_ISSUE_FIELDS: FieldConfig[] = [
   {
     id: "title",
-    label: "What issue did you encounter?",
     type: "input",
-    required: true,
+    attributes: {
+      label: "What issue did you encounter?",
+    },
+    validations: {
+      required: true,
+    },
   },
   {
     id: "description",
-    label: "Additional information:",
     type: "textarea",
-    required: true,
+    attributes: {
+      label: "Additional information:",
+    },
+    validations: {
+      required: true,
+    },
   },
 ];
+
+import type { TabConfig } from "./types.js";
 
 export const DEFAULT_TABS: TabConfig[] = [
   {

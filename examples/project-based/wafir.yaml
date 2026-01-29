@@ -12,26 +12,48 @@ tabs:
     label: Report
     icon: bug
     fields:
-      - name: title
-        label: "Summary"
-         type: input
-        required: true
-      - name: description
-        label: "Details"
-         type: textarea
-        required: true
-      - name: type
-        label: "Type"
-         type: dropdown
-        options: ["Bug", "Feature Request", "Improvement", "Question"]
-        required: true
-      - name: priority
-        label: "Priority"
-         type: dropdown
-        options: ["Low", "Medium", "High"]
-        required: false
-      - name: area
-        label: "Affected Area"
-         type: dropdown
-        options: ["UI/UX", "Backend", "API", "Documentation", "Other"]
-        required: false
+      - id: title
+        type: input
+        attributes:
+          label: "Summary"
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: "Details"
+        validations:
+          required: true
+      - id: type
+        type: dropdown
+        attributes:
+          label: "Type"
+          options:
+            - "Bug"
+            - "Feature Request"
+            - "Improvement"
+            - "Question"
+        validations:
+          required: true
+      - id: priority
+        type: dropdown
+        attributes:
+          label: "Priority"
+          options:
+            - "Low"
+            - "Medium"
+            - "High"
+        validations:
+          required: false
+      - id: area
+        type: dropdown
+        attributes:
+          label: "Affected Area"
+          options:
+            - "UI/UX"
+            - "Backend"
+            - "API"
+            - "Documentation"
+            - "Other"
+        validations:
+          required: false

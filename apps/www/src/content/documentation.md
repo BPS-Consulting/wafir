@@ -159,32 +159,56 @@ function App() {
 
 ## Form Configuration
 
-Configure which fields appear in the feedback form using your `.github/wafir.yaml` file.
+Configure the feedback form fields in your `.github/wafir.yaml` file. **With the new schema, each field is defined using `id`, `type`, `attributes`, and `validations` subkeys.**
 
 ### Field Types
 
-| Type         | Description                  | Options                  |
-| ------------ | ---------------------------- | ------------------------ |
-| `input`      | Single-line text input       | -                        |
-| `textarea`   | Multi-line text area         | -                        |
-| `dropdown`   | Dropdown selection           | Requires `options` array |
-| `checkboxes` | Boolean checkbox             | -                        |
-| `rating`     | Likert (stars) Rating System | -                        |
+| Type         | Description                               | Attributes (required/optional)                                        |
+| ------------ | ----------------------------------------- | --------------------------------------------------------------------- |
+| `input`      | Single-line text input                    | label, description?, placeholder?, value?                             |
+| `email`      | Email input                               | label, description?, placeholder?, value?                             |
+| `textarea`   | Multi-line text area                      | label, description?, placeholder?, value?, render?                    |
+| `dropdown`   | Dropdown selection                        | label, description?, placeholder?, value?, options, multiple?         |
+| `checkboxes` | Multiple checkbox options                 | label, description?, options (array of objects with label, required?) |
+| `markdown`   | Read-only Markdown display                | label, description?, value (markdown)                                 |
+| `rating`     | Likert (stars) Rating System (Wafir only) | label, description?, ratingLabels?                                    |
 
-### Field Properties
+### Field Structure
+
+Each field must be defined as follows:
 
 ```yaml
 fields:
-  - name: priority # Required: unique identifier
-    label: "Priority" # Required: display label
-    type: select # Required: field type
-    options: # Required for select type
-      - "Low"
-      - "Medium"
-      - "High"
-      - "Critical"
-    required: true # Optional: default false
+  - id: priority
+    type: dropdown
+    attributes:
+      label: "Priority"
+      options:
+        - "Low"
+        - "Medium"
+        - "High"
+        - "Critical"
+    validations:
+      required: true
 ```
+
+#### Field Properties Table
+
+| Property     | Location     | Type         | Description                                     |
+| ------------ | ------------ | ------------ | ----------------------------------------------- |
+| id           | field (root) | string       | Unique identifier for the field                 |
+| type         | field (root) | string       | Field input type (see above)                    |
+| attributes   | field (root) | object       | All display/options attributes (see below)      |
+| validations  | field (root) | object       | Validation rules (e.g., required: true/false)   |
+| label        | attributes   | string       | Display label                                   |
+| description  | attributes   | string?      | Helper/description text                         |
+| placeholder  | attributes   | string?      | Placeholder text (if supported by type)         |
+| value        | attributes   | string?      | Default value or Markdown content               |
+| render       | attributes   | string?      | Syntax highlighting for textarea (e.g. shell)   |
+| options      | attributes   | array/object | Options for dropdowns or checkboxes             |
+| multiple     | attributes   | boolean?     | Allow multiple selections (dropdown only)       |
+| ratingLabels | attributes   | array?       | Custom labels for star rating (Wafir extension) |
+| required     | validations  | boolean      | If the field is required                        |
 
 ---
 
@@ -203,12 +227,10 @@ Wafir can automatically capture browser context to help with debugging. All tele
 ### Configuration
 
 ```yaml
-# .github/wafir.yaml
-issue:
+telemetry:
   screenshot: true # Enable screenshot capture
   browserInfo: true # Collect browser details
   consoleLog: true # Capture console messages
-  labels: ["bug", "needs-triage"]
 ```
 
 ---
@@ -228,20 +250,12 @@ Choose what type of input the widget collects.
 ### Configuration
 
 ```yaml
-# .github/wafir.yaml
 mode: issue # Options: issue, feedback, both
 ```
-
-### When to Use Each Mode
-
-- **`issue`** - Best for bug tracking, feature requests, and detailed reports
-- **`feedback`** - Best for customer satisfaction, NPS surveys, quick sentiment
-- **`both`** - When you want users to choose what kind of input to provide
 
 ### Feedback Mode Example
 
 ```yaml
-# .github/wafir.yaml
 mode: feedback
 
 feedback:
@@ -265,49 +279,30 @@ Choose where feedback is stored in your GitHub repository.
 | `project` | Add items to a GitHub Project board      |
 | `both`    | Create both an issue and a project item  |
 
-### Cross-Repository Storage
-
-Store feedback in a different repository than where the widget is configured:
+### Example Storage Configs
 
 ```yaml
-# .github/wafir.yaml
 storage:
   type: issue
-  owner: my-org # Different organization
-  repo: feedback-repo # Different repository
+  owner: my-org # (optional) Different organization
+  repo: feedback-repo # (optional) Different repository
 ```
 
-### Project Board Storage
-
 ```yaml
-# .github/wafir.yaml
 storage:
   type: project
   projectNumber: 1 # GitHub Project number from URL
 ```
 
-### Personal Projects Authentication
-
-GitHub personal projects require additional authorization beyond the standard GitHub App installation. This is due to GitHub API limitations—personal projects can only be accessed with a user access token.
-
-**To enable personal project access:**
-
-1. Visit the [Connect](/connect) page
-2. Enter your GitHub App Installation ID
-3. Authorize Wafir via GitHub OAuth
-4. Your personal projects will now be accessible
-
-> **Note:** Organization projects work automatically with the GitHub App installation. Personal project authorization is only needed for projects owned by individual GitHub accounts.
-
 ---
 
 ## Configuration Examples
 
-We provide ready-to-use configuration templates for common use cases:
+We provide ready-to-use configuration templates for common use cases (see `/examples`). All now follow the new field schema.
 
-- **[Basic](https://github.com/BPS-Consulting/wafir/tree/main/examples/basic)** — Standard bug reporting setup
-- **[Minimal](https://github.com/BPS-Consulting/wafir/tree/main/examples/minimal)** — Simplest possible config
-- **[Full Featured](https://github.com/BPS-Consulting/wafir/tree/main/examples/full-featured)** — All options demonstrated
-- **[Privacy Focused](https://github.com/BPS-Consulting/wafir/tree/main/examples/privacy-focused)** — No automatic data collection
-- **[Feature Requests](https://github.com/BPS-Consulting/wafir/tree/main/examples/feature-requests)** — Optimized for ideas
-- **[Feedback Focused](https://github.com/BPS-Consulting/wafir/tree/main/examples/feedback-focused)** — Star rating and satisfaction surveys
+- **Basic** — Standard bug reporting setup
+- **Minimal** — Simplest possible config
+- **Full Featured** — All options demonstrated
+- **Privacy Focused** — No automatic data collection
+- **Feature Requests** — Optimized for ideas
+- **Feedback Focused** — Star rating and satisfaction surveys

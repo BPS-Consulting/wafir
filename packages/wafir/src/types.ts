@@ -7,24 +7,33 @@ export type FieldType =
   | "markdown" // GitHub Issue Forms (markdown/informational)
   | "rating"; // Wafir extension
 
-export interface FieldConfig {
-  id: string;
+export interface FieldAttributes {
   label: string;
-  type: FieldType;
-  required?: boolean;
+  description?: string;
   placeholder?: string;
-  options?: string[];
-  hidden?: boolean;
-  defaultValue?: string;
+  value?: string;
+  render?: string;
+  multiple?: boolean;
+  options?: string[] | Array<{ label: string; required?: boolean }>;
   ratingLabels?: string[];
+  hidden?: boolean;
 }
 
-export type TabIcon = "thumbsup" | "lightbulb" | "bug";
+export interface FieldValidations {
+  required?: boolean;
+}
+
+export interface FieldConfig {
+  id: string;
+  type: FieldType;
+  attributes: FieldAttributes;
+  validations?: FieldValidations;
+}
 
 export interface TabConfig {
   id: string;
   label: string;
-  icon?: TabIcon;
+  icon?: string;
   isFeedback?: boolean;
   fields: FieldConfig[];
 }

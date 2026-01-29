@@ -16,16 +16,25 @@ tabs:
     label: Feedback
     icon: thumbsup
     fields:
-      - name: title
-        label: "Subject"
-         type: input
-        required: true
-      - name: description
-        label: "Your Feedback"
-         type: textarea
-        required: true
-      - name: category
-        label: "Type"
-         type: dropdown
-        options: ["Bug Report", "Feature Request", "General Feedback"]
-        required: false
+      - id: title
+        type: input
+        attributes:
+          label: "Subject"
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: "Your Feedback"
+        validations:
+          required: true
+      - id: category
+        type: dropdown
+        attributes:
+          label: "Type"
+          options:
+            - "Bug Report"
+            - "Feature Request"
+            - "General Feedback"
+        validations:
+          required: false

@@ -17,68 +17,102 @@ tabs:
     icon: thumbsup
     isFeedback: true
     fields:
-      - name: rating
-        label: "How satisfied are you?"
+      - id: rating
         type: rating
-        required: true
-      - name: description
-        label: "What is the main reason for this rating?"
+        attributes:
+          label: "How satisfied are you?"
+        validations:
+          required: true
+      - id: description
         type: textarea
-        required: false
+        attributes:
+          label: "What is the main reason for this rating?"
+        validations:
+          required: false
 
   - id: suggestion
     label: Suggestion
     icon: lightbulb
     fields:
-      - name: title
-        label: "What is your suggestion?"
+      - id: title
         type: input
-        required: true
-      - name: description
-        label: "Additional details"
+        attributes:
+          label: "What is your suggestion?"
+        validations:
+          required: true
+      - id: description
         type: textarea
-        required: false
+        attributes:
+          label: "Additional details"
+        validations:
+          required: false
 
   - id: issue
     label: Issue
     icon: bug
     fields:
-      - name: title
-        label: "Issue Title"
+      - id: title
         type: input
-        required: true
-      - name: description
-        label: "Detailed Description"
+        attributes:
+          label: "Issue Title"
+        validations:
+          required: true
+      - id: description
         type: textarea
-        required: true
-      - name: priority
-        label: "Priority"
+        attributes:
+          label: "Detailed Description"
+        validations:
+          required: true
+      - id: priority
         type: dropdown
-        options: ["Low", "Medium", "High", "Critical"]
-        required: true
-      - name: category
-        label: "Category"
+        attributes:
+          label: "Priority"
+          options:
+            - "Low"
+            - "Medium"
+            - "High"
+            - "Critical"
+        validations:
+          required: true
+      - id: category
         type: dropdown
-        options:
-          ["Bug", "Feature Request", "Documentation", "Question", "Other"]
-        required: true
-      - name: steps_to_reproduce
-        label: "Steps to Reproduce"
+        attributes:
+          label: "Category"
+          options:
+            - "Bug"
+            - "Feature Request"
+            - "Documentation"
+            - "Question"
+            - "Other"
+        validations:
+          required: true
+      - id: steps_to_reproduce
         type: textarea
-        required: false
-      - name: expected_behavior
-        label: "Expected Behavior"
+        attributes:
+          label: "Steps to Reproduce"
+        validations:
+          required: false
+      - id: expected_behavior
         type: input
-        required: false
-      - name: actual_behavior
-        label: "Actual Behavior"
+        attributes:
+          label: "Expected Behavior"
+        validations:
+          required: false
+      - id: actual_behavior
         type: input
-        required: false
-      - name: contact_email
-        label: "Your Email (optional for follow-up)"
+        attributes:
+          label: "Actual Behavior"
+        validations:
+          required: false
+      - id: contact_email
         type: email
-        required: false
-      - name: accepts_contact
-        label: "I'm okay with follow-up questions"
+        attributes:
+          label: "Your Email (optional for follow-up)"
+        validations:
+          required: false
+      - id: accepts_contact
         type: checkboxes
-        required: false
+        attributes:
+          label: "I'm okay with follow-up questions"
+        validations:
+          required: false
