@@ -1,15 +1,15 @@
 /**
  * Tests for the /submit endpoint
  * Tests submission to GitHub issues and projects with mocked GitHub API and S3
+ * Includes validation tests for configUrl-based security
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi, Mock } from "vitest";
 import Fastify, { FastifyInstance } from "fastify";
 import fp from "fastify-plugin";
 import {
   setupTestEnv,
   createMockOctokit,
   createMockTokenStore,
-  encodeYamlToBase64,
   sampleConfigs,
   MockOctokit,
   MockTokenStore,
@@ -18,6 +18,9 @@ import {
 // Create a shared mock send function that we can control
 const mockS3Send = vi.fn();
 
+// Create a mock fetch for config URL fetching
+const mockFetch = vi.fn();
+
 // Mock the S3 client module before importing the route
 vi.mock("@aws-sdk/client-s3", () => {
   return {
@@ -25,16 +28,16 @@ vi.mock("@aws-sdk/client-s3", () => {
       send = mockS3Send;
     },
     PutObjectCommand: class MockPutObjectCommand {
-      constructor(public params: any) {}
+      constructor(public params: unknown) {}
     },
     GetObjectCommand: class MockGetObjectCommand {
-      constructor(public params: any) {}
+      constructor(public params: unknown) {}
     },
     DeleteObjectCommand: class MockDeleteObjectCommand {
-      constructor(public params: any) {}
+      constructor(public params: unknown) {}
     },
     HeadObjectCommand: class MockHeadObjectCommand {
-      constructor(public params: any) {}
+      constructor(public params: unknown) {}
     },
   };
 });
@@ -42,10 +45,22 @@ vi.mock("@aws-sdk/client-s3", () => {
 // Import the submit route after mocking
 import submitRoute from "../src/routes/submit.js";
 
+// Sample config URL for tests
+const TEST_CONFIG_URL = "https://example.com/wafir.yaml";
+
+// Helper to create a mock fetch response for config
+function createMockConfigResponse(yamlContent: string): Response {
+  return new Response(yamlContent, {
+    status: 200,
+    headers: { "content-type": "text/yaml" },
+  });
+}
+
 describe("POST /submit", () => {
   let app: FastifyInstance;
   let mockOctokit: MockOctokit;
   let mockTokenStore: MockTokenStore;
+  let originalFetch: typeof global.fetch;
 
   beforeEach(async () => {
     setupTestEnv();
@@ -53,17 +68,22 @@ describe("POST /submit", () => {
     mockTokenStore = createMockTokenStore();
     mockS3Send.mockReset();
     mockS3Send.mockResolvedValue({});
+    mockFetch.mockReset();
+
+    // Save and replace global fetch
+    originalFetch = global.fetch;
+    global.fetch = mockFetch as unknown as typeof fetch;
 
     app = Fastify({ logger: false });
 
     // Register mock GitHub plugin
     await app.register(
       fp(async (fastify) => {
-        (fastify as any).decorate(
+        fastify.decorate(
           "getGitHubClient",
           vi.fn().mockResolvedValue(mockOctokit),
         );
-        (fastify as any).decorate(
+        fastify.decorate(
           "getGitHubClientWithToken",
           vi.fn().mockReturnValue(mockOctokit),
         );
@@ -73,7 +93,7 @@ describe("POST /submit", () => {
     // Register mock token store plugin
     await app.register(
       fp(async (fastify) => {
-        (fastify as any).decorate("tokenStore", mockTokenStore);
+        fastify.decorate("tokenStore", mockTokenStore);
       }),
     );
 
@@ -87,13 +107,17 @@ describe("POST /submit", () => {
     await app.register(submitRoute);
     await app.ready();
 
-    // Default mock for config (no wafir.yaml - uses defaults)
-    mockOctokit.rest.repos.getContent.mockRejectedValue({ status: 404 });
+    // Default mock for config fetch - returns minimal config
+    mockFetch.mockResolvedValue(
+      createMockConfigResponse(sampleConfigs.minimal),
+    );
   });
 
   afterEach(async () => {
     await app.close();
     vi.clearAllMocks();
+    // Restore original fetch
+    global.fetch = originalFetch;
   });
 
   describe("successful issue submission", () => {
@@ -110,12 +134,14 @@ describe("POST /submit", () => {
         method: "POST",
         url: "/submit",
         payload: {
+          configUrl: TEST_CONFIG_URL,
           installationId: 123,
           owner: "testowner",
           repo: "testrepo",
           title: "Test Issue",
           formFields: {
-            description: "This is a test description",
+            title: "Test Issue",
+            message: "This is a test description",
           },
         },
       });
@@ -133,9 +159,15 @@ describe("POST /submit", () => {
         owner: "testowner",
         repo: "testrepo",
         title: "Test Issue",
-        body: expect.stringContaining("Description"),
+        body: expect.stringContaining("Message"),
         labels: ["wafir-feedback"],
       });
+
+      // Verify config was fetched
+      expect(mockFetch).toHaveBeenCalledWith(
+        TEST_CONFIG_URL,
+        expect.objectContaining({ method: "GET" }),
+      );
     });
 
     it("creates issue with custom labels", async () => {
@@ -151,13 +183,15 @@ describe("POST /submit", () => {
         method: "POST",
         url: "/submit",
         payload: {
+          configUrl: TEST_CONFIG_URL,
           installationId: 123,
           owner: "testowner",
           repo: "testrepo",
           title: "Bug Report",
           labels: ["bug", "priority-high"],
           formFields: {
-            steps: "1. Click button\n2. See error",
+            title: "Bug Report",
+            message: "1. Click button\n2. See error",
           },
         },
       });
@@ -171,6 +205,27 @@ describe("POST /submit", () => {
     });
 
     it("builds markdown body from form fields in correct order", async () => {
+      // Use full config with custom fields
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(`
+installationId: 123
+storage:
+  owner: testowner
+  repo: testrepo
+tabs:
+  - id: issue
+    fields:
+      - id: title
+        type: input
+      - id: description
+        type: textarea
+      - id: steps
+        type: textarea
+      - id: expected
+        type: textarea
+`),
+      );
+
       mockOctokit.rest.issues.create.mockResolvedValue({
         data: {
           number: 44,
@@ -183,11 +238,14 @@ describe("POST /submit", () => {
         method: "POST",
         url: "/submit",
         payload: {
+          configUrl: TEST_CONFIG_URL,
           installationId: 123,
           owner: "testowner",
           repo: "testrepo",
           title: "Ordered Fields Test",
+          tabId: "issue",
           formFields: {
+            title: "Ordered Fields Test",
             description: "First field",
             steps: "Second field",
             expected: "Third field",
@@ -211,6 +269,26 @@ describe("POST /submit", () => {
     });
 
     it("converts rating to star emojis in body", async () => {
+      // Config with feedback tab that has rating field
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(`
+installationId: 123
+storage:
+  owner: testowner
+  repo: testrepo
+tabs:
+  - id: feedback
+    isFeedback: true
+    fields:
+      - id: title
+        type: input
+      - id: rating
+        type: rating
+      - id: comment
+        type: textarea
+`),
+      );
+
       mockOctokit.rest.issues.create.mockResolvedValue({
         data: {
           number: 45,
@@ -223,11 +301,15 @@ describe("POST /submit", () => {
         method: "POST",
         url: "/submit",
         payload: {
+          configUrl: TEST_CONFIG_URL,
           installationId: 123,
           owner: "testowner",
           repo: "testrepo",
           title: "Feedback with Rating",
+          tabId: "feedback",
+          submissionType: "feedback",
           formFields: {
+            title: "Feedback with Rating",
             rating: 4,
             comment: "Great product!",
           },
@@ -253,12 +335,14 @@ describe("POST /submit", () => {
         method: "POST",
         url: "/submit",
         payload: {
+          configUrl: TEST_CONFIG_URL,
           installationId: 123,
           owner: "testowner",
           repo: "testrepo",
           title: "Issue with Browser Info",
           formFields: {
-            description: "A bug",
+            title: "Issue with Browser Info",
+            message: "A bug",
           },
           browserInfo: {
             url: "https://example.com/page",
@@ -293,12 +377,14 @@ describe("POST /submit", () => {
         method: "POST",
         url: "/submit",
         payload: {
+          configUrl: TEST_CONFIG_URL,
           installationId: 123,
           owner: "testowner",
           repo: "testrepo",
           title: "Issue with Console Logs",
           formFields: {
-            description: "Error occurred",
+            title: "Issue with Console Logs",
+            message: "Error occurred",
           },
           consoleLogs: [
             {
@@ -336,12 +422,13 @@ describe("POST /submit", () => {
         method: "POST",
         url: "/submit",
         payload: {
+          configUrl: TEST_CONFIG_URL,
           installationId: 123,
           owner: "testowner",
           repo: "testrepo",
           formFields: {
             title: "Title from Form Fields",
-            description: "Some description",
+            message: "Some description",
           },
         },
       });
@@ -352,6 +439,492 @@ describe("POST /submit", () => {
           title: "Title from Form Fields",
         }),
       );
+    });
+  });
+
+  describe("config validation - security", () => {
+    it("rejects submission when configUrl is missing", async () => {
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          installationId: 123,
+          owner: "testowner",
+          repo: "testrepo",
+          title: "Test Issue",
+          formFields: {
+            title: "Test Issue",
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error).toContain("configUrl");
+    });
+
+    it("rejects submission when config fetch fails", async () => {
+      mockFetch.mockRejectedValue(new Error("Network error"));
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          installationId: 123,
+          owner: "testowner",
+          repo: "testrepo",
+          title: "Test Issue",
+          formFields: {
+            title: "Test Issue",
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error).toBe("Validation Failed");
+      expect(body.details[0].code).toBe("CONFIG_FETCH_FAILED");
+    });
+
+    it("rejects submission when config returns non-200", async () => {
+      mockFetch.mockResolvedValue(new Response("Not Found", { status: 404 }));
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          installationId: 123,
+          owner: "testowner",
+          repo: "testrepo",
+          title: "Test Issue",
+          formFields: {
+            title: "Test Issue",
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error).toBe("Validation Failed");
+      expect(body.details[0].code).toBe("CONFIG_FETCH_FAILED");
+    });
+
+    it("rejects submission when installationId does not match config", async () => {
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(sampleConfigs.minimal),
+      );
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          installationId: 999, // Does not match config (123)
+          owner: "testowner",
+          repo: "testrepo",
+          title: "Test Issue",
+          formFields: {
+            title: "Test Issue",
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error).toBe("Validation Failed");
+      expect(body.details[0].code).toBe("INSTALLATION_ID_MISMATCH");
+    });
+
+    it("rejects submission when owner does not match config", async () => {
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(sampleConfigs.minimal),
+      );
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          installationId: 123,
+          owner: "malicious-owner", // Does not match config (testowner)
+          repo: "testrepo",
+          title: "Test Issue",
+          formFields: {
+            title: "Test Issue",
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error).toBe("Validation Failed");
+      expect(body.details[0].code).toBe("OWNER_MISMATCH");
+    });
+
+    it("rejects submission when repo does not match config", async () => {
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(sampleConfigs.minimal),
+      );
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          installationId: 123,
+          owner: "testowner",
+          repo: "malicious-repo", // Does not match config (testrepo)
+          title: "Test Issue",
+          formFields: {
+            title: "Test Issue",
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error).toBe("Validation Failed");
+      expect(body.details[0].code).toBe("REPO_MISMATCH");
+    });
+
+    it("uses values from config, not from client submission, for GitHub API", async () => {
+      // Config has specific owner/repo
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(`
+installationId: 123
+storage:
+  owner: real-owner
+  repo: real-repo
+`),
+      );
+
+      mockOctokit.rest.issues.create.mockResolvedValue({
+        data: {
+          number: 100,
+          html_url: "https://github.com/real-owner/real-repo/issues/100",
+          node_id: "I_real",
+        },
+      });
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          installationId: 123,
+          owner: "real-owner",
+          repo: "real-repo",
+          title: "Test Issue",
+          formFields: {
+            title: "Test Issue",
+            message: "Test",
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(201);
+
+      // Verify GitHub API was called with config values
+      expect(mockOctokit.rest.issues.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          owner: "real-owner",
+          repo: "real-repo",
+        }),
+      );
+    });
+  });
+
+  describe("form field validation", () => {
+    it("rejects submission with extra fields not in config", async () => {
+      // Config with specific fields
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(`
+installationId: 123
+storage:
+  owner: testowner
+  repo: testrepo
+tabs:
+  - id: feedback
+    fields:
+      - id: title
+        type: input
+      - id: message
+        type: textarea
+`),
+      );
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          installationId: 123,
+          owner: "testowner",
+          repo: "testrepo",
+          title: "Test Issue",
+          tabId: "feedback",
+          formFields: {
+            title: "Test Issue",
+            message: "Valid field",
+            maliciousField: "Should be rejected", // Not in config
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error).toBe("Validation Failed");
+      expect(body.details[0].code).toBe("UNKNOWN_FIELD");
+      expect(body.details[0].field).toBe("maliciousField");
+    });
+
+    it("rejects submission with missing required fields", async () => {
+      // Config with required field
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(`
+installationId: 123
+storage:
+  owner: testowner
+  repo: testrepo
+tabs:
+  - id: feedback
+    fields:
+      - id: title
+        type: input
+        validations:
+          required: true
+      - id: message
+        type: textarea
+        validations:
+          required: true
+`),
+      );
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          installationId: 123,
+          owner: "testowner",
+          repo: "testrepo",
+          title: "Test Issue",
+          tabId: "feedback",
+          formFields: {
+            title: "Test Issue",
+            // message is missing but required
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error).toBe("Validation Failed");
+      expect(
+        body.details.some(
+          (e: { code: string }) => e.code === "MISSING_REQUIRED_FIELD",
+        ),
+      ).toBe(true);
+    });
+
+    it("rejects submission with invalid email format", async () => {
+      // Config with email field
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(`
+installationId: 123
+storage:
+  owner: testowner
+  repo: testrepo
+tabs:
+  - id: feedback
+    fields:
+      - id: title
+        type: input
+      - id: email
+        type: email
+      - id: message
+        type: textarea
+`),
+      );
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          installationId: 123,
+          owner: "testowner",
+          repo: "testrepo",
+          title: "Test Issue",
+          tabId: "feedback",
+          formFields: {
+            title: "Test Issue",
+            email: "not-an-email",
+            message: "Test",
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error).toBe("Validation Failed");
+      expect(body.details[0].code).toBe("INVALID_EMAIL");
+    });
+
+    it("rejects submission with invalid rating value", async () => {
+      // Config with rating field
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(`
+installationId: 123
+storage:
+  owner: testowner
+  repo: testrepo
+tabs:
+  - id: feedback
+    fields:
+      - id: title
+        type: input
+      - id: rating
+        type: rating
+      - id: message
+        type: textarea
+`),
+      );
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          installationId: 123,
+          owner: "testowner",
+          repo: "testrepo",
+          title: "Test Issue",
+          tabId: "feedback",
+          formFields: {
+            title: "Test Issue",
+            rating: 10, // Invalid: must be 1-5
+            message: "Test",
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error).toBe("Validation Failed");
+      expect(body.details[0].code).toBe("INVALID_RATING");
+    });
+
+    it("rejects submission with invalid dropdown value", async () => {
+      // Config with dropdown field
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(`
+installationId: 123
+storage:
+  owner: testowner
+  repo: testrepo
+tabs:
+  - id: feedback
+    fields:
+      - id: title
+        type: input
+      - id: category
+        type: dropdown
+        attributes:
+          options:
+            - Bug
+            - Feature
+            - Question
+      - id: message
+        type: textarea
+`),
+      );
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          installationId: 123,
+          owner: "testowner",
+          repo: "testrepo",
+          title: "Test Issue",
+          tabId: "feedback",
+          formFields: {
+            title: "Test Issue",
+            category: "InvalidOption", // Not in options
+            message: "Test",
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error).toBe("Validation Failed");
+      expect(body.details[0].code).toBe("INVALID_DROPDOWN_VALUE");
+    });
+
+    it("accepts valid submission with all field types", async () => {
+      // Config with multiple field types
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(`
+installationId: 123
+storage:
+  owner: testowner
+  repo: testrepo
+tabs:
+  - id: feedback
+    fields:
+      - id: title
+        type: input
+      - id: email
+        type: email
+      - id: rating
+        type: rating
+      - id: category
+        type: dropdown
+        attributes:
+          options:
+            - Bug
+            - Feature
+      - id: message
+        type: textarea
+`),
+      );
+
+      mockOctokit.rest.issues.create.mockResolvedValue({
+        data: {
+          number: 200,
+          html_url: "https://github.com/testowner/testrepo/issues/200",
+          node_id: "I_valid",
+        },
+      });
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          installationId: 123,
+          owner: "testowner",
+          repo: "testrepo",
+          title: "Test Issue",
+          tabId: "feedback",
+          formFields: {
+            title: "Test Issue",
+            email: "valid@example.com",
+            rating: 5,
+            category: "Bug",
+            message: "This is a valid submission",
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(201);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
     });
   });
 
@@ -371,6 +944,10 @@ describe("POST /submit", () => {
 
       const body = [
         `--${boundary}`,
+        'Content-Disposition: form-data; name="configUrl"',
+        "",
+        TEST_CONFIG_URL,
+        `--${boundary}`,
         'Content-Disposition: form-data; name="installationId"',
         "",
         "123",
@@ -389,7 +966,7 @@ describe("POST /submit", () => {
         `--${boundary}`,
         'Content-Disposition: form-data; name="formFields"',
         "",
-        '{"description":"Bug with screenshot"}',
+        '{"title":"Issue with Screenshot","message":"Bug with screenshot"}',
         `--${boundary}`,
         'Content-Disposition: form-data; name="screenshot"; filename="screenshot.png"',
         "Content-Type: image/png",
@@ -435,6 +1012,10 @@ describe("POST /submit", () => {
 
       const body = [
         `--${boundary}`,
+        'Content-Disposition: form-data; name="configUrl"',
+        "",
+        TEST_CONFIG_URL,
+        `--${boundary}`,
         'Content-Disposition: form-data; name="installationId"',
         "",
         "123",
@@ -453,7 +1034,7 @@ describe("POST /submit", () => {
         `--${boundary}`,
         'Content-Disposition: form-data; name="formFields"',
         "",
-        '{"description":"Bug"}',
+        '{"title":"Issue with Failed Screenshot","message":"Bug"}',
         `--${boundary}`,
         'Content-Disposition: form-data; name="screenshot"; filename="screenshot.png"',
         "Content-Type: image/png",
@@ -484,6 +1065,11 @@ describe("POST /submit", () => {
 
   describe("project-based submission", () => {
     it("adds draft issue to project when storage type is project", async () => {
+      // Config with project storage
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(sampleConfigs.withProject),
+      );
+
       // Mock finding the project
       mockOctokit.graphql.mockResolvedValueOnce({
         organization: { projectV2: { id: "PVT_abc123" } },
@@ -500,17 +1086,14 @@ describe("POST /submit", () => {
         method: "POST",
         url: "/submit",
         payload: {
+          configUrl: TEST_CONFIG_URL,
           installationId: 123,
           owner: "testowner",
           repo: "testrepo",
           title: "Project Draft Issue",
           formFields: {
-            description: "This goes to a project",
-          },
-          storageConfig: {
-            type: "project",
-            projectNumber: 1,
-            projectOwner: "testowner",
+            title: "Project Draft Issue",
+            message: "This goes to a project",
           },
         },
       });
@@ -525,6 +1108,11 @@ describe("POST /submit", () => {
     });
 
     it("returns warning when project cannot be found", async () => {
+      // Config with project storage
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(sampleConfigs.withProject),
+      );
+
       // Mock project not found for both org and user
       mockOctokit.graphql.mockRejectedValue(new Error("Project not found"));
 
@@ -532,17 +1120,14 @@ describe("POST /submit", () => {
         method: "POST",
         url: "/submit",
         payload: {
+          configUrl: TEST_CONFIG_URL,
           installationId: 123,
           owner: "testowner",
           repo: "testrepo",
           title: "Project Issue",
           formFields: {
-            description: "Test",
-          },
-          storageConfig: {
-            type: "project",
-            projectNumber: 1,
-            projectOwner: "testowner",
+            title: "Project Issue",
+            message: "Test",
           },
         },
       });
@@ -557,6 +1142,11 @@ describe("POST /submit", () => {
 
   describe("feedback submission", () => {
     it("adds feedback to project with rating field", async () => {
+      // Config with feedback project
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(sampleConfigs.withFeedbackProject),
+      );
+
       // Mock finding the project (first call in the feedback handling)
       mockOctokit.graphql.mockResolvedValueOnce({
         organization: { projectV2: { id: "PVT_feedback123" } },
@@ -606,6 +1196,7 @@ describe("POST /submit", () => {
         method: "POST",
         url: "/submit",
         payload: {
+          configUrl: TEST_CONFIG_URL,
           installationId: 123,
           owner: "testowner",
           repo: "testrepo",
@@ -613,12 +1204,8 @@ describe("POST /submit", () => {
           rating: 4,
           submissionType: "feedback",
           formFields: {
-            comment: "Love the product!",
-          },
-          feedbackProjectConfig: {
-            projectNumber: 2,
-            owner: "testowner",
-            ratingField: "Rating",
+            title: "User Feedback",
+            message: "Love the product!",
           },
         },
       });
@@ -630,6 +1217,11 @@ describe("POST /submit", () => {
     });
 
     it("creates issue as fallback when no feedback project configured", async () => {
+      // Minimal config without feedback project
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(sampleConfigs.minimal),
+      );
+
       mockOctokit.rest.issues.create.mockResolvedValue({
         data: {
           number: 52,
@@ -642,15 +1234,16 @@ describe("POST /submit", () => {
         method: "POST",
         url: "/submit",
         payload: {
+          configUrl: TEST_CONFIG_URL,
           installationId: 123,
           owner: "testowner",
           repo: "testrepo",
           title: "Feedback without Project",
           submissionType: "feedback",
           formFields: {
-            comment: "Good stuff",
+            title: "Feedback without Project",
+            message: "Good stuff",
           },
-          // No feedbackProjectConfig - should fallback to issue creation
         },
       });
 
@@ -674,6 +1267,7 @@ describe("POST /submit", () => {
         method: "POST",
         url: "/submit",
         payload: {
+          configUrl: TEST_CONFIG_URL,
           installationId: 123,
           owner: "testowner",
           // Missing repo and title
@@ -690,11 +1284,12 @@ describe("POST /submit", () => {
         method: "POST",
         url: "/submit",
         payload: {
+          configUrl: TEST_CONFIG_URL,
           installationId: 123,
           owner: "testowner",
           repo: "testrepo",
           formFields: {
-            description: "No title provided",
+            message: "No title provided",
           },
         },
       });
@@ -713,12 +1308,14 @@ describe("POST /submit", () => {
         method: "POST",
         url: "/submit",
         payload: {
+          configUrl: TEST_CONFIG_URL,
           installationId: 123,
           owner: "testowner",
           repo: "testrepo",
           title: "This will fail",
           formFields: {
-            description: "Test",
+            title: "This will fail",
+            message: "Test",
           },
         },
       });
@@ -728,58 +1325,13 @@ describe("POST /submit", () => {
       expect(body.error).toBe("Submission Failed");
       expect(body.message).toContain("GitHub API error");
     });
-
-    it("returns descriptive error message when GitHub auth fails", async () => {
-      mockOctokit.rest.issues.create.mockRejectedValue(
-        new Error("Bad credentials"),
-      );
-
-      const response = await app.inject({
-        method: "POST",
-        url: "/submit",
-        payload: {
-          installationId: 123,
-          owner: "testowner",
-          repo: "testrepo",
-          title: "Auth will fail",
-          formFields: {
-            description: "Test",
-          },
-        },
-      });
-
-      expect(response.statusCode).toBe(500);
-      const body = JSON.parse(response.body);
-      expect(body.error).toBe("Submission Failed");
-      expect(body.message).toContain("Bad credentials");
-    });
-
-    it("returns descriptive error when repo not found", async () => {
-      mockOctokit.rest.issues.create.mockRejectedValue(new Error("Not Found"));
-
-      const response = await app.inject({
-        method: "POST",
-        url: "/submit",
-        payload: {
-          installationId: 123,
-          owner: "testowner",
-          repo: "nonexistent",
-          title: "To missing repo",
-          formFields: {
-            description: "Test",
-          },
-        },
-      });
-
-      expect(response.statusCode).toBe(500);
-      const body = JSON.parse(response.body);
-      expect(body.error).toBe("Submission Failed");
-      expect(body.message).toContain("Not Found");
-    });
   });
 
   describe("both storage type (issue + project)", () => {
     it("creates issue and adds to project when storage type is both", async () => {
+      // Config with "both" storage type
+      mockFetch.mockResolvedValue(createMockConfigResponse(sampleConfigs.full));
+
       mockOctokit.rest.issues.create.mockResolvedValue({
         data: {
           number: 60,
@@ -804,17 +1356,14 @@ describe("POST /submit", () => {
         method: "POST",
         url: "/submit",
         payload: {
+          configUrl: TEST_CONFIG_URL,
           installationId: 123,
           owner: "testowner",
           repo: "testrepo",
           title: "Issue for Both",
           formFields: {
-            description: "Goes to issue and project",
-          },
-          storageConfig: {
-            type: "both",
-            projectNumber: 1,
-            projectOwner: "testowner",
+            title: "Issue for Both",
+            message: "Goes to issue and project",
           },
         },
       });
@@ -833,6 +1382,18 @@ describe("POST /submit", () => {
 
   describe("user token for projects", () => {
     it("uses user token for user projects when available", async () => {
+      // Config with project storage
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(`
+installationId: 123
+storage:
+  type: project
+  owner: testuser
+  repo: testrepo
+  projectNumber: 1
+`),
+      );
+
       // User token is available
       mockTokenStore.getUserToken.mockResolvedValue("user-oauth-token");
 
@@ -855,17 +1416,14 @@ describe("POST /submit", () => {
         method: "POST",
         url: "/submit",
         payload: {
+          configUrl: TEST_CONFIG_URL,
           installationId: 123,
           owner: "testuser",
           repo: "testrepo",
           title: "User Project Issue",
           formFields: {
-            description: "Test",
-          },
-          storageConfig: {
-            type: "project",
-            projectNumber: 1,
-            projectOwner: "testuser",
+            title: "User Project Issue",
+            message: "Test",
           },
         },
       });

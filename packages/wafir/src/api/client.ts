@@ -100,10 +100,14 @@ export interface ConsoleLogEntry {
 }
 
 export interface SubmitIssueParams {
+  /** URL to the authoritative config file - required for server-side validation */
+  configUrl: string;
   installationId: number;
   owner: string;
   repo: string;
   title: string;
+  /** The active tab ID for field validation */
+  tabId?: string;
   labels?: string[];
   screenshot?: Blob;
   bridgeUrl?: string;
@@ -113,25 +117,16 @@ export interface SubmitIssueParams {
   fieldOrder?: string[];
   browserInfo?: BrowserInfo;
   consoleLogs?: ConsoleLogEntry[];
-  // Storage configuration (passed from widget's fetched config)
-  storageConfig?: {
-    type?: "issue" | "project" | "both";
-    projectNumber?: number;
-    projectOwner?: string;
-  };
-  feedbackProjectConfig?: {
-    projectNumber?: number;
-    owner?: string;
-    ratingField?: string;
-  };
 }
 
 export const submitIssue = async (params: SubmitIssueParams) => {
   const {
+    configUrl,
     installationId,
     owner,
     repo,
     title,
+    tabId,
     labels,
     screenshot,
     bridgeUrl,
@@ -141,8 +136,6 @@ export const submitIssue = async (params: SubmitIssueParams) => {
     fieldOrder,
     browserInfo,
     consoleLogs,
-    storageConfig,
-    feedbackProjectConfig,
   } = params;
 
   if (bridgeUrl) {
@@ -150,10 +143,14 @@ export const submitIssue = async (params: SubmitIssueParams) => {
   }
 
   const formData = new FormData();
+  formData.append("configUrl", configUrl);
   formData.append("installationId", String(installationId));
   formData.append("owner", owner);
   formData.append("repo", repo);
   formData.append("title", title);
+  if (tabId) {
+    formData.append("tabId", tabId);
+  }
   if (labels) {
     formData.append("labels", JSON.stringify(labels));
   }
@@ -178,23 +175,17 @@ export const submitIssue = async (params: SubmitIssueParams) => {
   if (consoleLogs) {
     formData.append("consoleLogs", JSON.stringify(consoleLogs));
   }
-  if (storageConfig) {
-    formData.append("storageConfig", JSON.stringify(storageConfig));
-  }
-  if (feedbackProjectConfig) {
-    formData.append(
-      "feedbackProjectConfig",
-      JSON.stringify(feedbackProjectConfig),
-    );
-  }
 
   const response = await getClient().POST("/submit", {
-    body: formData as any,
+    // @ts-expect-error FormData type compatibility with openapi-fetch
+    body: formData,
   });
 
   if (!response.response.ok) {
     const errorData = await response.response.json().catch(() => ({}));
-    throw new Error(errorData.message || "Failed to submit issue");
+    throw new Error(
+      (errorData as { message?: string }).message || "Failed to submit issue",
+    );
   }
 
   return response.data;
