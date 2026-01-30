@@ -334,10 +334,12 @@ export class WafirWidget extends LitElement {
       }
 
       await submitIssue({
+        configUrl: this.configUrl,
         installationId,
         owner,
         repo,
         title,
+        tabId: this._activeTabId,
         labels,
         screenshot: screenshotBlob,
         bridgeUrl: this.bridgeUrl || undefined,
@@ -349,20 +351,6 @@ export class WafirWidget extends LitElement {
           ? (browserInfo.get() ?? undefined)
           : undefined,
         consoleLogs: this._telemetry.consoleLog ? consoleLogs.get() : undefined,
-        storageConfig: storage
-          ? {
-              type: storage.type,
-              projectNumber: storage.projectNumber,
-              projectOwner: storage.owner,
-            }
-          : undefined,
-        feedbackProjectConfig: this._config.feedbackProject
-          ? {
-              projectNumber: this._config.feedbackProject.projectNumber,
-              owner: this._config.feedbackProject.owner,
-              ratingField: this._config.feedbackProject.ratingField,
-            }
-          : undefined,
       });
 
       alert("Thank you for your input!");

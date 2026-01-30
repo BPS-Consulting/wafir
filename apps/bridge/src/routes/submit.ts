@@ -1,12 +1,17 @@
 import { FastifyPluginAsync, FastifyRequest } from "fastify";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from "uuid";
+import { validateSubmission, WafirConfig } from "../utils/config-validator.js";
 
 interface SubmitBody {
+  // Required: URL to the authoritative config file
+  configUrl: string;
+  // These are submitted by client but validated against fetched config
   installationId: number;
   owner: string;
   repo: string;
   title: string;
+  tabId?: string;
   labels?: string[];
   rating?: number;
   submissionType?: "issue" | "feedback";
@@ -24,22 +29,13 @@ interface SubmitBody {
     message: string;
     timestamp: string;
   }>;
-  // Storage configuration (now passed from widget's fetched config)
-  storageConfig?: {
-    type?: "issue" | "project" | "both";
-    projectNumber?: number;
-    projectOwner?: string;
-  };
-  feedbackProjectConfig?: {
-    projectNumber?: number;
-    owner?: string;
-    ratingField?: string;
-  };
 }
 
 interface ParsedRequestData extends SubmitBody {
   screenshotBuffer?: Buffer;
   screenshotMime?: string;
+  // The validated config fetched from configUrl (set after validation)
+  validatedConfig?: WafirConfig;
 }
 
 // Keys to exclude from the markdown body (used for other purposes)
@@ -278,19 +274,11 @@ async function parseSubmitRequest(
               result.consoleLogs = [];
             }
             break;
-          case "storageConfig":
-            try {
-              result.storageConfig = JSON.parse(val);
-            } catch {
-              result.storageConfig = undefined;
-            }
+          case "configUrl":
+            result.configUrl = val;
             break;
-          case "feedbackProjectConfig":
-            try {
-              result.feedbackProjectConfig = JSON.parse(val);
-            } catch {
-              result.feedbackProjectConfig = undefined;
-            }
+          case "tabId":
+            result.tabId = val;
             break;
         }
       }
@@ -299,7 +287,11 @@ async function parseSubmitRequest(
     Object.assign(result, request.body as SubmitBody);
   }
 
-  // Validation
+  // Validation: configUrl is now required
+  if (!result.configUrl) {
+    throw new Error("Missing required field: configUrl");
+  }
+
   if (!result.installationId || !result.owner || !result.repo) {
     throw new Error("Missing required fields (installationId, owner, or repo)");
   }
@@ -550,9 +542,51 @@ const submitRoute: FastifyPluginAsync = async (
       try {
         // Parse Input
         const input = await parseSubmitRequest(request);
-        const { installationId, owner, repo, title, labels } = input;
 
-        // Build markdown body from form fields
+        // ============================================
+        // SECURITY: Validate submission against authoritative config
+        // ============================================
+        const validationResult = await validateSubmission({
+          configUrl: input.configUrl,
+          installationId: input.installationId,
+          owner: input.owner,
+          repo: input.repo,
+          formFields: input.formFields || {},
+          tabId: input.tabId,
+        });
+
+        if (!validationResult.valid) {
+          request.log.warn(
+            { errors: validationResult.errors },
+            "Submission validation failed",
+          );
+          return reply.code(400).send({
+            error: "Validation Failed",
+            details: validationResult.errors,
+          });
+        }
+
+        // Use ONLY values from the validated config, not from client submission
+        const config = validationResult.config!;
+        const installationId = config.installationId;
+        const owner = config.storage.owner;
+        const repo = config.storage.repo;
+        const storageType = config.storage.type || "issue";
+        const projectNumber = config.storage.projectNumber;
+        const projectOwner = config.storage.projectOwner || owner;
+
+        // Feedback project settings from config
+        const feedbackProjectNumber =
+          config.feedbackProject?.projectNumber || projectNumber;
+        const feedbackProjectOwner =
+          config.feedbackProject?.owner || projectOwner;
+        const ratingFieldName = config.feedbackProject?.ratingField || "Rating";
+
+        // Title and labels can come from form (validated above)
+        const title = input.title;
+        const labels = input.labels;
+
+        // Build markdown body from validated form fields
         let finalBody = buildMarkdownFromFields(
           input.formFields || {},
           input.fieldOrder,
@@ -564,17 +598,12 @@ const submitRoute: FastifyPluginAsync = async (
         // Append console logs if provided
         finalBody = appendConsoleLogs(finalBody, input.consoleLogs);
 
-        // Initialize Clients
+        // Initialize Clients using config values
         const appOctokit = await fastify.getGitHubClient(installationId);
         const userToken = await fastify.tokenStore.getUserToken(installationId);
         const userOctokit = userToken
           ? fastify.getGitHubClientWithToken(userToken)
           : null;
-
-        // Use config from request (widget fetches config directly now)
-        const storageType = input.storageConfig?.type || "issue";
-        const projectNumber = input.storageConfig?.projectNumber;
-        const projectOwner = input.storageConfig?.projectOwner || owner;
 
         // Handle Screenshot Upload
         if (input.screenshotBuffer && input.screenshotMime) {
@@ -596,12 +625,6 @@ const submitRoute: FastifyPluginAsync = async (
 
         // Determine submission targets
         const isFeedback = input.submissionType === "feedback";
-        const feedbackProjectNumber =
-          input.feedbackProjectConfig?.projectNumber || projectNumber;
-        const feedbackProjectOwner =
-          input.feedbackProjectConfig?.owner || projectOwner;
-        const ratingFieldName =
-          input.feedbackProjectConfig?.ratingField || "Rating";
 
         let issueData: {
           number?: number;
@@ -722,16 +745,16 @@ const submitRoute: FastifyPluginAsync = async (
           projectAdded: projectResult.added,
           warning: projectResult.error,
         });
-      } catch (error: any) {
-        request.log.error({ error: error.message }, "Submit failed");
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error ? error.message : "Unknown error";
+        request.log.error({ error: message }, "Submit failed");
 
-        if (error.message.includes("Missing required")) {
-          return reply.code(400).send({ error: error.message });
+        if (message.includes("Missing required")) {
+          return reply.code(400).send({ error: message });
         }
 
-        return reply
-          .code(500)
-          .send({ error: "Submission Failed", message: error.message });
+        return reply.code(500).send({ error: "Submission Failed", message });
       }
     },
   );
