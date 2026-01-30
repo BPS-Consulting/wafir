@@ -42,8 +42,7 @@ const features = [
   },
 ];
 
-const quickstartCode = `<script type="module" src="https://YOUR_HOST_OR_S3_URL/wafir.browser.js"></script>
-<link rel="stylesheet" href="https://YOUR_HOST_OR_S3_URL/styles/wafir-widget.css" />
+const quickstartCode = `<script type="module" src="https://wafir-all.s3.us-east-2.amazonaws.com/wafir/latest/wafir.js"></script>
 
 <wafir-widget
   installationid="12345"
@@ -143,9 +142,9 @@ fields:
             1
           </div>
           <div class="flex-1">
-             <h3 class="text-lg font-bold mb-3">Install the widget</h3>
-             <pre
-               class="text-sm"><code>npm install wafir
+            <h3 class="text-lg font-bold mb-3">Install the widget</h3>
+            <pre
+              class="text-sm"><code>npm install wafir
 # OR just load wafir.browser.js from your host (e.g. S3 or your CDN)</code></pre>
           </div>
         </div>
@@ -156,8 +155,10 @@ fields:
             2
           </div>
           <div class="flex-1">
-             <h3 class="text-lg font-bold mb-3">Add to your app (vanilla Web Component)</h3>
-             <pre class="text-sm"><code>{quickstartCode}</code></pre>
+            <h3 class="text-lg font-bold mb-3">
+              Add to your app (vanilla Web Component)
+            </h3>
+            <pre class="text-sm"><code>{quickstartCode}</code></pre>
           </div>
         </div>
         <div class="flex gap-6 items-start max-md:flex-col max-md:gap-4">

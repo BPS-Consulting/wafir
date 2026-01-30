@@ -38,7 +38,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  publish-cdn:
+  publish-s3:
     name: Publish IIFE to S3
     runs-on: ubuntu-latest
     defaults:
@@ -83,15 +83,17 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
 
           # Upload versioned file
-          aws s3 cp dist/iife/wafir.js "s3://${{ secrets.S3_CDN_BUCKET }}/wafir/${VERSION}/wafir.js" \
+          aws s3 cp dist/iife/wafir.js "s3://${{ secrets.S3_BUCKET }}/wafir/${VERSION}/wafir.js" \
             --content-type "application/javascript" \
-            --cache-control "public, max-age=31536000, immutable"
+            --cache-control "public, max-age=31536000, immutable" \
+            --acl public-read
 
           # Also upload as latest
-          aws s3 cp dist/iife/wafir.js "s3://${{ secrets.S3_CDN_BUCKET }}/wafir/latest/wafir.js" \
+          aws s3 cp dist/iife/wafir.js "s3://${{ secrets.S3_BUCKET }}/wafir/latest/wafir.js" \
             --content-type "application/javascript" \
-            --cache-control "public, max-age=3600"
+            --cache-control "public, max-age=3600" \
+            --acl public-read
 
           echo "Uploaded wafir.js to:"
-          echo "  - s3://${{ secrets.S3_CDN_BUCKET }}/wafir/${VERSION}/wafir.js"
-          echo "  - s3://${{ secrets.S3_CDN_BUCKET }}/wafir/latest/wafir.js"
+          echo "  - s3://${{ secrets.S3_BUCKET }}/wafir/${VERSION}/wafir.js"
+          echo "  - s3://${{ secrets.S3_BUCKET }}/wafir/latest/wafir.js"
