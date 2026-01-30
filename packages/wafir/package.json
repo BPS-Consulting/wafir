@@ -10,17 +10,20 @@
   },
   "files": [
     "dist",
+    "!dist/iife",
     "README.md",
     "LICENSE"
   ],
   "version": "0.1.0",
   "type": "module",
-  "main": "dist/wafir.js",
+  "main": "dist/wafir.cjs",
+  "module": "dist/wafir.js",
   "exports": {
     ".": {
-      "import": "./dist/wafir.js"
+      "types": "./dist/wafir-widget.d.ts",
+      "import": "./dist/wafir.js",
+      "require": "./dist/wafir.cjs"
     },
-    "./browser": "./dist/browser/wafir.browser.js",
     "./styles/widget.css": "./dist/styles/wafir-widget.css",
     "./styles/form.css": "./dist/styles/wafir-form.css",
     "./styles/highlighter.css": "./dist/styles/wafir-highlighter.css"
@@ -28,9 +31,9 @@
   "scripts": {
     "dev": "vite build --watch",
     "prebuild": "pnpm dlx shx cp ../../README.md ../../LICENSE .",
-    "build": "tsc && vite build --mode=production",
-    "build:browser": "vite build --mode browser",
-    "build:all": "pnpm run build && pnpm run build:browser",
+    "build": "vite build && tsc",
+    "build:iife": "vite build --mode iife",
+    "build:all": "pnpm run build && pnpm run build:iife",
     "generate:api": "openapi-typescript ../../apps/bridge/swagger.json -o src/api/schema.d.ts"
   },
   "dependencies": {
@@ -55,10 +58,13 @@
   },
   "homepage": "https://BPS-Consulting.github.io/wafir",
   "sideEffects": false,
-  "types": "dist/wafir.d.ts",
+  "types": "dist/wafir-widget.d.ts",
   "devDependencies": {
     "openapi-typescript": "^7.10.1",
     "typescript": "~5.9.3",
     "vite": "^7.2.4"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -1,0 +1,97 @@
+name: Publish Wafir Widget
+
+on:
+  push:
+    tags:
+      - "wafir@*"
+
+jobs:
+  publish-npm:
+    name: Publish to NPM
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/wafir
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: .
+
+      - name: Build package
+        run: pnpm run build
+
+      - name: Publish to NPM
+        run: pnpm publish --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-cdn:
+    name: Publish IIFE to S3
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/wafir
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: .
+
+      - name: Build IIFE bundle
+        run: pnpm run build:iife
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          # Tag format: wafir@1.2.3
+          VERSION="${GITHUB_REF_NAME#wafir@}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Upload to S3
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Upload versioned file
+          aws s3 cp dist/iife/wafir.js "s3://${{ secrets.S3_CDN_BUCKET }}/wafir/${VERSION}/wafir.js" \
+            --content-type "application/javascript" \
+            --cache-control "public, max-age=31536000, immutable"
+
+          # Also upload as latest
+          aws s3 cp dist/iife/wafir.js "s3://${{ secrets.S3_CDN_BUCKET }}/wafir/latest/wafir.js" \
+            --content-type "application/javascript" \
+            --cache-control "public, max-age=3600"
+
+          echo "Uploaded wafir.js to:"
+          echo "  - s3://${{ secrets.S3_CDN_BUCKET }}/wafir/${VERSION}/wafir.js"
+          echo "  - s3://${{ secrets.S3_CDN_BUCKET }}/wafir/latest/wafir.js"
