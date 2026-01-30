@@ -8,7 +8,7 @@ const features = [
     icon: "🚀",
     title: "Easy to Use",
     description:
-      "Drop-in widget for any web app. Works with React, Vue, or vanilla JavaScript in minutes.",
+      "Drop-in widget for any web app. Works natively as a Web Component, with React and Vue wrappers available.",
   },
   {
     icon: "🔓",
@@ -38,17 +38,18 @@ const features = [
     icon: "🌐",
     title: "Framework Agnostic",
     description:
-      "Built with Lit Web Components. Works anywhere with first-class React and Vue wrappers.",
+      "Built as a Lit Web Component for direct browser use, plus React and Vue wrappers.",
   },
 ];
 
-const quickstartCode = `import { WafirReporter } from '@wafir/react';
+const quickstartCode = `<script type="module" src="https://YOUR_HOST_OR_S3_URL/wafir.browser.js"></script>
+<link rel="stylesheet" href="https://YOUR_HOST_OR_S3_URL/styles/wafir-widget.css" />
 
-<WafirReporter
-  installationId={12345}
+<wafir-widget
+  installationid="12345"
   owner="your-org"
   repo="your-repo"
-/>`;
+></wafir-widget>`;
 
 const configCode = `# .github/wafir.yaml
 storage:
@@ -142,9 +143,10 @@ fields:
             1
           </div>
           <div class="flex-1">
-            <h3 class="text-lg font-bold mb-3">Install the widget</h3>
-            <pre
-              class="text-sm"><code>npm install wafir @wafir/react</code></pre>
+             <h3 class="text-lg font-bold mb-3">Install the widget</h3>
+             <pre
+               class="text-sm"><code>npm install wafir
+# OR just load wafir.browser.js from your host (e.g. S3 or your CDN)</code></pre>
           </div>
         </div>
         <div class="flex gap-6 items-start max-md:flex-col max-md:gap-4">
@@ -154,8 +156,8 @@ fields:
             2
           </div>
           <div class="flex-1">
-            <h3 class="text-lg font-bold mb-3">Add to your app</h3>
-            <pre class="text-sm"><code>{quickstartCode}</code></pre>
+             <h3 class="text-lg font-bold mb-3">Add to your app (vanilla Web Component)</h3>
+             <pre class="text-sm"><code>{quickstartCode}</code></pre>
           </div>
         </div>
         <div class="flex gap-6 items-start max-md:flex-col max-md:gap-4">

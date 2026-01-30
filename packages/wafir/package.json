@@ -1,28 +1,43 @@
 {
   "name": "wafir",
-  "private": true,
-  "version": "0.0.0",
+  "license": "AGPL-3.0-only",
+  "description": "A powerful, framework-agnostic UI widget library built with Lit & TypeScript.",
+  "author": "BPS Consulting",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BPS-Consulting/wafir.git",
+    "directory": "packages/wafir"
+  },
+  "files": [
+    "dist",
+    "!dist/iife",
+    "README.md",
+    "LICENSE"
+  ],
+  "version": "0.1.0",
   "type": "module",
-  "main": "dist/wafir.js",
+  "main": "dist/wafir.cjs",
+  "module": "dist/wafir.js",
   "exports": {
     ".": {
-      "import": "./dist/wafir.js"
+      "types": "./dist/wafir-widget.d.ts",
+      "import": "./dist/wafir.js",
+      "require": "./dist/wafir.cjs"
     },
-    "./browser": "./dist-browser/wafir.browser.js",
-    "./styles/reporter.css": "./dist/styles/wafir-reporter.css",
+    "./styles/widget.css": "./dist/styles/wafir-widget.css",
     "./styles/form.css": "./dist/styles/wafir-form.css",
     "./styles/highlighter.css": "./dist/styles/wafir-highlighter.css"
   },
   "scripts": {
     "dev": "vite build --watch",
-    "build": "tsc && vite build",
-    "build:browser": "vite build --mode browser",
-    "build:all": "pnpm run build && pnpm run build:browser",
+    "prebuild": "pnpm dlx shx cp ../../README.md ../../LICENSE .",
+    "build": "vite build && tsc",
+    "build:iife": "vite build --mode iife",
+    "build:all": "pnpm run build && pnpm run build:iife",
     "generate:api": "openapi-typescript ../../apps/bridge/swagger.json -o src/api/schema.d.ts"
   },
   "dependencies": {
     "@nanostores/lit": "^0.2.3",
-    "@standard-schema/spec": "^1.0.0",
     "dompurify": "^3.3.1",
     "lit": "^3.3.1",
     "marked": "^17.0.1",
@@ -30,17 +45,26 @@
     "nanostores": "^1.1.0",
     "openapi-fetch": "^0.15.0"
   },
+  "keywords": [
+    "lit",
+    "widget",
+    "ui",
+    "typescript",
+    "web components",
+    "library"
+  ],
+  "bugs": {
+    "url": "https://github.com/BPS-Consulting/wafir/issues"
+  },
+  "homepage": "https://BPS-Consulting.github.io/wafir",
+  "sideEffects": false,
+  "types": "dist/wafir-widget.d.ts",
   "devDependencies": {
-    "@size-limit/preset-big-lib": "^11.2.0",
     "openapi-typescript": "^7.10.1",
-    "size-limit": "^11.2.0",
     "typescript": "~5.9.3",
     "vite": "^7.2.4"
   },
-  "size-limit": [
-    {
-      "path": "dist/wafir.js",
-      "limit": "20 kB"
-    }
-  ]
+  "publishConfig": {
+    "access": "public"
+  }
 }

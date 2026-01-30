@@ -1,4 +1,4 @@
-import { WafirReporter } from "@wafir/react";
+import { WafirWidget } from "@wafir/react";
 
 export function HomePage() {
   return (
@@ -237,7 +237,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <WafirReporter installationId={0} owner="" repo="">
+      <WafirWidget installationId={0} owner="" repo="">
         <button
           style={{
             display: "flex",
@@ -277,7 +277,7 @@ export function HomePage() {
           </svg>
           Report a Bug
         </button>
-      </WafirReporter>
+      </WafirWidget>
     </>
   );
 }

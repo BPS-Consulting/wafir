@@ -1,2 +1,2 @@
-export { default as WafirReporter } from "./WafirReporter.vue";
-export type { WafirReporterProps, WafirPosition } from "./WafirReporter.vue";
+export { default as WafirWidget } from "./WafirWidget.vue";
+export type { WafirWidgetProps, WafirPosition } from "./WafirWidget.vue";

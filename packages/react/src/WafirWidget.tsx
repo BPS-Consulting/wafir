@@ -7,7 +7,7 @@ export type WafirPosition =
   | "top-right"
   | "top-left";
 
-export interface WafirReporterProps {
+export interface WafirWidgetProps {
   /** Installation ID for the wafir widget */
   installationId: number;
   /** GitHub repository owner */
@@ -28,7 +28,7 @@ export interface WafirReporterProps {
   children?: React.ReactNode;
 }
 
-interface WafirReporterElement extends HTMLElement {
+interface WafirWidgetElement extends HTMLElement {
   installationId?: number;
   owner?: string;
   repo?: string;
@@ -40,10 +40,10 @@ interface WafirReporterElement extends HTMLElement {
 }
 
 /**
- * React wrapper component for the wafir-reporter web component.
+ * React wrapper component for the wafir-widget web component.
  * Provides a type-safe interface for using the wafir feedback widget in React applications.
  */
-export function WafirReporter({
+export function WafirWidget({
   installationId,
   owner,
   repo,
@@ -53,8 +53,8 @@ export function WafirReporter({
   tooltipText,
   buttonText,
   children,
-}: WafirReporterProps) {
-  const ref = useRef<WafirReporterElement>(null);
+}: WafirWidgetProps) {
+  const ref = useRef<WafirWidgetElement>(null);
 
   useEffect(() => {
     if (ref.current) {
@@ -79,10 +79,10 @@ export function WafirReporter({
   ]);
 
   return React.createElement(
-    "wafir-reporter",
+    "wafir-widget",
     { ref },
-    children ? React.createElement("div", { slot: "trigger" }, children) : null
+    children ? React.createElement("div", { slot: "trigger" }, children) : null,
   );
 }
 
-export default WafirReporter;
+export default WafirWidget;

@@ -170,9 +170,9 @@
    Wafir Form Customization Example
    ============================================
    Override Wafir CSS custom properties to match your app's theme.
-   Apply these to the wafir-reporter element. */
+   Apply these to the wafir-widget element. */
 
-wafir-reporter {
+wafir-widget {
   /* Form background and text colors */
   --wafir-form-bg: oklch(0.18 0.012 270);
   --wafir-form-text-color: oklch(0.92 0.004 270);

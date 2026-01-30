@@ -57,14 +57,14 @@ Import and add the widget component to your application:
 ### React
 
 ```jsx
-import { WafirReporter } from "@wafir/react";
+import { WafirWidget } from "@wafir/react";
 
 function App() {
   return (
     <div>
       {/* Your app content */}
 
-      <WafirReporter
+      <WafirWidget
         installationId={12345}
         owner="your-username"
         repo="your-repo"
@@ -79,14 +79,14 @@ function App() {
 
 ```vue
 <script setup>
-import { WafirReporter } from "@wafir/vue";
+import { WafirWidget } from "@wafir/vue";
 </script>
 
 <template>
   <div>
     <!-- Your app content -->
 
-    <WafirReporter
+    <WafirWidget
       :installation-id="12345"
       owner="your-username"
       repo="your-repo"
@@ -103,12 +103,12 @@ import { WafirReporter } from "@wafir/vue";
 <script type="module" src="https://unpkg.com/wafir"></script>
 
 <!-- Add the widget -->
-<wafir-reporter
+<wafir-widget
   installationId="12345"
   owner="your-username"
   repo="your-repo"
   position="bottom-right"
-></wafir-reporter>
+></wafir-widget>
 ```
 
 ## 4. Configure Your Repository
@@ -170,7 +170,7 @@ If you're self-hosting the Wafir bridge server, you can configure the widget to 
 ### React
 
 ```jsx
-<WafirReporter
+<WafirWidget
   installationId={12345}
   owner="your-username"
   repo="your-repo"
@@ -181,7 +181,7 @@ If you're self-hosting the Wafir bridge server, you can configure the widget to 
 ### Vue
 
 ```vue
-<WafirReporter
+<WafirWidget
   :installation-id="12345"
   owner="your-username"
   repo="your-repo"
@@ -192,12 +192,12 @@ If you're self-hosting the Wafir bridge server, you can configure the widget to 
 ### Vanilla JS
 
 ```html
-<wafir-reporter
+<wafir-widget
   installationId="12345"
   owner="your-username"
   repo="your-repo"
   bridgeUrl="https://your-bridge.example.com"
-></wafir-reporter>
+></wafir-widget>
 ```
 
 > **Note:** If you don't specify a `bridgeUrl`, the widget will use the default hosted bridge service.

@@ -1,13 +1,15 @@
 # Wafir - The Web App Feedback and Issue Reporter
 
-Wafir is a lightweight feedback and issue reporting tool that seamlessly connects input from users and testers to your GitHub-based development workflow. It captures user input, screenshots, console logs, and essential browser telemetry to accelerate debugging.  See details at https://bps-consulting.github.io/wafir/.
+Wafir is a lightweight feedback and issue reporting tool that seamlessly connects input from users and testers to your GitHub-based development workflow. It captures user input, screenshots, console logs, and essential browser telemetry to accelerate debugging. See details at https://bps-consulting.github.io/wafir/.
 
 ## What's in this Repo
-This repository contains everything needed to build, use, and support Wafir.  You don't need to clone the repo to use Wafir: simply get the widget code and add it to your web application as described in the [Quickstart Guide](QUICKSTART.md).
+
+This repository contains everything needed to build, use, and support Wafir. You don't need to clone the repo to use Wafir: simply get the widget code and add it to your web application as described in the [Quickstart Guide](QUICKSTART.md).
 
 The repo includes source code for the following:
+
 - **Wafir Widget** (packages/wafir): A web component built with Lit that you can embed in any web application to collect user feedback.
-- **Bridge Service** (apps/bridge): A Fastify-based backend service that handles feedback submissions, file uploads, and GitHub integration.  See the [wafir-infrastructure](https://github.com/bps-consulting/wafir-infrastructure) repo for deployment and infrastructure details.
+- **Bridge Service** (apps/bridge): A Fastify-based backend service that handles feedback submissions, file uploads, and GitHub integration. See the [wafir-infrastructure](https://github.com/bps-consulting/wafir-infrastructure) repo for deployment and infrastructure details.
 - **Test Web Page** (packages/wafir/index.html): A simple HTML page to test the Wafir widget in isolation.
 - **React Consumer** (internal/react-consumer): A sample React application demonstrating how to integrate the Wafir widget. {TODO: Update or remove if needed}
 - **Framework Wrappers** (packages/react, packages/vue): Sample React and Vue wrappers demonstrating how to integrate the Wafir widget into popular frameworks.
@@ -117,7 +119,7 @@ The widget can be configured via attributes or JavaScript initialization. See th
 
 ### CSS Customization
 
-Wafir uses Shadow DOM for isolation but exposes CSS custom properties for theming. Set these on the `wafir-reporter` element:
+Wafir uses Shadow DOM for isolation but exposes CSS custom properties for theming. Set these on the `wafir-widget` element:
 
 #### Reporter Variables
 
@@ -183,7 +185,7 @@ Wafir uses Shadow DOM for isolation but exposes CSS custom properties for themin
 #### Example
 
 ```css
-wafir-reporter {
+wafir-widget {
   --wafir-primary-color: #6366f1;
   --wafir-primary-hover: #818cf8;
   --wafir-modal-bg: #ffffff;
@@ -199,3 +201,48 @@ wafir-reporter {
 3.  Commit your changes (`git commit -m 'Add some amazing feature'`)
 4.  Push to the branch (`git push origin feature/amazing-feature`)
 5.  Open a Pull Request
+
+## Credits
+
+- This project uses [normalize.css](https://github.com/necolas/normalize.css) v8.0.1 by [Nicolas Gallagher](https://github.com/necolas), licensed under the [MIT License](https://github.com/necolas/normalize.css/blob/master/LICENSE).
+
+## Distribution & Usage
+
+### 📦 Using via NPM (Module, ESM)
+
+Install:
+
+```bash
+npm install wafir
+```
+
+Import and use in your project:
+
+```js
+import { WafirWidget } from "wafir";
+// Register/use wafir-widget as a custom element (see docs)
+```
+
+- For module consumers, import from `wafir`, styles from `wafir/styles/widget.css`, etc.
+
+### 🌐 Using via CDN/IIFE (Browser Global)
+
+Add to your HTML:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/wafir/dist/browser/wafir.browser.js"></script>
+```
+
+This exposes `Wafir` globally (e.g. `window.WafirWidget`).  
+Include styles from the CDN:
+
+```html
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/wafir/dist/browser/styles/wafir-widget.css"
+/>
+```
+
+- Use `<wafir-widget></wafir-widget>` in your HTML as documented.
+
+See full docs at [GitHub Pages](https://bps-consulting.github.io/wafir/).
