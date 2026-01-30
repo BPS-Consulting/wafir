@@ -2,7 +2,7 @@
   "name": "wafir",
   "license": "AGPL-3.0-only",
   "description": "A powerful, framework-agnostic UI widget library built with Lit & TypeScript.",
-  "author": "",
+  "author": "BPS Consulting",
   "repository": {
     "type": "git",
     "url": "https://github.com/BPS-Consulting/wafir.git",
@@ -20,7 +20,7 @@
     ".": {
       "import": "./dist/wafir.js"
     },
-    "./browser": "./dist/wafir.browser.js",
+    "./browser": "./dist/browser/wafir.browser.js",
     "./styles/widget.css": "./dist/styles/wafir-widget.css",
     "./styles/form.css": "./dist/styles/wafir-form.css",
     "./styles/highlighter.css": "./dist/styles/wafir-highlighter.css"
@@ -57,7 +57,6 @@
   "sideEffects": false,
   "types": "dist/wafir.d.ts",
   "devDependencies": {
-    "@size-limit/preset-big-lib": "^11.2.0",
     "openapi-typescript": "^7.10.1",
     "typescript": "~5.9.3",
     "vite": "^7.2.4"

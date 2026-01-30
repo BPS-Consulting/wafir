@@ -36,7 +36,7 @@ export default defineConfig(({ command, mode }) => {
             }
           : {},
       },
-      outDir: "dist",
+      outDir: isBrowserBundle ? "dist/browser" : "dist",
       emptyOutDir: isBrowserBundle ? false : true,
       minify: "terser",
     },
@@ -44,7 +44,10 @@ export default defineConfig(({ command, mode }) => {
       {
         name: "copy-css-files",
         closeBundle() {
-          const distStyles = resolve(__dirname, "dist/styles");
+          const distStyles = resolve(
+            __dirname,
+            isBrowserBundle ? "dist/browser/styles" : "dist/styles",
+          );
           if (!existsSync(distStyles)) {
             mkdirSync(distStyles, { recursive: true });
           }
