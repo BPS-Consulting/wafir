@@ -1,8 +1,15 @@
 # WAFIR Configuration Example - Minimal Setup
 # The simplest possible configuration - uses all defaults
+# Host this file anywhere and point your widget to it via configUrl
+
+# Required: Your GitHub App installation ID
+installationId: 12345678
 
 title: "Feedback"
 
 storage:
   type: issue
+  # Required: Target repository for issues
+  owner: your-username
+  repo: your-repo
 # No tabs specified - uses defaults (feedback, suggestion, issue)

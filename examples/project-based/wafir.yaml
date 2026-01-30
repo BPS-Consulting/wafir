@@ -1,10 +1,17 @@
 # WAFIR Configuration Example - GitHub Projects
 # Creates draft items directly on a GitHub Project board
+# Host this file anywhere and point your widget to it via configUrl
+
+# Required: Your GitHub App installation ID
+installationId: 12345678
 
 title: "Submit Feedback"
 
 storage:
   type: project
+  # Required: Target repository
+  owner: your-username
+  repo: your-repo
   projectNumber: 1
 
 tabs:

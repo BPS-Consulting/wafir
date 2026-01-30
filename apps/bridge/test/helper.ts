@@ -89,28 +89,40 @@ export function encodeYamlToBase64(yamlContent: string): string {
 // Sample configs for testing
 export const sampleConfigs = {
   minimal: `
+installationId: 123
 title: "Feedback"
 storage:
   type: issue
+  owner: testowner
+  repo: testrepo
 `,
   withProject: `
+installationId: 123
 title: "Feedback"
 storage:
   type: project
+  owner: testowner
+  repo: testrepo
   projectNumber: 1
 `,
   withFeedbackProject: `
+installationId: 123
 title: "Feedback"
 storage:
   type: issue
+  owner: testowner
+  repo: testrepo
 feedbackProject:
   projectNumber: 2
   ratingField: "Rating"
 `,
   full: `
+installationId: 123
 title: "Full Config"
 storage:
   type: both
+  owner: testowner
+  repo: testrepo
   projectNumber: 1
 telemetry:
   screenshot: true

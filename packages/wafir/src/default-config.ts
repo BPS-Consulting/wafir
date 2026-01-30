@@ -1,6 +1,7 @@
 import type {
   FieldConfigApi as FieldConfig,
   TabConfigApi as TabConfig,
+  WafirConfig,
 } from "./api/client";
 
 export const RATING_LABELS = [
@@ -124,4 +125,22 @@ export function getDefaultFields(tabId: string): FieldConfig[] {
 
 export function getDefaultTabs(): TabConfig[] {
   return DEFAULT_TABS;
+}
+
+export function getDefaultConfig(): WafirConfig {
+  return {
+    installationId: 0,
+    title: "Contact Us",
+    storage: {
+      type: "issue",
+      owner: "",
+      repo: "",
+    },
+    telemetry: {
+      screenshot: true,
+      browserInfo: true,
+      consoleLog: false,
+    },
+    tabs: DEFAULT_TABS,
+  };
 }

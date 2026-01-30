@@ -483,16 +483,6 @@ describe("POST /submit", () => {
   });
 
   describe("project-based submission", () => {
-    beforeEach(() => {
-      // Mock config with project storage
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(sampleConfigs.withProject),
-          encoding: "base64",
-        },
-      });
-    });
-
     it("adds draft issue to project when storage type is project", async () => {
       // Mock finding the project
       mockOctokit.graphql.mockResolvedValueOnce({
@@ -516,6 +506,11 @@ describe("POST /submit", () => {
           title: "Project Draft Issue",
           formFields: {
             description: "This goes to a project",
+          },
+          storageConfig: {
+            type: "project",
+            projectNumber: 1,
+            projectOwner: "testowner",
           },
         },
       });
@@ -544,6 +539,11 @@ describe("POST /submit", () => {
           formFields: {
             description: "Test",
           },
+          storageConfig: {
+            type: "project",
+            projectNumber: 1,
+            projectOwner: "testowner",
+          },
         },
       });
 
@@ -556,16 +556,6 @@ describe("POST /submit", () => {
   });
 
   describe("feedback submission", () => {
-    beforeEach(() => {
-      // Mock config with feedback project
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(sampleConfigs.withFeedbackProject),
-          encoding: "base64",
-        },
-      });
-    });
-
     it("adds feedback to project with rating field", async () => {
       // Mock finding the project (first call in the feedback handling)
       mockOctokit.graphql.mockResolvedValueOnce({
@@ -625,6 +615,11 @@ describe("POST /submit", () => {
           formFields: {
             comment: "Love the product!",
           },
+          feedbackProjectConfig: {
+            projectNumber: 2,
+            owner: "testowner",
+            ratingField: "Rating",
+          },
         },
       });
 
@@ -635,14 +630,6 @@ describe("POST /submit", () => {
     });
 
     it("creates issue as fallback when no feedback project configured", async () => {
-      // Mock config without feedback project
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(sampleConfigs.minimal),
-          encoding: "base64",
-        },
-      });
-
       mockOctokit.rest.issues.create.mockResolvedValue({
         data: {
           number: 52,
@@ -663,6 +650,7 @@ describe("POST /submit", () => {
           formFields: {
             comment: "Good stuff",
           },
+          // No feedbackProjectConfig - should fallback to issue creation
         },
       });
 
@@ -791,16 +779,6 @@ describe("POST /submit", () => {
   });
 
   describe("both storage type (issue + project)", () => {
-    beforeEach(() => {
-      // Mock config with 'both' storage type
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(sampleConfigs.full),
-          encoding: "base64",
-        },
-      });
-    });
-
     it("creates issue and adds to project when storage type is both", async () => {
       mockOctokit.rest.issues.create.mockResolvedValue({
         data: {
@@ -833,6 +811,11 @@ describe("POST /submit", () => {
           formFields: {
             description: "Goes to issue and project",
           },
+          storageConfig: {
+            type: "both",
+            projectNumber: 1,
+            projectOwner: "testowner",
+          },
         },
       });
 
@@ -849,16 +832,6 @@ describe("POST /submit", () => {
   });
 
   describe("user token for projects", () => {
-    beforeEach(() => {
-      // Mock config with project storage
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(sampleConfigs.withProject),
-          encoding: "base64",
-        },
-      });
-    });
-
     it("uses user token for user projects when available", async () => {
       // User token is available
       mockTokenStore.getUserToken.mockResolvedValue("user-oauth-token");
@@ -888,6 +861,11 @@ describe("POST /submit", () => {
           title: "User Project Issue",
           formFields: {
             description: "Test",
+          },
+          storageConfig: {
+            type: "project",
+            projectNumber: 1,
+            projectOwner: "testuser",
           },
         },
       });

@@ -9,20 +9,22 @@ export type WafirPosition =
   | "top-left";
 
 export interface WafirWidgetProps {
-  installationId: number;
-  owner: string;
-  repo: string;
+  /** URL to the wafir configuration file (JSON or YAML) */
+  configUrl: string;
+  /** Custom bridge server URL (for self-hosted bridge) */
   bridgeUrl?: string;
+  /** Widget button position */
   position?: WafirPosition;
+  /** Modal title text */
   modalTitle?: string;
+  /** Tooltip text for the trigger button */
   tooltipText?: string;
+  /** Optional button text (shows instead of icon) */
   buttonText?: string;
 }
 
 interface WafirWidgetElement extends HTMLElement {
-  installationId?: number;
-  owner?: string;
-  repo?: string;
+  configUrl?: string;
   bridgeUrl?: string;
   position?: string;
   modalTitle?: string;
@@ -39,9 +41,7 @@ const elementRef = ref<WafirWidgetElement | null>(null);
 onMounted(() => {
   watchEffect(() => {
     if (elementRef.value) {
-      elementRef.value.installationId = props.installationId;
-      elementRef.value.owner = props.owner;
-      elementRef.value.repo = props.repo;
+      elementRef.value.configUrl = props.configUrl;
       if (props.bridgeUrl) elementRef.value.bridgeUrl = props.bridgeUrl;
       if (props.position) elementRef.value.position = props.position;
       if (props.modalTitle) elementRef.value.modalTitle = props.modalTitle;

@@ -124,7 +124,13 @@ const tabSchema = {
 export const wafirConfigSchema = {
   $id: "wafirConfig",
   type: "object",
+  required: ["installationId", "storage"],
   properties: {
+    installationId: {
+      type: "number",
+      description:
+        "GitHub App installation ID. Required for authenticating with the GitHub API.",
+    },
     title: {
       type: "string",
       default: "Contact Us",
@@ -132,14 +138,21 @@ export const wafirConfigSchema = {
     },
     storage: {
       type: "object",
+      required: ["owner", "repo"],
       properties: {
         type: {
           type: "string",
           enum: ["issue", "project", "both"],
           default: "issue",
         },
-        owner: { type: "string" },
-        repo: { type: "string" },
+        owner: {
+          type: "string",
+          description: "GitHub repository owner (user or organization)",
+        },
+        repo: {
+          type: "string",
+          description: "GitHub repository name",
+        },
         projectNumber: { type: "number" },
       },
     },
