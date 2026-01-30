@@ -267,6 +267,9 @@ importers:
       dompurify:
         specifier: ^3.3.1
         version: 3.3.1
+      js-yaml:
+        specifier: ^4.1.1
+        version: 4.1.1
       lit:
         specifier: ^3.3.1
         version: 3.3.1
@@ -283,6 +286,9 @@ importers:
         specifier: ^0.15.0
         version: 0.15.0
     devDependencies:
+      '@types/js-yaml':
+        specifier: ^4.0.9
+        version: 4.0.9
       openapi-typescript:
         specifier: ^7.10.1
         version: 7.10.1(typescript@5.9.3)

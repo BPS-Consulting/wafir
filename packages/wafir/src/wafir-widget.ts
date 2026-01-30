@@ -21,10 +21,15 @@ import { StoreController } from "@nanostores/lit";
 import type {
   TabConfigApi as TabConfig,
   FieldConfigApi as FieldConfig,
+  WafirConfig,
 } from "./api/client.js";
 import { dataURLtoBlob } from "./utils/file.js";
 import { getBrowserInfo, consoleInterceptor } from "./utils/telemetry.js";
-import { getDefaultTabs, getDefaultFields } from "./default-config.js";
+import {
+  getDefaultTabs,
+  getDefaultFields,
+  getDefaultConfig,
+} from "./default-config.js";
 
 type WidgetPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 
@@ -149,57 +154,99 @@ export class WafirWidget extends LitElement {
   }
 
   private async _fetchConfig() {
-    if (!this.installationId || !this.owner || !this.repo) return;
+    if (!this.configUrl) {
+      console.warn("Wafir: No configUrl provided, using default configuration");
+      this._config = getDefaultConfig();
+      this._applyConfig(this._config);
+      return;
+    }
 
     this.isConfigLoading = true;
     this.configFetchError = null;
 
     try {
-      const { getWafirConfig } = await import("./api/client.js");
-      const config = await getWafirConfig(
-        this.installationId,
-        this.owner,
-        this.repo,
-        this.bridgeUrl || undefined,
-      );
+      const response = await fetch(this.configUrl, {
+        method: "GET",
+        signal: AbortSignal.timeout(10000), // 10 second timeout
+      });
 
-      if (config) {
-        const remoteConfig = config;
-        if (remoteConfig.tabs && Array.isArray(remoteConfig.tabs)) {
-          this._tabs = remoteConfig.tabs.map((tab: any) => ({
-            id: tab.id,
-            label: tab.label || this._capitalize(tab.id),
-            icon: tab.icon,
-            isFeedback: tab.isFeedback ?? false,
-            fields:
-              tab.fields && tab.fields.length > 0
-                ? tab.fields
-                : getDefaultFields(tab.id),
-          }));
-          if (this._tabs.length > 0) {
-            this._activeTabId = this._tabs[0].id;
-          }
-        }
-
-        if (remoteConfig.title) {
-          this.modalTitle = remoteConfig.title;
-        }
-
-        if (remoteConfig.telemetry) {
-          this._telemetry = {
-            screenshot: remoteConfig.telemetry.screenshot ?? true,
-            browserInfo: remoteConfig.telemetry.browserInfo ?? true,
-            consoleLog: remoteConfig.telemetry.consoleLog ?? false,
-          };
-        }
+      if (!response.ok) {
+        throw new Error(`Failed to fetch config: ${response.status}`);
       }
+
+      const contentType = response.headers.get("content-type") || "";
+      let config: WafirConfig;
+
+      if (
+        contentType.includes("yaml") ||
+        contentType.includes("x-yaml") ||
+        this.configUrl.endsWith(".yaml") ||
+        this.configUrl.endsWith(".yml")
+      ) {
+        // Parse YAML
+        const yamlText = await response.text();
+        const yaml = await import("js-yaml");
+        config = yaml.load(yamlText) as WafirConfig;
+      } else {
+        // Parse JSON
+        config = await response.json();
+      }
+
+      // Validate required fields
+      if (
+        !config.installationId ||
+        !config.storage?.owner ||
+        !config.storage?.repo
+      ) {
+        console.warn(
+          "Wafir: Config missing required fields (installationId, storage.owner, storage.repo), using defaults",
+        );
+        this._config = getDefaultConfig();
+        this._applyConfig(this._config);
+        return;
+      }
+
+      this._config = config;
+      this._applyConfig(config);
     } catch (error) {
       console.warn(
         "Wafir: Failed to fetch remote config, using defaults",
         error,
       );
+      this._config = getDefaultConfig();
+      this._applyConfig(this._config);
     } finally {
       this.isConfigLoading = false;
+    }
+  }
+
+  private _applyConfig(config: WafirConfig) {
+    if (config.tabs && Array.isArray(config.tabs)) {
+      this._tabs = config.tabs.map((tab: TabConfig) => ({
+        id: tab.id,
+        label: tab.label || this._capitalize(tab.id),
+        icon: tab.icon,
+        isFeedback: tab.isFeedback ?? false,
+        fields:
+          tab.fields && tab.fields.length > 0
+            ? tab.fields
+            : getDefaultFields(tab.id),
+      }));
+      if (this._tabs.length > 0) {
+        this._activeTabId = this._tabs[0].id;
+      }
+    }
+
+    if (config.title) {
+      this.modalTitle = config.title;
+    }
+
+    if (config.telemetry) {
+      this._telemetry = {
+        screenshot: config.telemetry.screenshot ?? true,
+        browserInfo: config.telemetry.browserInfo ?? true,
+        consoleLog: config.telemetry.consoleLog ?? false,
+      };
     }
   }
 
@@ -225,29 +272,34 @@ export class WafirWidget extends LitElement {
     this._activeTabId = tabId;
   }
 
-  @property({ type: Number })
-  installationId = 0;
-
   @property({ type: String })
-  owner = "";
-
-  @property({ type: String })
-  repo = "";
+  configUrl = "";
 
   @property({ type: String })
   bridgeUrl = "";
+
+  @state()
+  private _config: WafirConfig | null = null;
 
   private async _handleSubmit(event: CustomEvent) {
     const formData = event.detail.formData as Record<string, unknown>;
     const activeTab = this._getActiveTab();
 
-    if (!this.installationId || !this.owner || !this.repo) {
+    if (
+      !this._config ||
+      !this._config.installationId ||
+      !this._config.storage?.owner ||
+      !this._config.storage?.repo
+    ) {
       console.error(
-        "Wafir: Missing configuration (installationId, owner, or repo)",
+        "Wafir: Missing configuration (installationId, storage.owner, or storage.repo)",
       );
       alert("Widget configuration error");
       return;
     }
+
+    const { installationId, storage } = this._config;
+    const { owner, repo } = storage;
 
     try {
       const title =
@@ -282,9 +334,9 @@ export class WafirWidget extends LitElement {
       }
 
       await submitIssue({
-        installationId: this.installationId,
-        owner: this.owner,
-        repo: this.repo,
+        installationId,
+        owner,
+        repo,
         title,
         labels,
         screenshot: screenshotBlob,
@@ -297,6 +349,20 @@ export class WafirWidget extends LitElement {
           ? (browserInfo.get() ?? undefined)
           : undefined,
         consoleLogs: this._telemetry.consoleLog ? consoleLogs.get() : undefined,
+        storageConfig: storage
+          ? {
+              type: storage.type,
+              projectNumber: storage.projectNumber,
+              projectOwner: storage.owner,
+            }
+          : undefined,
+        feedbackProjectConfig: this._config.feedbackProject
+          ? {
+              projectNumber: this._config.feedbackProject.projectNumber,
+              owner: this._config.feedbackProject.owner,
+              ratingField: this._config.feedbackProject.ratingField,
+            }
+          : undefined,
       });
 
       alert("Thank you for your input!");

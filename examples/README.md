@@ -1,6 +1,6 @@
 # Wafir Configuration Examples
 
-This directory contains example `wafir.yaml` configuration files for different use cases. Copy the appropriate template to your repository's `.github/wafir.yaml` file and customize it to your needs.
+This directory contains example `wafir.yaml` configuration files for different use cases. Host one of these configurations anywhere (S3, Gist, CDN, your own server, etc.) and point your widget to it via the `configUrl` prop.
 
 ## Examples
 
@@ -16,68 +16,83 @@ This directory contains example `wafir.yaml` configuration files for different u
 ## Quick Start
 
 1. **Install the GitHub App** on your repository
-2. **Copy** one of these examples to `.github/wafir.yaml` in your repo
-3. **Add the widget** to your application:
+2. **Copy and customize** one of these examples - update `installationId`, `owner`, and `repo`
+3. **Host the config file** anywhere accessible via URL (S3, Gist, CDN, etc.)
+4. **Add the widget** to your application with the config URL:
 
 ```tsx
 // React
 import { WafirWidget } from "@wafir/react";
 
-<WafirWidget
-  installationId={YOUR_INSTALLATION_ID}
-  owner="your-username"
-  repo="your-repo"
-/>;
+<WafirWidget configUrl="https://example.com/wafir.yaml" />;
 ```
 
 ```html
 <!-- Vanilla HTML -->
 <script type="module" src="https://unpkg.com/wafir"></script>
-<wafir-widget
-  installationId="YOUR_INSTALLATION_ID"
-  owner="your-username"
-  repo="your-repo"
-></wafir-widget>
+<wafir-widget configUrl="https://example.com/wafir.yaml"></wafir-widget>
 ```
 
 ## Configuration Reference
 
-### Storage
+### Required Fields
 
 ```yaml
+# Your GitHub App installation ID (required)
+installationId: 12345678
+
 storage:
   type: issue # Options: issue, project, both
-  owner: other-org # Optional: different repo owner
-  repo: other-repo # Optional: different repo name
-  projectId: 123 # Optional: GitHub Project ID
+  owner: your-username # Required: repository owner
+  repo: your-repo # Required: repository name
+  projectNumber: 1 # Required for project storage
+```
+
+### Optional: Dedicated Feedback Project
+
+```yaml
+# Dedicated project for feedback with rating field
+feedbackProject:
+  projectNumber: 1 # Your feedback project number
+  owner: org-name # Project owner (defaults to repo owner)
+  ratingField: "Rating" # Name of the Rating field in your project
 ```
 
 ### Automatic Data Collection
 
 ```yaml
-issue:
+telemetry:
   screenshot: true # Enable screenshot capture
   browserInfo: true # Collect URL, user agent, viewport
-  consoleLog: true # Capture console messages
-  labels: ["bug"] # Labels for created issues
+  consoleLog: false # Capture console messages
 ```
 
 ### Form Fields
 
-Field types: `text`, `textarea`, `select`, `checkbox`
+Field types: `input`, `textarea`, `email`, `dropdown`, `checkboxes`, `rating`, `markdown`
 
 ```yaml
-fields:
-  - name: title # Field identifier
-    label: "Title" # Display label
-    type: text # Field type
-    required: true # Is field required?
+tabs:
+  - id: feedback
+    label: "Feedback"
+    icon: thumbsup # Options: thumbsup, lightbulb, bug
+    isFeedback: true # Uses rating field for project integration
+    fields:
+      - id: title
+        type: input
+        attributes:
+          label: "Title"
+          placeholder: "Enter a title"
+        validations:
+          required: true
 
-  - name: priority
-    label: "Priority"
-    type: select
-    options: ["Low", "Medium", "High"]
-    required: false
+      - id: priority
+        type: dropdown
+        attributes:
+          label: "Priority"
+          options: ["Low", "Medium", "High"]
+        validations:
+          required: false
 ```
 
 ## Tips
@@ -86,3 +101,4 @@ fields:
 - Enable **screenshots** for visual bugs
 - Enable **browserInfo** for debugging browser-specific issues
 - Keep forms **short** - users are more likely to submit brief forms
+- Host your config on a **CDN** for best performance

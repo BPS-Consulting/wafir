@@ -8,12 +8,8 @@ export type WafirPosition =
   | "top-left";
 
 export interface WafirWidgetProps {
-  /** Installation ID for the wafir widget */
-  installationId: number;
-  /** GitHub repository owner */
-  owner: string;
-  /** GitHub repository name */
-  repo: string;
+  /** URL to the wafir configuration file (JSON or YAML) */
+  configUrl: string;
   /** Custom bridge server URL (for self-hosted bridge) */
   bridgeUrl?: string;
   /** Widget button position */
@@ -29,9 +25,7 @@ export interface WafirWidgetProps {
 }
 
 interface WafirWidgetElement extends HTMLElement {
-  installationId?: number;
-  owner?: string;
-  repo?: string;
+  configUrl?: string;
   bridgeUrl?: string;
   position?: string;
   modalTitle?: string;
@@ -44,9 +38,7 @@ interface WafirWidgetElement extends HTMLElement {
  * Provides a type-safe interface for using the wafir feedback widget in React applications.
  */
 export function WafirWidget({
-  installationId,
-  owner,
-  repo,
+  configUrl,
   bridgeUrl,
   position = "bottom-right",
   modalTitle,
@@ -58,25 +50,14 @@ export function WafirWidget({
 
   useEffect(() => {
     if (ref.current) {
-      ref.current.installationId = installationId;
-      ref.current.owner = owner;
-      ref.current.repo = repo;
+      ref.current.configUrl = configUrl;
       if (bridgeUrl) ref.current.bridgeUrl = bridgeUrl;
       if (position) ref.current.position = position;
       if (modalTitle) ref.current.modalTitle = modalTitle;
       if (tooltipText) ref.current.tooltipText = tooltipText;
       if (buttonText) ref.current.buttonText = buttonText;
     }
-  }, [
-    installationId,
-    owner,
-    repo,
-    bridgeUrl,
-    position,
-    modalTitle,
-    tooltipText,
-    buttonText,
-  ]);
+  }, [configUrl, bridgeUrl, position, modalTitle, tooltipText, buttonText]);
 
   return React.createElement(
     "wafir-widget",

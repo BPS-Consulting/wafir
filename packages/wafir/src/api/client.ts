@@ -16,8 +16,22 @@ const getClient = () => {
   });
 };
 
-export type WafirConfig =
+export type WafirConfigBase =
   paths["/config"]["get"]["responses"][200]["content"]["application/json"];
+
+// Extended WafirConfig type that includes installationId (required for user-hosted configs)
+export type WafirConfig = WafirConfigBase & {
+  /** GitHub App installation ID. Required for authenticating with the GitHub API. */
+  installationId: number;
+  storage: {
+    type: "issue" | "project" | "both";
+    /** GitHub repository owner (user or organization) */
+    owner: string;
+    /** GitHub repository name */
+    repo: string;
+    projectNumber?: number;
+  };
+};
 
 // Canonical tab and field types from API schema
 export type TabConfigApi = NonNullable<WafirConfig["tabs"]>[number];
@@ -40,6 +54,10 @@ export const checkBridgeHealth = async (
   }
 };
 
+/**
+ * @deprecated The widget now fetches config directly from a user-hosted URL.
+ * This function is kept for backward compatibility but will be removed in a future version.
+ */
 export const getWafirConfig = async (
   installationId: number,
   owner: string,
@@ -95,6 +113,17 @@ export interface SubmitIssueParams {
   fieldOrder?: string[];
   browserInfo?: BrowserInfo;
   consoleLogs?: ConsoleLogEntry[];
+  // Storage configuration (passed from widget's fetched config)
+  storageConfig?: {
+    type?: "issue" | "project" | "both";
+    projectNumber?: number;
+    projectOwner?: string;
+  };
+  feedbackProjectConfig?: {
+    projectNumber?: number;
+    owner?: string;
+    ratingField?: string;
+  };
 }
 
 export const submitIssue = async (params: SubmitIssueParams) => {
@@ -112,6 +141,8 @@ export const submitIssue = async (params: SubmitIssueParams) => {
     fieldOrder,
     browserInfo,
     consoleLogs,
+    storageConfig,
+    feedbackProjectConfig,
   } = params;
 
   if (bridgeUrl) {
@@ -146,6 +177,15 @@ export const submitIssue = async (params: SubmitIssueParams) => {
   }
   if (consoleLogs) {
     formData.append("consoleLogs", JSON.stringify(consoleLogs));
+  }
+  if (storageConfig) {
+    formData.append("storageConfig", JSON.stringify(storageConfig));
+  }
+  if (feedbackProjectConfig) {
+    formData.append(
+      "feedbackProjectConfig",
+      JSON.stringify(feedbackProjectConfig),
+    );
   }
 
   const response = await getClient().POST("/submit", {

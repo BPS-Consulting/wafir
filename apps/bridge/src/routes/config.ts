@@ -14,9 +14,12 @@ const configRoute: FastifyPluginAsync = async (fastify): Promise<void> => {
     {
       schema: {
         tags: ["WAFIR"],
-        summary: "Get WAFIR Configuration",
+        summary: "Get WAFIR Configuration (Deprecated)",
         description:
+          "DEPRECATED: The widget now fetches config directly from a user-hosted URL. " +
+          "This endpoint is kept for backward compatibility but will be removed in a future version. " +
           "Fetches and parses .github/wafir.yaml from the target repository.",
+        deprecated: true,
         querystring: {
           type: "object",
           required: ["installationId", "owner", "repo"],

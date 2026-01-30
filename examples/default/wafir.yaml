@@ -1,13 +1,18 @@
 # WAFIR Configuration Example - Default
 # This example shows what the widget displays when no tabs are specified.
 # Use this as a reference for the default behavior.
+# Host this file anywhere and point your widget to it via configUrl
+
+# Required: Your GitHub App installation ID
+installationId: 12345678
 
 title: "Contact Us"
 
 storage:
   type: issue # Options: issue, project, both
-  # owner: different-org    # Optional: target a different repository
-  # repo: different-repo    # Optional: target a different repository
+  # Required: Target repository for issues
+  owner: your-username
+  repo: your-repo
   # projectNumber: 1        # Required for project storage
 
 # Optional: Dedicated project for feedback with rating field

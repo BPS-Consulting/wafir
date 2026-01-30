@@ -1,7 +1,6 @@
 import { FastifyPluginAsync, FastifyRequest } from "fastify";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from "uuid";
-import yaml from "js-yaml";
 
 interface SubmitBody {
   installationId: number;
@@ -25,26 +24,22 @@ interface SubmitBody {
     message: string;
     timestamp: string;
   }>;
+  // Storage configuration (now passed from widget's fetched config)
+  storageConfig?: {
+    type?: "issue" | "project" | "both";
+    projectNumber?: number;
+    projectOwner?: string;
+  };
+  feedbackProjectConfig?: {
+    projectNumber?: number;
+    owner?: string;
+    ratingField?: string;
+  };
 }
 
 interface ParsedRequestData extends SubmitBody {
   screenshotBuffer?: Buffer;
   screenshotMime?: string;
-}
-
-interface WafirConfig {
-  mode?: "issue" | "feedback" | "both";
-  storage?: {
-    type?: "issue" | "project" | "both";
-    projectNumber?: number;
-    owner?: string;
-    repo?: string;
-  };
-  feedbackProject?: {
-    projectNumber?: number;
-    owner?: string;
-    ratingField?: string;
-  };
 }
 
 // Keys to exclude from the markdown body (used for other purposes)
@@ -283,6 +278,20 @@ async function parseSubmitRequest(
               result.consoleLogs = [];
             }
             break;
+          case "storageConfig":
+            try {
+              result.storageConfig = JSON.parse(val);
+            } catch {
+              result.storageConfig = undefined;
+            }
+            break;
+          case "feedbackProjectConfig":
+            try {
+              result.feedbackProjectConfig = JSON.parse(val);
+            } catch {
+              result.feedbackProjectConfig = undefined;
+            }
+            break;
         }
       }
     }
@@ -305,40 +314,6 @@ async function parseSubmitRequest(
   }
 
   return result as ParsedRequestData;
-}
-
-/**
- * Fetches and parses the wafir.yaml config from the repo.
- */
-async function getWafirConfig(
-  octokit: any,
-  owner: string,
-  repo: string,
-  log: any,
-): Promise<WafirConfig> {
-  try {
-    const { data: configData } = await octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: ".github/wafir.yaml",
-    });
-
-    if ("content" in configData) {
-      const yamlContent = Buffer.from(configData.content, "base64").toString(
-        "utf-8",
-      );
-      const config = (yaml.load(yamlContent) as WafirConfig) || {};
-      log.info({ config }, "Loaded wafir.yaml config");
-      return config;
-    }
-  } catch (error: any) {
-    if (error.status === 404) {
-      log.info("No wafir.yaml found, using defaults");
-    } else {
-      log.error({ error: error.message }, "Failed to fetch wafir.yaml");
-    }
-  }
-  return {};
 }
 
 /**
@@ -596,16 +571,10 @@ const submitRoute: FastifyPluginAsync = async (
           ? fastify.getGitHubClientWithToken(userToken)
           : null;
 
-        // Load Config
-        const config = await getWafirConfig(
-          appOctokit,
-          owner,
-          repo,
-          request.log,
-        );
-        const storageType = config.storage?.type || "issue";
-        const projectNumber = config.storage?.projectNumber;
-        const projectOwner = config.storage?.owner || owner;
+        // Use config from request (widget fetches config directly now)
+        const storageType = input.storageConfig?.type || "issue";
+        const projectNumber = input.storageConfig?.projectNumber;
+        const projectOwner = input.storageConfig?.projectOwner || owner;
 
         // Handle Screenshot Upload
         if (input.screenshotBuffer && input.screenshotMime) {
@@ -628,10 +597,11 @@ const submitRoute: FastifyPluginAsync = async (
         // Determine submission targets
         const isFeedback = input.submissionType === "feedback";
         const feedbackProjectNumber =
-          config.feedbackProject?.projectNumber || projectNumber;
+          input.feedbackProjectConfig?.projectNumber || projectNumber;
         const feedbackProjectOwner =
-          config.feedbackProject?.owner || projectOwner;
-        const ratingFieldName = config.feedbackProject?.ratingField || "Rating";
+          input.feedbackProjectConfig?.owner || projectOwner;
+        const ratingFieldName =
+          input.feedbackProjectConfig?.ratingField || "Rating";
 
         let issueData: {
           number?: number;
