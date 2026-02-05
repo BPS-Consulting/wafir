@@ -422,6 +422,53 @@ export function validateFormFields(
 }
 
 /**
+ * Validates that the configUrl is from the same origin as the request.
+ * This prevents SSRF attacks and ensures config integrity.
+ */
+export function validateSameOrigin(
+  configUrl: string,
+  requestOrigin: string,
+): ValidationResult {
+  try {
+    const configUrlObj = new URL(configUrl);
+    const requestOriginObj = new URL(requestOrigin);
+
+    // Compare protocol, hostname, and port
+    if (
+      configUrlObj.protocol !== requestOriginObj.protocol ||
+      configUrlObj.hostname !== requestOriginObj.hostname ||
+      configUrlObj.port !== requestOriginObj.port
+    ) {
+      return {
+        valid: false,
+        errors: [
+          {
+            code: "ORIGIN_MISMATCH",
+            message: `Config URL origin (${configUrlObj.origin}) does not match request origin (${requestOriginObj.origin}). For security, config must be hosted on the same domain as the form.`,
+          },
+        ],
+      };
+    }
+
+    return {
+      valid: true,
+      errors: [],
+    };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Invalid URL";
+    return {
+      valid: false,
+      errors: [
+        {
+          code: "INVALID_URL",
+          message: `Failed to parse URLs: ${message}`,
+        },
+      ],
+    };
+  }
+}
+
+/**
  * Full validation: fetches config and validates both config match and form fields.
  */
 export async function validateSubmission(params: {
@@ -431,8 +478,25 @@ export async function validateSubmission(params: {
   repo: string;
   formFields: Record<string, unknown>;
   tabId?: string;
+  requestOrigin?: string;
 }): Promise<ValidationResult> {
-  const { configUrl, installationId, owner, repo, formFields, tabId } = params;
+  const {
+    configUrl,
+    installationId,
+    owner,
+    repo,
+    formFields,
+    tabId,
+    requestOrigin,
+  } = params;
+
+  // Validate same-origin if requestOrigin is provided
+  if (requestOrigin) {
+    const originResult = validateSameOrigin(configUrl, requestOrigin);
+    if (!originResult.valid) {
+      return originResult;
+    }
+  }
 
   // Fetch authoritative config
   let config: WafirConfig;
