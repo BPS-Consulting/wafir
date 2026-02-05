@@ -16,7 +16,7 @@ import {
 } from "./helper.js";
 
 // Import the config route
-import configRoute from "../src/routes/config.js";
+import configRoute from "../src/domains/config/routes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

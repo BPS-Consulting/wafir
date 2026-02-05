@@ -17,18 +17,22 @@ const options: AppOptions = {};
 // 2. Wrap the app plugin in fp
 const app: FastifyPluginAsync<AppOptions> = fp(
   async (fastify, opts): Promise<void> => {
+    // Load shared plugins first
     void fastify.register(AutoLoad, {
-      dir: path.join(__dirname, "plugins"),
+      dir: path.join(__dirname, "shared", "plugins"),
       options: opts,
       forceESM: true,
     });
 
+    // Load modules (routes.ts or index.ts files from each module)
     void fastify.register(AutoLoad, {
-      dir: path.join(__dirname, "routes"),
+      dir: path.join(__dirname, "modules"),
       options: opts,
       forceESM: true,
+      autoHooks: true,
+      cascadeHooks: true,
     });
-  }
+  },
 );
 
 export default app;

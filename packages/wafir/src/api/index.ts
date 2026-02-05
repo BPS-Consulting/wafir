@@ -167,7 +167,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/config": {
+    "/config/": {
         parameters: {
             query?: never;
             header?: never;
@@ -175,8 +175,9 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get WAFIR Configuration
-         * @description Fetches and parses .github/wafir.yaml from the target repository.
+         * Get WAFIR Configuration (Deprecated)
+         * @deprecated
+         * @description DEPRECATED: The widget now fetches config directly from a user-hosted URL. This endpoint is kept for backward compatibility but will be removed in a future version. Fetches and parses .github/wafir.yaml from the target repository.
          */
         get: {
             parameters: {
@@ -198,19 +199,23 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            /** @description GitHub App installation ID. Required for authenticating with the GitHub API. */
+                            installationId: number;
                             /**
                              * @description Modal title
                              * @default Contact Us
                              */
                             title: string;
-                            storage?: {
+                            storage: {
                                 /**
                                  * @default issue
                                  * @enum {string}
                                  */
                                 type: "issue" | "project" | "both";
-                                owner?: string;
-                                repo?: string;
+                                /** @description GitHub repository owner (user or organization) */
+                                owner: string;
+                                /** @description GitHub repository name */
+                                repo: string;
                                 projectNumber?: number;
                             };
                             /** @description Automatic data collection settings */
@@ -327,7 +332,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/health": {
+    "/health/": {
         parameters: {
             query?: never;
             header?: never;
@@ -369,7 +374,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/submit": {
+    "/submit/": {
         parameters: {
             query?: never;
             header?: never;
@@ -380,7 +385,7 @@ export interface paths {
         put?: never;
         /**
          * Submit Feedback/Issue
-         * @description Creates a new issue or project draft. Supports multipart/form-data.
+         * @description Creates a GitHub issue or project draft from form fields. Supports multipart/form-data.
          */
         post: {
             parameters: {

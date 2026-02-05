@@ -14,7 +14,7 @@ import {
 } from "./helper.js";
 
 // Import the config route
-import configRoute from "../src/routes/config.js";
+import configRoute from "../src/domains/config/routes.js";
 
 describe("GET /config", () => {
   let app: FastifyInstance;

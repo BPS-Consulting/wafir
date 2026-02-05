@@ -7,7 +7,7 @@ import {
   validateSameOrigin,
   validateFormFields,
   WafirConfig,
-} from "../src/utils/config-validator.js";
+} from "../src/shared/utils/config-validator.js";
 
 describe("validateSameOrigin", () => {
   it("accepts config URL from same origin", () => {

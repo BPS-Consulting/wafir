@@ -136,13 +136,13 @@
         }
       }
     },
-    "/config": {
+    "/config/": {
       "get": {
-        "summary": "Get WAFIR Configuration",
+        "summary": "Get WAFIR Configuration (Deprecated)",
         "tags": [
           "WAFIR"
         ],
-        "description": "Fetches and parses .github/wafir.yaml from the target repository.",
+        "description": "DEPRECATED: The widget now fetches config directly from a user-hosted URL. This endpoint is kept for backward compatibility but will be removed in a future version. Fetches and parses .github/wafir.yaml from the target repository.",
         "parameters": [
           {
             "schema": {
@@ -169,6 +169,7 @@
             "required": true
           }
         ],
+        "deprecated": true,
         "responses": {
           "200": {
             "description": "Default Response",
@@ -176,7 +177,15 @@
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "required": [
+                    "installationId",
+                    "storage"
+                  ],
                   "properties": {
+                    "installationId": {
+                      "type": "number",
+                      "description": "GitHub App installation ID. Required for authenticating with the GitHub API."
+                    },
                     "title": {
                       "type": "string",
                       "default": "Contact Us",
@@ -184,6 +193,10 @@
                     },
                     "storage": {
                       "type": "object",
+                      "required": [
+                        "owner",
+                        "repo"
+                      ],
                       "properties": {
                         "type": {
                           "type": "string",
@@ -195,10 +208,12 @@
                           "default": "issue"
                         },
                         "owner": {
-                          "type": "string"
+                          "type": "string",
+                          "description": "GitHub repository owner (user or organization)"
                         },
                         "repo": {
-                          "type": "string"
+                          "type": "string",
+                          "description": "GitHub repository name"
                         },
                         "projectNumber": {
                           "type": "number"
@@ -427,7 +442,7 @@
         }
       }
     },
-    "/health": {
+    "/health/": {
       "get": {
         "summary": "Health Check",
         "tags": [
@@ -456,13 +471,13 @@
         }
       }
     },
-    "/submit": {
+    "/submit/": {
       "post": {
         "summary": "Submit Feedback/Issue",
         "tags": [
           "WAFIR"
         ],
-        "description": "Creates a new issue or project draft. Supports multipart/form-data.",
+        "description": "Creates a GitHub issue or project draft from form fields. Supports multipart/form-data.",
         "responses": {
           "200": {
             "description": "Default Response"
