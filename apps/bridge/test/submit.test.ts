@@ -139,6 +139,7 @@ describe("POST /submit", () => {
           owner: "testowner",
           repo: "testrepo",
           title: "Test Issue",
+          tabId: "issue",
           formFields: {
             title: "Test Issue",
             message: "This is a test description",
@@ -188,6 +189,7 @@ describe("POST /submit", () => {
           owner: "testowner",
           repo: "testrepo",
           title: "Bug Report",
+          tabId: "issue",
           labels: ["bug", "priority-high"],
           formFields: {
             title: "Bug Report",
@@ -306,8 +308,8 @@ tabs:
           owner: "testowner",
           repo: "testrepo",
           title: "Feedback with Rating",
-          tabId: "feedback",
           submissionType: "feedback",
+          tabId: "feedback",
           formFields: {
             title: "Feedback with Rating",
             rating: 4,
@@ -340,6 +342,7 @@ tabs:
           owner: "testowner",
           repo: "testrepo",
           title: "Issue with Browser Info",
+          tabId: "issue",
           formFields: {
             title: "Issue with Browser Info",
             message: "A bug",
@@ -382,6 +385,7 @@ tabs:
           owner: "testowner",
           repo: "testrepo",
           title: "Issue with Console Logs",
+          tabId: "issue",
           formFields: {
             title: "Issue with Console Logs",
             message: "Error occurred",
@@ -426,6 +430,7 @@ tabs:
           installationId: 123,
           owner: "testowner",
           repo: "testrepo",
+          tabId: "issue",
           formFields: {
             title: "Title from Form Fields",
             message: "Some description",
@@ -452,6 +457,7 @@ tabs:
           owner: "testowner",
           repo: "testrepo",
           title: "Test Issue",
+          tabId: "issue",
           formFields: {
             title: "Test Issue",
           },
@@ -480,6 +486,7 @@ tabs:
           owner: "testowner",
           repo: "testrepo",
           title: "Test Issue",
+          tabId: "issue",
           formFields: {
             title: "Test Issue",
           },
@@ -520,6 +527,7 @@ tabs:
           owner: "testowner",
           repo: "testrepo",
           title: "Test Issue",
+          tabId: "issue",
           formFields: {
             title: "Test Issue",
             message: "Valid same-origin submission",
@@ -554,6 +562,7 @@ tabs:
           owner: "testowner",
           repo: "testrepo",
           title: "Test Issue",
+          tabId: "issue",
           formFields: {
             title: "Test Issue",
             message: "No referer header",
@@ -578,6 +587,7 @@ tabs:
           owner: "testowner",
           repo: "testrepo",
           title: "Test Issue",
+          tabId: "issue",
           formFields: {
             title: "Test Issue",
           },
@@ -602,6 +612,7 @@ tabs:
           owner: "testowner",
           repo: "testrepo",
           title: "Test Issue",
+          tabId: "issue",
           formFields: {
             title: "Test Issue",
           },
@@ -628,6 +639,7 @@ tabs:
           owner: "testowner",
           repo: "testrepo",
           title: "Test Issue",
+          tabId: "issue",
           formFields: {
             title: "Test Issue",
           },
@@ -654,6 +666,7 @@ tabs:
           owner: "malicious-owner", // Does not match config (testowner)
           repo: "testrepo",
           title: "Test Issue",
+          tabId: "issue",
           formFields: {
             title: "Test Issue",
           },
@@ -700,6 +713,17 @@ installationId: 123
 storage:
   owner: real-owner
   repo: real-repo
+tabs:
+  - id: issue
+    fields:
+      - id: title
+        type: input
+        validations:
+          required: true
+      - id: message
+        type: textarea
+        validations:
+          required: true
 `),
       );
 
@@ -720,6 +744,7 @@ storage:
           owner: "real-owner",
           repo: "real-repo",
           title: "Test Issue",
+          tabId: "issue",
           formFields: {
             title: "Test Issue",
             message: "Test",
@@ -1067,6 +1092,10 @@ tabs:
         "",
         "Issue with Screenshot",
         `--${boundary}`,
+        'Content-Disposition: form-data; name="tabId"',
+        "",
+        "issue",
+        `--${boundary}`,
         'Content-Disposition: form-data; name="formFields"',
         "",
         '{"title":"Issue with Screenshot","message":"Bug with screenshot"}',
@@ -1135,6 +1164,10 @@ tabs:
         "",
         "Issue with Failed Screenshot",
         `--${boundary}`,
+        'Content-Disposition: form-data; name="tabId"',
+        "",
+        "issue",
+        `--${boundary}`,
         'Content-Disposition: form-data; name="formFields"',
         "",
         '{"title":"Issue with Failed Screenshot","message":"Bug"}',
@@ -1194,6 +1227,7 @@ tabs:
           owner: "testowner",
           repo: "testrepo",
           title: "Project Draft Issue",
+          tabId: "issue",
           formFields: {
             title: "Project Draft Issue",
             message: "This goes to a project",
@@ -1228,6 +1262,7 @@ tabs:
           owner: "testowner",
           repo: "testrepo",
           title: "Project Issue",
+          tabId: "issue",
           formFields: {
             title: "Project Issue",
             message: "Test",
@@ -1306,8 +1341,10 @@ tabs:
           title: "User Feedback",
           rating: 4,
           submissionType: "feedback",
+          tabId: "feedback",
           formFields: {
             title: "User Feedback",
+            rating: 4,
             message: "Love the product!",
           },
         },
@@ -1343,6 +1380,7 @@ tabs:
           repo: "testrepo",
           title: "Feedback without Project",
           submissionType: "feedback",
+          tabId: "issue",
           formFields: {
             title: "Feedback without Project",
             message: "Good stuff",
@@ -1391,6 +1429,7 @@ tabs:
           installationId: 123,
           owner: "testowner",
           repo: "testrepo",
+          tabId: "issue",
           formFields: {
             message: "No title provided",
           },
@@ -1416,6 +1455,7 @@ tabs:
           owner: "testowner",
           repo: "testrepo",
           title: "This will fail",
+          tabId: "issue",
           formFields: {
             title: "This will fail",
             message: "Test",
@@ -1464,6 +1504,7 @@ tabs:
           owner: "testowner",
           repo: "testrepo",
           title: "Issue for Both",
+          tabId: "issue",
           formFields: {
             title: "Issue for Both",
             message: "Goes to issue and project",
@@ -1494,6 +1535,17 @@ storage:
   owner: testuser
   repo: testrepo
   projectNumber: 1
+tabs:
+  - id: issue
+    fields:
+      - id: title
+        type: input
+        validations:
+          required: true
+      - id: message
+        type: textarea
+        validations:
+          required: true
 `),
       );
 
@@ -1524,6 +1576,7 @@ storage:
           owner: "testuser",
           repo: "testrepo",
           title: "User Project Issue",
+          tabId: "issue",
           formFields: {
             title: "User Project Issue",
             message: "Test",

@@ -175,35 +175,26 @@ export function validateConfigMatch(
 
 /**
  * Gets the allowed field IDs for a specific tab from the config.
- * Returns default field IDs if no fields are defined for the tab.
+ * Only returns fields explicitly defined in the tab configuration.
+ * If no tab is found or no fields are defined, returns an empty set.
  */
 function getAllowedFieldIds(config: WafirConfig, tabId?: string): Set<string> {
   const allowedFields = new Set<string>();
 
-  // Always allow these system fields
-  allowedFields.add("title");
+  // If no tabId provided, cannot determine allowed fields
+  if (!tabId) {
+    return allowedFields;
+  }
 
   // Find the tab in config
   const tab = config.tabs?.find((t) => t.id === tabId);
 
+  // Only use fields explicitly defined in the tab configuration
   if (tab?.fields && tab.fields.length > 0) {
-    // Use fields from config
     for (const field of tab.fields) {
       if (field.id) {
         allowedFields.add(field.id);
       }
-    }
-  } else {
-    // Use default fields for known tab types
-    const defaultFieldsByTab: Record<string, string[]> = {
-      feedback: ["title", "rating", "message"],
-      suggestion: ["title", "message"],
-      issue: ["title", "message"],
-    };
-
-    const defaults = defaultFieldsByTab[tabId || ""] || ["title", "message"];
-    for (const fieldId of defaults) {
-      allowedFields.add(fieldId);
     }
   }
 
@@ -212,15 +203,19 @@ function getAllowedFieldIds(config: WafirConfig, tabId?: string): Set<string> {
 
 /**
  * Gets required field IDs for a specific tab from the config.
+ * Only returns fields marked as required in the tab configuration.
  */
 function getRequiredFieldIds(config: WafirConfig, tabId?: string): Set<string> {
   const requiredFields = new Set<string>();
 
-  // Title is always required
-  requiredFields.add("title");
+  // If no tabId provided, cannot determine required fields
+  if (!tabId) {
+    return requiredFields;
+  }
 
   const tab = config.tabs?.find((t) => t.id === tabId);
 
+  // Only use fields explicitly marked as required in the tab configuration
   if (tab?.fields) {
     for (const field of tab.fields) {
       if (field.id && field.validations?.required) {
@@ -375,6 +370,34 @@ export function validateFormFields(
   tabId?: string,
 ): ValidationResult {
   const errors: ValidationError[] = [];
+
+  // Validate that tabId is provided
+  if (!tabId) {
+    errors.push({
+      code: "MISSING_TAB_ID",
+      message: "Tab ID is required for validation",
+    });
+    return {
+      valid: false,
+      errors,
+      config,
+    };
+  }
+
+  // Validate that the tab exists in config
+  const tab = config.tabs?.find((t) => t.id === tabId);
+  if (!tab) {
+    errors.push({
+      code: "UNKNOWN_TAB",
+      message: `Tab "${tabId}" not found in config`,
+      field: "tabId",
+    });
+    return {
+      valid: false,
+      errors,
+      config,
+    };
+  }
 
   const allowedFields = getAllowedFieldIds(config, tabId);
   const requiredFields = getRequiredFieldIds(config, tabId);

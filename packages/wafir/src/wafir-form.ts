@@ -120,13 +120,8 @@ export class WafirForm extends LitElement {
 
     switch (field.type) {
       case "markdown": {
-        // Render block with markdown (no label for markdown)
         const markdown =
           field.attributes?.value || field.attributes?.label || "";
-        // Render markdown as HTML, sanitized
-        // Render markdown as HTML, sanitized
-        // TypeScript: marked.parse can return string | Promise<string>, but
-        // we only use it in synchronous mode so a string is guaranteed.
         const htmlString = DOMPurify.sanitize(marked.parse(markdown) as string);
         return html`<div class="form-markdown">${unsafeHTML(htmlString)}</div>`;
       }
