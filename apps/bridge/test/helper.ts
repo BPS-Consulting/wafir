@@ -95,6 +95,18 @@ storage:
   type: issue
   owner: testowner
   repo: testrepo
+tabs:
+  - id: issue
+    label: "Report Issue"
+    fields:
+      - id: title
+        type: input
+        validations:
+          required: true
+      - id: message
+        type: textarea
+        validations:
+          required: true
 `,
   withProject: `
 installationId: 123
@@ -104,6 +116,18 @@ storage:
   owner: testowner
   repo: testrepo
   projectNumber: 1
+tabs:
+  - id: issue
+    label: "Report Issue"
+    fields:
+      - id: title
+        type: input
+        validations:
+          required: true
+      - id: message
+        type: textarea
+        validations:
+          required: true
 `,
   withFeedbackProject: `
 installationId: 123
@@ -115,6 +139,21 @@ storage:
 feedbackProject:
   projectNumber: 2
   ratingField: "Rating"
+tabs:
+  - id: feedback
+    label: "Feedback"
+    isFeedback: true
+    fields:
+      - id: title
+        type: input
+        validations:
+          required: true
+      - id: rating
+        type: rating
+        validations:
+          required: true
+      - id: message
+        type: textarea
 `,
   full: `
 installationId: 123
@@ -129,6 +168,17 @@ telemetry:
   browserInfo: true
   consoleLog: true
 tabs:
+  - id: issue
+    label: "Report Issue"
+    fields:
+      - id: title
+        type: input
+        validations:
+          required: true
+      - id: message
+        type: textarea
+        validations:
+          required: true
   - id: feedback
     label: "Feedback"
     icon: "thumbsup"
@@ -138,6 +188,12 @@ tabs:
         type: rating
         attributes:
           label: "Rating"
+        validations:
+          required: true
+      - id: message
+        type: textarea
+        validations:
+          required: true
 `,
 };
 

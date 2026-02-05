@@ -293,4 +293,118 @@ describe("validateFormFields", () => {
     expect(result.errors[0].code).toBe("INVALID_DROPDOWN_VALUE");
     expect(result.errors[0].field).toBe("category");
   });
+
+  it("accepts feedback form with rating and description but no title", () => {
+    const config: WafirConfig = {
+      ...minimalConfig,
+      tabs: [
+        {
+          id: "feedback",
+          fields: [
+            {
+              id: "rating",
+              type: "rating",
+              validations: { required: true },
+            },
+            {
+              id: "description",
+              type: "textarea",
+              validations: { required: true },
+            },
+          ],
+        },
+      ],
+    };
+
+    const formFields = {
+      rating: 5,
+      description: "Great product!",
+    };
+
+    const result = validateFormFields(formFields, config, "feedback");
+
+    expect(result.valid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it("rejects feedback form when title is submitted but not in config", () => {
+    const config: WafirConfig = {
+      ...minimalConfig,
+      tabs: [
+        {
+          id: "feedback",
+          fields: [
+            {
+              id: "rating",
+              type: "rating",
+              validations: { required: true },
+            },
+            {
+              id: "description",
+              type: "textarea",
+              validations: { required: true },
+            },
+          ],
+        },
+      ],
+    };
+
+    const formFields = {
+      rating: 5,
+      description: "Great product!",
+      title: "This should be rejected",
+    };
+
+    const result = validateFormFields(formFields, config, "feedback");
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].code).toBe("UNKNOWN_FIELD");
+    expect(result.errors[0].field).toBe("title");
+  });
+
+  it("rejects form submission with unknown tab ID", () => {
+    const config: WafirConfig = {
+      ...minimalConfig,
+      tabs: [
+        {
+          id: "feedback",
+          fields: [{ id: "rating", type: "rating" }],
+        },
+      ],
+    };
+
+    const formFields = {
+      rating: 5,
+    };
+
+    const result = validateFormFields(formFields, config, "nonexistent-tab");
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].code).toBe("UNKNOWN_TAB");
+    expect(result.errors[0].field).toBe("tabId");
+  });
+
+  it("rejects form submission without tab ID", () => {
+    const config: WafirConfig = {
+      ...minimalConfig,
+      tabs: [
+        {
+          id: "feedback",
+          fields: [{ id: "rating", type: "rating" }],
+        },
+      ],
+    };
+
+    const formFields = {
+      rating: 5,
+    };
+
+    const result = validateFormFields(formFields, config);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].code).toBe("MISSING_TAB_ID");
+  });
 });

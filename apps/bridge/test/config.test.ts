@@ -162,9 +162,10 @@ describe("GET /config", () => {
       expect(body.telemetry.screenshot).toBe(true);
       expect(body.telemetry.browserInfo).toBe(true);
       expect(body.telemetry.consoleLog).toBe(true);
-      expect(body.tabs).toHaveLength(1);
-      expect(body.tabs[0].id).toBe("feedback");
-      expect(body.tabs[0].isFeedback).toBe(true);
+      expect(body.tabs).toHaveLength(2);
+      expect(body.tabs[0].id).toBe("issue");
+      expect(body.tabs[1].id).toBe("feedback");
+      expect(body.tabs[1].isFeedback).toBe(true);
     });
 
     it("includes organization issue types when owner is an org", async () => {
