@@ -159,7 +159,9 @@ function App() {
 
 ## Form Configuration
 
-Configure the feedback form fields in your `.github/wafir.yaml` file. **With the new schema, each field is defined using `id`, `type`, `attributes`, and `validations` subkeys.**
+Configure the feedback form fields by placing a `wafir.yaml` file in your app's `public` folder (e.g. `public/wafir.yaml`).
+
+**With the new schema, each field is defined using `id`, `type`, `attributes`, and `validations` subkeys.**
 
 ### Field Types
 
@@ -230,7 +232,7 @@ A markdown field can be used for headings, hints, or formatted instructions anyw
 
 ## Telemetry Options
 
-Wafir can automatically capture browser context to help with debugging. All telemetry is opt-in via configuration.
+Wafir can automatically capture browser context to help with debugging. All telemetry is opt-in via configuration in your `public/wafir.yaml` file.
 
 ### Available Options
 
@@ -253,7 +255,7 @@ telemetry:
 
 ## Mode Configuration
 
-Choose what type of input the widget collects.
+Choose what type of input the widget collects in your `public/wafir.yaml` config file.
 
 ### Widget Modes
 
@@ -285,7 +287,7 @@ When `mode: feedback` is set, users see a 5-star rating component followed by op
 
 ## Storage Options
 
-Choose where feedback is stored in your GitHub repository.
+The `storage` key in your `public/wafir.yaml` file determines where feedback is stored in your GitHub repository.
 
 ### Storage Types
 
@@ -296,6 +298,8 @@ Choose where feedback is stored in your GitHub repository.
 | `both`    | Create both an issue and a project item  |
 
 ### Example Storage Configs
+
+Add this section to your `public/wafir.yaml` file under the top-level `storage` key:
 
 ```yaml
 storage:
@@ -314,7 +318,12 @@ storage:
 
 ## Configuration Examples
 
-We provide ready-to-use configuration templates for common use cases (see `/examples`). All now follow the new field schema.
+Place your Wafir configuration file in the `public` folder of your app, e.g. `public/wafir.yaml`. We provide ready-to-use configuration templates for common use cases (see `/examples`). All examples use the new config format and schema:
+
+Required top-level keys:
+
+- `installationId`: Your numeric GitHub App installation ID
+- `storage`: Storage configuration/capture options
 
 - **Basic** — Standard bug reporting setup
 - **Minimal** — Simplest possible config

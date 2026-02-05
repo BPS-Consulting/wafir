@@ -111,42 +111,55 @@ import { WafirWidget } from "@wafir/vue";
 ></wafir-widget>
 ```
 
-## 4. Configure Your Repository
+## 4. Configure Your App
 
-Create a `.github/wafir.yaml` file in your repository to configure the widget:
+Place the `wafir.yaml` config file in your app's `public` directory (e.g. `public/wafir.yaml`). This file is loaded by the Wafir widget at runtime.
+
+**Required top-level keys:**
+
+- `installationId`: The numeric GitHub App installation ID
+- `storage`: The storage configuration for issues and/or project items
+
+Example:
 
 ```yaml
-# .github/wafir.yaml
+# public/wafir.yaml
+installationId: 12345 # Your GitHub App installation ID
 mode: issue # Options: issue, feedback, both
 
 storage:
   type: issue # Options: issue, project, both
+  owner: "your-org" # (optional)
+  repo: "your-repo" # (optional)
+  projectNumber: 1 # (if type is project)
 
 feedback:
   title: "Submit Feedback"
 
-issue:
-  screenshot: true # Enable screenshot capture
-  browserInfo: true # Collect browser details
-  consoleLog: false # Capture console logs
-  labels: ["feedback"]
-
 fields:
-  - name: title
-    label: "Title"
-    type: text
-    required: true
+  - id: title
+    type: input
+    attributes:
+      label: "Title"
+      placeholder: "Short summary"
+    validations:
+      required: true
 
-  - name: description
-    label: "Description"
+  - id: description
     type: textarea
-    required: true
+    attributes:
+      label: "Description"
+      placeholder: "Describe the issue"
+    validations:
+      required: true
 
-  - name: type
-    label: "Type"
-    type: select
-    options: ["Bug", "Feature Request", "Question"]
-    required: true
+  - id: type
+    type: dropdown
+    attributes:
+      label: "Type"
+      options: ["Bug", "Feature Request", "Question"]
+    validations:
+      required: true
 ```
 
 ## Props Reference
