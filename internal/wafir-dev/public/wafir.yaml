@@ -3,13 +3,12 @@
 # Use this as a reference for the default behavior.
 
 title: "Contact Us"
-installationId: 105081464 
+installationId: 105081464
 
 storage:
   type: issue # Options: issue, project, both
-  owner: alkmei  
-  repo: alkmei.github.io
-  projectNumber: 9        # Required for project storage
+  owner: BPS-Consulting  
+  repo: wafir
 
 # Optional: Dedicated project for feedback with rating field
 # feedbackProject:
