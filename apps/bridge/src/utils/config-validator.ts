@@ -1,6 +1,109 @@
 import * as yaml from "js-yaml";
 
 /**
+ * Default configuration used when no configUrl is provided.
+ * This matches the default configuration from packages/wafir/src/default-config.ts
+ */
+const DEFAULT_CONFIG: WafirConfig = {
+  installationId: 0,
+  title: "Contact Us",
+  storage: {
+    type: "issue",
+    owner: "",
+    repo: "",
+  },
+  telemetry: {
+    screenshot: true,
+    browserInfo: true,
+    consoleLog: false,
+  },
+  tabs: [
+    {
+      id: "feedback",
+      label: "Feedback",
+      icon: "thumbsup",
+      isFeedback: true,
+      fields: [
+        {
+          id: "rating",
+          type: "rating",
+          attributes: {
+            label: "How satisfied are you with our website?",
+          },
+          validations: {
+            required: true,
+          },
+        },
+        {
+          id: "description",
+          type: "textarea",
+          attributes: {
+            label: "What is the main reason for this rating?",
+          },
+          validations: {
+            required: false,
+          },
+        },
+      ],
+    },
+    {
+      id: "suggestion",
+      label: "Suggestion",
+      icon: "lightbulb",
+      fields: [
+        {
+          id: "title",
+          type: "input",
+          attributes: {
+            label: "What is your suggestion?",
+          },
+          validations: {
+            required: true,
+          },
+        },
+        {
+          id: "description",
+          type: "textarea",
+          attributes: {
+            label: "Additional information:",
+          },
+          validations: {
+            required: false,
+          },
+        },
+      ],
+    },
+    {
+      id: "issue",
+      label: "Issue",
+      icon: "bug",
+      fields: [
+        {
+          id: "title",
+          type: "input",
+          attributes: {
+            label: "What issue did you encounter?",
+          },
+          validations: {
+            required: true,
+          },
+        },
+        {
+          id: "description",
+          type: "textarea",
+          attributes: {
+            label: "Additional information:",
+          },
+          validations: {
+            required: true,
+          },
+        },
+      ],
+    },
+  ],
+};
+
+/**
  * Represents a field configuration from the wafir config.
  */
 interface FieldConfig {
@@ -73,8 +176,14 @@ export interface ValidationResult {
 /**
  * Fetches and parses a wafir config from a URL.
  * Supports both JSON and YAML formats.
+ * If no configUrl is provided, returns the default configuration.
  */
-export async function fetchConfig(configUrl: string): Promise<WafirConfig> {
+export async function fetchConfig(configUrl?: string): Promise<WafirConfig> {
+  // If no configUrl provided, return default config
+  if (!configUrl) {
+    return DEFAULT_CONFIG;
+  }
+
   const response = await fetch(configUrl, {
     method: "GET",
     signal: AbortSignal.timeout(10000), // 10 second timeout
@@ -493,9 +602,10 @@ export function validateSameOrigin(
 
 /**
  * Full validation: fetches config and validates both config match and form fields.
+ * If no configUrl is provided, uses the default configuration merged with submitted values.
  */
 export async function validateSubmission(params: {
-  configUrl: string;
+  configUrl?: string;
   installationId: number;
   owner: string;
   repo: string;
@@ -513,18 +623,32 @@ export async function validateSubmission(params: {
     requestOrigin,
   } = params;
 
-  // Validate same-origin if requestOrigin is provided
-  if (requestOrigin) {
+  // Validate same-origin if requestOrigin is provided and configUrl exists
+  if (requestOrigin && configUrl) {
     const originResult = validateSameOrigin(configUrl, requestOrigin);
     if (!originResult.valid) {
       return originResult;
     }
   }
 
-  // Fetch authoritative config
+  // Fetch authoritative config (or use default if no configUrl)
   let config: WafirConfig;
   try {
     config = await fetchConfig(configUrl);
+
+    // If no configUrl was provided, merge the submitted values with default config
+    // This allows users to specify installationId, owner, repo directly on the widget
+    if (!configUrl) {
+      config = {
+        ...config,
+        installationId: installationId || config.installationId,
+        storage: {
+          ...config.storage,
+          owner: owner || config.storage.owner,
+          repo: repo || config.storage.repo,
+        },
+      };
+    }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return {

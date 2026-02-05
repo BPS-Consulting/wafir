@@ -14,94 +14,30 @@ First, install the Wafir GitHub App on your repository. This allows Wafir to cre
 
 Install the Wafir widget package for your framework of choice:
 
-### React
-
-```bash
-npm install wafir @wafir/react
-```
-
-Or with pnpm:
-
-```bash
-pnpm add wafir @wafir/react
-```
-
-### Vue
-
-```bash
-npm install wafir @wafir/vue
-```
-
-Or with pnpm:
-
-```bash
-pnpm add wafir @wafir/vue
-```
-
-### Vanilla JS
-
 ```bash
 npm install wafir
+```
+
+Or with pnpm:
+
+```bash
+pnpm add wafir
 ```
 
 Or use a CDN:
 
 ```html
-<script type="module" src="https://unpkg.com/wafir"></script>
+<script
+  type="module"
+  src="https://wafir-all.s3.us-east-2.amazonaws.com/wafir/latest/wafir.js"
+></script>
 ```
 
 ## 3. Add the Widget to Your App
 
 Import and add the widget component to your application:
 
-### React
-
-```jsx
-import { WafirWidget } from "@wafir/react";
-
-function App() {
-  return (
-    <div>
-      {/* Your app content */}
-
-      <WafirWidget
-        installationId={12345}
-        owner="your-username"
-        repo="your-repo"
-        position="bottom-right"
-      />
-    </div>
-  );
-}
-```
-
-### Vue
-
-```vue
-<script setup>
-import { WafirWidget } from "@wafir/vue";
-</script>
-
-<template>
-  <div>
-    <!-- Your app content -->
-
-    <WafirWidget
-      :installation-id="12345"
-      owner="your-username"
-      repo="your-repo"
-      position="bottom-right"
-    />
-  </div>
-</template>
-```
-
-### Vanilla JS
-
 ```html
-<!-- Add the script -->
-<script type="module" src="https://unpkg.com/wafir"></script>
-
 <!-- Add the widget -->
 <wafir-widget
   installationId="12345"
@@ -109,6 +45,12 @@ import { WafirWidget } from "@wafir/vue";
   repo="your-repo"
   position="bottom-right"
 ></wafir-widget>
+```
+
+Or
+
+```html
+<wafir-widget configUrl="/config.yaml" position="bottom-right"></wafir-widget>
 ```
 
 ## 4. Configure Your App
