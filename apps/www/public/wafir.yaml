@@ -3,12 +3,13 @@
 # Use this as a reference for the default behavior.
 
 title: "Contact Us"
+installationId: 105081464
 
 storage:
   type: issue # Options: issue, project, both
-  # owner: different-org    # Optional: target a different repository
-  # repo: different-repo    # Optional: target a different repository
-  projectNumber: 9        # Required for project storage
+  owner: BPS-Consulting  
+  repo: wafir
+  projectNumber: 9
 
 # Optional: Dedicated project for feedback with rating field
 # feedbackProject:
