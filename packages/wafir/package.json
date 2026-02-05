@@ -58,7 +58,10 @@
     "url": "https://github.com/BPS-Consulting/wafir/issues"
   },
   "homepage": "https://BPS-Consulting.github.io/wafir",
-  "sideEffects": false,
+  "sideEffects": [
+    "src/**/*.ts",
+    "dist/**/*.js"
+  ],
   "types": "dist/wafir-widget.d.ts",
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",

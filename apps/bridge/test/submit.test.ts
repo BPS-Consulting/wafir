@@ -463,6 +463,109 @@ tabs:
       expect(body.error).toContain("configUrl");
     });
 
+    it("rejects submission when configUrl origin does not match referer origin", async () => {
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(sampleConfigs.minimal),
+      );
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        headers: {
+          referer: "https://legitimate-site.com/app",
+        },
+        payload: {
+          configUrl: "https://attacker-site.com/malicious.yaml",
+          installationId: 123,
+          owner: "testowner",
+          repo: "testrepo",
+          title: "Test Issue",
+          formFields: {
+            title: "Test Issue",
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error).toBe("Validation Failed");
+      expect(body.details[0].code).toBe("ORIGIN_MISMATCH");
+      expect(body.details[0].message).toContain(
+        "For security, config must be hosted on the same domain",
+      );
+    });
+
+    it("accepts submission when configUrl origin matches referer origin", async () => {
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(sampleConfigs.minimal),
+      );
+
+      mockOctokit.rest.issues.create.mockResolvedValue({
+        data: {
+          number: 999,
+          html_url: "https://github.com/testowner/testrepo/issues/999",
+          node_id: "I_same_origin",
+        },
+      });
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        headers: {
+          referer: "https://example.com/app/page",
+        },
+        payload: {
+          configUrl: "https://example.com/config/wafir.yaml",
+          installationId: 123,
+          owner: "testowner",
+          repo: "testrepo",
+          title: "Test Issue",
+          formFields: {
+            title: "Test Issue",
+            message: "Valid same-origin submission",
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(201);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+    });
+
+    it("accepts submission when no referer header is present (allows testing)", async () => {
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(sampleConfigs.minimal),
+      );
+
+      mockOctokit.rest.issues.create.mockResolvedValue({
+        data: {
+          number: 998,
+          html_url: "https://github.com/testowner/testrepo/issues/998",
+          node_id: "I_no_referer",
+        },
+      });
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          installationId: 123,
+          owner: "testowner",
+          repo: "testrepo",
+          title: "Test Issue",
+          formFields: {
+            title: "Test Issue",
+            message: "No referer header",
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(201);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+    });
+
     it("rejects submission when config fetch fails", async () => {
       mockFetch.mockRejectedValue(new Error("Network error"));
 

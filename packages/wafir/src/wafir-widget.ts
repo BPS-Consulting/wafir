@@ -5,8 +5,8 @@ import widgetStyles from "./styles/wafir-widget.css?inline";
 import bugIcon from "./assets/bug.svg?raw";
 import thumbsupIcon from "./assets/thumbsup.svg?raw";
 import lightbulbIcon from "./assets/lightbulb.svg?raw";
-import "./wafir-form.js";
-import "./wafir-highlighter.js";
+import "./wafir-form";
+import "./wafir-highlighter";
 import {
   isSelecting,
   isCapturing,
@@ -153,6 +153,18 @@ export class WafirWidget extends LitElement {
     }
   }
 
+  private _resolveConfigUrl(configUrl: string): string {
+    // If the URL starts with http:// or https://, use it as-is
+    if (configUrl.startsWith("http://") || configUrl.startsWith("https://")) {
+      return configUrl;
+    }
+
+    // Otherwise, resolve relative to current origin (like anchor tags)
+    const baseUrl = window.location.origin;
+    const url = new URL(configUrl, baseUrl);
+    return url.href;
+  }
+
   private async _fetchConfig() {
     if (!this.configUrl) {
       console.warn("Wafir: No configUrl provided, using default configuration");
@@ -165,7 +177,10 @@ export class WafirWidget extends LitElement {
     this.configFetchError = null;
 
     try {
-      const response = await fetch(this.configUrl, {
+      // Resolve relative URLs to same origin
+      const resolvedUrl = this._resolveConfigUrl(this.configUrl);
+
+      const response = await fetch(resolvedUrl, {
         method: "GET",
         signal: AbortSignal.timeout(10000), // 10 second timeout
       });
@@ -180,8 +195,8 @@ export class WafirWidget extends LitElement {
       if (
         contentType.includes("yaml") ||
         contentType.includes("x-yaml") ||
-        this.configUrl.endsWith(".yaml") ||
-        this.configUrl.endsWith(".yml")
+        resolvedUrl.endsWith(".yaml") ||
+        resolvedUrl.endsWith(".yml")
       ) {
         // Parse YAML
         const yamlText = await response.text();
@@ -200,6 +215,7 @@ export class WafirWidget extends LitElement {
       ) {
         console.warn(
           "Wafir: Config missing required fields (installationId, storage.owner, storage.repo), using defaults",
+          config,
         );
         this._config = getDefaultConfig();
         this._applyConfig(this._config);
@@ -209,10 +225,10 @@ export class WafirWidget extends LitElement {
       this._config = config;
       this._applyConfig(config);
     } catch (error) {
-      console.warn(
-        "Wafir: Failed to fetch remote config, using defaults",
+      console.error("Wafir: Failed to fetch remote config, using defaults", {
         error,
-      );
+        configUrl: this.configUrl,
+      });
       this._config = getDefaultConfig();
       this._applyConfig(this._config);
     } finally {
@@ -235,6 +251,8 @@ export class WafirWidget extends LitElement {
       if (this._tabs.length > 0) {
         this._activeTabId = this._tabs[0].id;
       }
+    } else {
+      console.warn("Wafir: No tabs in config or tabs is not an array");
     }
 
     if (config.title) {
@@ -265,7 +283,8 @@ export class WafirWidget extends LitElement {
 
   private _getActiveFormConfig(): FieldConfig[] {
     const tab = this._getActiveTab();
-    return tab?.fields || [];
+    const fields = tab?.fields || [];
+    return fields;
   }
 
   private _switchTab(tabId: string) {
@@ -333,8 +352,13 @@ export class WafirWidget extends LitElement {
         if (formData[id] !== undefined) filteredFormData[id] = formData[id];
       }
 
+      // Always send the resolved absolute URL to the backend
+      const resolvedConfigUrl = this.configUrl
+        ? this._resolveConfigUrl(this.configUrl)
+        : "";
+
       await submitIssue({
-        configUrl: this.configUrl,
+        configUrl: resolvedConfigUrl,
         installationId,
         owner,
         repo,
@@ -439,18 +463,20 @@ export class WafirWidget extends LitElement {
                     </div>`
                   : html`
                       <div class="mode-tabs">
-                        ${this._tabs.map(
-                          (tab) => html`
-                            <button
-                              class="mode-tab ${this._activeTabId === tab.id
-                                ? "active"
-                                : ""}"
-                              @click="${() => this._switchTab(tab.id)}"
-                            >
-                              ${this._renderTabIcon(tab.icon)} ${tab.label}
-                            </button>
-                          `,
-                        )}
+                        ${(() => {
+                          return this._tabs.map(
+                            (tab) => html`
+                              <button
+                                class="mode-tab ${this._activeTabId === tab.id
+                                  ? "active"
+                                  : ""}"
+                                @click="${() => this._switchTab(tab.id)}"
+                              >
+                                ${this._renderTabIcon(tab.icon)} ${tab.label}
+                              </button>
+                            `,
+                          );
+                        })()}
                       </div>
                       <wafir-form
                         .fields="${this._getActiveFormConfig()}"

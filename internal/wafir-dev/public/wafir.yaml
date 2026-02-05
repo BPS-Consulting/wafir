@@ -1,0 +1,76 @@
+# WAFIR Configuration Example - Default
+# This example shows what the widget displays when no tabs are specified.
+# Use this as a reference for the default behavior.
+
+title: "Contact Us"
+installationId: 105081464 
+
+storage:
+  type: issue # Options: issue, project, both
+  owner: alkmei  
+  repo: alkmei.github.io
+  projectNumber: 9        # Required for project storage
+
+# Optional: Dedicated project for feedback with rating field
+# feedbackProject:
+#   projectNumber: 1          # Your feedback project number
+#   owner: org-name           # Project owner (defaults to repo owner)
+#   ratingField: "Rating"     # Name of the Rating field in your project
+
+telemetry:
+  screenshot: true
+  browserInfo: true
+  consoleLog: false
+
+tabs:
+  - id: feedback
+    label: Feedback
+    icon: thumbsup
+    isFeedback: true
+    fields:
+      - id: rating
+        type: rating
+        attributes:
+          label: "How satisfied are you with our website? (if you see this, then the config fetching works!)"
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: "What is the main reason for this rating?"
+        validations:
+          required: false
+
+  - id: suggestion
+    label: Suggestion
+    icon: lightbulb
+    fields:
+      - id: title
+        type: input
+        attributes:
+          label: "What is your suggestion?"
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: "Additional information:"
+        validations:
+          required: false
+
+  - id: issue
+    label: Issue
+    icon: bug
+    fields:
+      - id: title
+        type: input
+        attributes:
+          label: "What issue did you encounter?"
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: "Additional information:"
+        validations:
+          required: true

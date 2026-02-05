@@ -543,6 +543,22 @@ const submitRoute: FastifyPluginAsync = async (
         // Parse Input
         const input = await parseSubmitRequest(request);
 
+        // Extract request origin for same-origin validation
+        const referer = request.headers.referer || request.headers.origin;
+        let requestOrigin: string | undefined;
+
+        if (referer) {
+          try {
+            const refererUrl = new URL(referer);
+            requestOrigin = refererUrl.origin;
+          } catch (e) {
+            request.log.warn(
+              { referer },
+              "Failed to parse referer for origin validation",
+            );
+          }
+        }
+
         // ============================================
         // SECURITY: Validate submission against authoritative config
         // ============================================
@@ -553,6 +569,7 @@ const submitRoute: FastifyPluginAsync = async (
           repo: input.repo,
           formFields: input.formFields || {},
           tabId: input.tabId,
+          requestOrigin,
         });
 
         if (!validationResult.valid) {

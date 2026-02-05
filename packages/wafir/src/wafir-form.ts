@@ -1,7 +1,7 @@
 // Copyright (c) BPS-Consulting. Licensed under the AGPLv3 License.
 import { LitElement, html, unsafeCSS } from "lit";
 import formStyles from "./styles/wafir-form.css?inline";
-import "./star-rating.js";
+import "./star-rating";
 import { customElement, property } from "lit/decorators.js";
 import { StoreController } from "@nanostores/lit";
 import {
@@ -244,7 +244,7 @@ export class WafirForm extends LitElement {
       default:
         return html`
           <input
-            type="${field.type}"
+            type="${field.type === "input" ? "text" : field.type}"
             id="${String(field.id)}"
             .value="${value}"
             placeholder="${field.attributes!.placeholder || ""}"
