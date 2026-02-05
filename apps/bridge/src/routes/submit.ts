@@ -4,8 +4,8 @@ import { v4 as uuidv4 } from "uuid";
 import { validateSubmission, WafirConfig } from "../utils/config-validator.js";
 
 interface SubmitBody {
-  // Required: URL to the authoritative config file
-  configUrl: string;
+  // Optional: URL to the authoritative config file. If not provided, uses default config.
+  configUrl?: string;
   // These are submitted by client but validated against fetched config
   installationId: number;
   owner: string;
@@ -287,13 +287,13 @@ async function parseSubmitRequest(
     Object.assign(result, request.body as SubmitBody);
   }
 
-  // Validation: configUrl is now required
+  // Validation: If configUrl is null or not provided, require installationId, owner, and repo
   if (!result.configUrl) {
-    throw new Error("Missing required field: configUrl");
-  }
-
-  if (!result.installationId || !result.owner || !result.repo) {
-    throw new Error("Missing required fields (installationId, owner, or repo)");
+    if (!result.installationId || !result.owner || !result.repo) {
+      throw new Error(
+        "Missing required fields (installationId, owner, or repo)",
+      );
+    }
   }
 
   // Get title from formFields if not provided directly

@@ -8,8 +8,14 @@ export type WafirPosition =
   | "top-left";
 
 export interface WafirWidgetProps {
-  /** URL to the wafir configuration file (JSON or YAML) */
-  configUrl: string;
+  /** URL to the wafir configuration file (JSON or YAML). Optional if installationId, owner, and repo are provided. */
+  configUrl?: string;
+  /** GitHub App installation ID (required if configUrl not provided) */
+  installationId?: number;
+  /** Repository owner (required if configUrl not provided) */
+  owner?: string;
+  /** Repository name (required if configUrl not provided) */
+  repo?: string;
   /** Custom bridge server URL (for self-hosted bridge) */
   bridgeUrl?: string;
   /** Widget button position */
@@ -26,6 +32,9 @@ export interface WafirWidgetProps {
 
 interface WafirWidgetElement extends HTMLElement {
   configUrl?: string;
+  installationId?: number;
+  owner?: string;
+  repo?: string;
   bridgeUrl?: string;
   position?: string;
   modalTitle?: string;
@@ -39,6 +48,9 @@ interface WafirWidgetElement extends HTMLElement {
  */
 export function WafirWidget({
   configUrl,
+  installationId,
+  owner,
+  repo,
   bridgeUrl,
   position = "bottom-right",
   modalTitle,
@@ -50,14 +62,28 @@ export function WafirWidget({
 
   useEffect(() => {
     if (ref.current) {
-      ref.current.configUrl = configUrl;
+      if (configUrl) ref.current.configUrl = configUrl;
+      if (installationId !== undefined)
+        ref.current.installationId = installationId;
+      if (owner) ref.current.owner = owner;
+      if (repo) ref.current.repo = repo;
       if (bridgeUrl) ref.current.bridgeUrl = bridgeUrl;
       if (position) ref.current.position = position;
       if (modalTitle) ref.current.modalTitle = modalTitle;
       if (tooltipText) ref.current.tooltipText = tooltipText;
       if (buttonText) ref.current.buttonText = buttonText;
     }
-  }, [configUrl, bridgeUrl, position, modalTitle, tooltipText, buttonText]);
+  }, [
+    configUrl,
+    installationId,
+    owner,
+    repo,
+    bridgeUrl,
+    position,
+    modalTitle,
+    tooltipText,
+    buttonText,
+  ]);
 
   return React.createElement(
     "wafir-widget",

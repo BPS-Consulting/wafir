@@ -119,32 +119,6 @@ wafir-widget::part(button):hover {
 
 Replace the default floating button with your own custom trigger element using the `trigger` slot.
 
-### React Example
-
-```jsx
-import { WafirWidget } from "@wafir/react";
-
-function App() {
-  return (
-    <WafirWidget installationId={12345} owner="your-org" repo="your-repo">
-      {/* Your custom trigger */}
-      <button className="my-custom-button">Report an Issue</button>
-    </WafirWidget>
-  );
-}
-```
-
-### Vue Example
-
-```vue
-<template>
-  <WafirWidget :installation-id="12345" owner="your-org" repo="your-repo">
-    <!-- Your custom trigger -->
-    <button class="my-custom-button">Report an Issue</button>
-  </WafirWidget>
-</template>
-```
-
 ### Vanilla HTML Example
 
 ```html

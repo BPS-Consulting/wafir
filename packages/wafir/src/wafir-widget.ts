@@ -168,7 +168,19 @@ export class WafirWidget extends LitElement {
   private async _fetchConfig() {
     if (!this.configUrl) {
       console.warn("Wafir: No configUrl provided, using default configuration");
-      this._config = getDefaultConfig();
+      const defaultConfig = getDefaultConfig();
+
+      // Merge direct widget properties with default config
+      this._config = {
+        ...defaultConfig,
+        installationId: this.installationId ?? defaultConfig.installationId,
+        storage: {
+          ...defaultConfig.storage,
+          owner: this.owner || defaultConfig.storage.owner,
+          repo: this.repo || defaultConfig.storage.repo,
+        },
+      };
+
       this._applyConfig(this._config);
       return;
     }
@@ -296,6 +308,15 @@ export class WafirWidget extends LitElement {
 
   @property({ type: String })
   bridgeUrl = "";
+
+  @property({ type: Number })
+  installationId?: number;
+
+  @property({ type: String })
+  owner = "";
+
+  @property({ type: String })
+  repo = "";
 
   @state()
   private _config: WafirConfig | null = null;
