@@ -134,6 +134,7 @@ Replace the default floating button with your own custom trigger element using t
 ## Form Configuration
 
 Configure the feedback form fields by placing a `wafir.yaml` file in your app's `public` folder (e.g. `public/wafir.yaml`).
+Make sure that it is publically accessible.
 
 **With the new schema, each field is defined using `id`, `type`, `attributes`, and `validations` subkeys.**
 

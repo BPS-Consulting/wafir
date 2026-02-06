@@ -122,28 +122,6 @@ fields:
 
 If you're self-hosting the Wafir bridge server, you can configure the widget to use your custom bridge URL:
 
-### React
-
-```jsx
-<WafirWidget
-  installationId={12345}
-  owner="your-username"
-  repo="your-repo"
-  bridgeUrl="https://your-bridge.example.com"
-/>
-```
-
-### Vue
-
-```vue
-<WafirWidget
-  :installation-id="12345"
-  owner="your-username"
-  repo="your-repo"
-  bridge-url="https://your-bridge.example.com"
-/>
-```
-
 ### Vanilla JS
 
 ```html
