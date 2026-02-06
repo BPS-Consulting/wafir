@@ -3,7 +3,10 @@ import { FastifyPluginAsync } from "fastify";
 import { S3Client } from "@aws-sdk/client-s3";
 import { validateSubmission } from "../../shared/utils/config-validator.js";
 import { SubmitService } from "./service.js";
-import { GitHubProjectService } from "./github-project-service.js";
+import {
+  GithubIssueSubmission,
+  GithubSubmissionContext,
+} from "./github-issue-submission.js";
 import { RequestParserService } from "./request-parser.js";
 
 const submitRoute: FastifyPluginAsync = async (
@@ -14,7 +17,7 @@ const submitRoute: FastifyPluginAsync = async (
   const bucketName = process.env.S3_BUCKET_NAME;
 
   const submitService = new SubmitService();
-  const projectService = new GitHubProjectService();
+  const githubSubmission = new GithubIssueSubmission();
   const parserService = new RequestParserService();
 
   fastify.post(
@@ -51,7 +54,6 @@ const submitRoute: FastifyPluginAsync = async (
         // Validate submission against authoritative config
         const validationResult = await validateSubmission({
           configUrl: input.configUrl,
-          installationId: input.installationId,
           targetType: input.targetType,
           target: input.target,
           authRef: input.authRef,
@@ -192,127 +194,39 @@ const submitRoute: FastifyPluginAsync = async (
           }
         }
 
-        // Determine submission targets
-        const isFeedback = input.submissionType === "feedback";
+        // Use the GithubIssueSubmission class to handle submission
+        const submissionResult = await githubSubmission.submit({
+          title,
+          body: finalBody,
+          labels,
+          rating: input.rating,
+          submissionType: input.submissionType,
+          log: request.log,
+          owner,
+          repo,
+          appOctokit,
+          userOctokit,
+          projectOwner,
+          projectNumber,
+          storageType,
+          feedbackProjectNumber,
+          feedbackProjectOwner,
+          ratingFieldName,
+        } as GithubSubmissionContext);
 
-        let issueData: {
-          number?: number;
-          url?: string;
-          nodeId?: string;
-        } = {};
-        let projectResult: { added: boolean; error?: string; itemId?: string } =
-          {
-            added: false,
-          };
-
-        // Create GitHub Issue (for non-feedback or when no project is configured)
-        const shouldCreateIssue =
-          !isFeedback && (storageType === "issue" || storageType === "both");
-
-        if (shouldCreateIssue) {
-          const issue = await appOctokit.rest.issues.create({
-            owner,
-            repo,
-            title,
-            body: finalBody,
-            labels: labels || ["wafir-feedback"],
+        if (!submissionResult.success) {
+          return reply.code(500).send({
+            error: "Submission Failed",
+            message: submissionResult.error,
           });
-          issueData = {
-            number: issue.data.number,
-            url: issue.data.html_url,
-            nodeId: issue.data.node_id,
-          };
-          request.log.info({ issueNumber: issueData.number }, "Issue created");
-        }
-
-        // Add to project (if configured)
-        const shouldAddToProject =
-          projectNumber !== undefined &&
-          !isFeedback &&
-          (storageType === "project" || storageType === "both");
-
-        if (shouldAddToProject && projectNumber !== undefined) {
-          const targetNodeId =
-            storageType === "both" ? issueData.nodeId : undefined;
-
-          projectResult = await projectService.addToProject({
-            appOctokit,
-            userOctokit,
-            projectOwner,
-            projectNumber,
-            title,
-            body: finalBody,
-            issueNodeId: targetNodeId,
-            log: request.log,
-          });
-        }
-
-        // Handle feedback submissions (project draft with rating)
-        if (isFeedback && feedbackProjectNumber) {
-          const { nodeId: feedbackProjId, shouldUseUserToken } =
-            await projectService.findProjectNodeId(
-              appOctokit,
-              userOctokit,
-              feedbackProjectOwner,
-              feedbackProjectNumber,
-              request.log,
-            );
-
-          if (feedbackProjId) {
-            projectResult = await projectService.addToProject({
-              appOctokit,
-              userOctokit,
-              projectOwner: feedbackProjectOwner,
-              projectNumber: feedbackProjectNumber,
-              title,
-              body: finalBody,
-              log: request.log,
-            });
-
-            // Set rating field if provided
-            if (projectResult.added && projectResult.itemId && input.rating) {
-              const client =
-                shouldUseUserToken && userOctokit ? userOctokit : appOctokit;
-              await projectService.setProjectRatingField({
-                octokit: client,
-                projectId: feedbackProjId,
-                itemId: projectResult.itemId,
-                ratingFieldName,
-                rating: input.rating,
-                log: request.log,
-              });
-            }
-          } else {
-            projectResult.error = "Could not find feedback project";
-          }
-        }
-
-        // Fallback: create issue for feedback if no project configured
-        if (isFeedback && !feedbackProjectNumber) {
-          const issue = await appOctokit.rest.issues.create({
-            owner,
-            repo,
-            title,
-            body: finalBody,
-            labels: labels || ["feedback"],
-          });
-          issueData = {
-            number: issue.data.number,
-            url: issue.data.html_url,
-            nodeId: issue.data.node_id,
-          };
-          request.log.info(
-            { issueNumber: issueData.number },
-            "Feedback issue created (no project configured)",
-          );
         }
 
         return reply.code(201).send({
           success: true,
-          issueUrl: issueData.url,
-          issueNumber: issueData.number,
-          projectAdded: projectResult.added,
-          warning: projectResult.error,
+          issueUrl: submissionResult.url,
+          issueNumber: submissionResult.number,
+          projectAdded: submissionResult.projectAdded || false,
+          warning: submissionResult.warning,
         });
       } catch (error: unknown) {
         const message =

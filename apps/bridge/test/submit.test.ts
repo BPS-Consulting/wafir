@@ -158,9 +158,8 @@ describe("POST /submit", () => {
 
       // Verify issue was created with correct parameters
       expect(mockOctokit.rest.issues.create).toHaveBeenCalledWith({
-        targetType: "github/issues",
-        target: "testowner/testrepo",
-        authRef: "123",
+        owner: "testowner",
+        repo: "testrepo",
         title: "Test Issue",
         body: expect.stringContaining("Message"),
         labels: ["wafir-feedback"],
@@ -652,7 +651,7 @@ tabs:
       expect(body.details[0].code).toBe("CONFIG_FETCH_FAILED");
     });
 
-    it("rejects submission when installationId does not match config", async () => {
+    it("rejects submission when target does not match config", async () => {
       mockFetch.mockResolvedValue(
         createMockConfigResponse(sampleConfigs.minimal),
       );
@@ -662,8 +661,61 @@ tabs:
         url: "/submit",
         payload: {
           configUrl: TEST_CONFIG_URL,
-          installationId: 999, // Does not match config (123)
           targetType: "github/issues",
+          target: "wrongowner/wrongrepo", // Does not match config (testowner/testrepo)
+          authRef: "123",
+          title: "Test Issue",
+          tabId: "issue",
+          formFields: {
+            title: "Test Issue",
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error).toBe("Validation Failed");
+      expect(body.details[0].code).toBe("TARGET_MISMATCH");
+    });
+
+    it("rejects submission when authRef does not match config", async () => {
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(sampleConfigs.minimal),
+      );
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          targetType: "github/issues",
+          target: "testowner/testrepo",
+          authRef: "999", // Does not match config (123)
+          title: "Test Issue",
+          tabId: "issue",
+          formFields: {
+            title: "Test Issue",
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error).toBe("Validation Failed");
+      expect(body.details[0].code).toBe("TARGET_MISMATCH");
+    });
+
+    it("rejects submission when targetType does not match config", async () => {
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(sampleConfigs.minimal),
+      );
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          targetType: "github/project", // Does not match config (github/issues)
           target: "testowner/testrepo",
           authRef: "123",
           title: "Test Issue",
@@ -677,61 +729,7 @@ tabs:
       expect(response.statusCode).toBe(400);
       const body = JSON.parse(response.body);
       expect(body.error).toBe("Validation Failed");
-      expect(body.details[0].code).toBe("INSTALLATION_ID_MISMATCH");
-    });
-
-    it("rejects submission when owner does not match config", async () => {
-      mockFetch.mockResolvedValue(
-        createMockConfigResponse(sampleConfigs.minimal),
-      );
-
-      const response = await app.inject({
-        method: "POST",
-        url: "/submit",
-        payload: {
-          configUrl: TEST_CONFIG_URL,
-          installationId: 123,
-          owner: "malicious-owner", // Does not match config (testowner)
-          title: "Test Issue",
-          tabId: "issue",
-          formFields: {
-            title: "Test Issue",
-          },
-        },
-      });
-
-      expect(response.statusCode).toBe(400);
-      const body = JSON.parse(response.body);
-      expect(body.error).toBe("Validation Failed");
-      expect(body.details[0].code).toBe("OWNER_MISMATCH");
-    });
-
-    it("rejects submission when repo does not match config", async () => {
-      mockFetch.mockResolvedValue(
-        createMockConfigResponse(sampleConfigs.minimal),
-      );
-
-      const response = await app.inject({
-        method: "POST",
-        url: "/submit",
-        payload: {
-          configUrl: TEST_CONFIG_URL,
-          installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
-          repo: "malicious-repo", // Does not match config (testrepo)
-          title: "Test Issue",
-          formFields: {
-            title: "Test Issue",
-          },
-        },
-      });
-
-      expect(response.statusCode).toBe(400);
-      const body = JSON.parse(response.body);
-      expect(body.error).toBe("Validation Failed");
-      expect(body.details[0].code).toBe("REPO_MISMATCH");
+      expect(body.details[0].code).toBe("TARGET_MISMATCH");
     });
 
     it("uses values from config, not from client submission, for GitHub API", async () => {
@@ -1250,9 +1248,27 @@ tabs:
 
   describe("project-based submission", () => {
     it("adds draft issue to project when target type is github/project", async () => {
-      // Config with project storage
+      // Config with ONLY project storage
       mockFetch.mockResolvedValue(
-        createMockConfigResponse(sampleConfigs.withProject),
+        createMockConfigResponse(`
+installationId: 123
+targets:
+  - id: github-project
+    type: github/project
+    target: testowner/1
+    authRef: "123"
+tabs:
+  - id: issue
+    fields:
+      - id: title
+        type: input
+        validations:
+          required: true
+      - id: message
+        type: textarea
+        validations:
+          required: true
+`),
       );
 
       // Mock finding the project
@@ -1272,9 +1288,8 @@ tabs:
         url: "/submit",
         payload: {
           configUrl: TEST_CONFIG_URL,
-          installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
+          targetType: "github/project",
+          target: "testowner/1",
           authRef: "123",
           title: "Project Draft Issue",
           tabId: "issue",
@@ -1295,9 +1310,27 @@ tabs:
     });
 
     it("returns warning when project cannot be found", async () => {
-      // Config with project storage
+      // Config with ONLY project storage
       mockFetch.mockResolvedValue(
-        createMockConfigResponse(sampleConfigs.withProject),
+        createMockConfigResponse(`
+installationId: 123
+targets:
+  - id: github-project
+    type: github/project
+    target: testowner/1
+    authRef: "123"
+tabs:
+  - id: issue
+    fields:
+      - id: title
+        type: input
+        validations:
+          required: true
+      - id: message
+        type: textarea
+        validations:
+          required: true
+`),
       );
 
       // Mock project not found for both org and user
@@ -1308,9 +1341,8 @@ tabs:
         url: "/submit",
         payload: {
           configUrl: TEST_CONFIG_URL,
-          installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
+          targetType: "github/project",
+          target: "testowner/1",
           authRef: "123",
           title: "Project Issue",
           tabId: "issue",
@@ -1584,15 +1616,11 @@ tabs:
 
   describe("user token for projects", () => {
     it("uses user token for user projects when available", async () => {
-      // Config with project storage
+      // Config with ONLY project storage (user project)
       mockFetch.mockResolvedValue(
         createMockConfigResponse(`
 installationId: 123
 targets:
-  - id: github-issues
-    type: github/issues
-    target: testuser/testrepo
-    authRef: "123"
   - id: github-project
     type: github/project
     target: testuser/1
@@ -1634,8 +1662,9 @@ tabs:
         url: "/submit",
         payload: {
           configUrl: TEST_CONFIG_URL,
-          installationId: 123,
-          owner: "testuser",
+          targetType: "github/project",
+          target: "testuser/1",
+          authRef: "123",
           title: "User Project Issue",
           tabId: "issue",
           formFields: {
