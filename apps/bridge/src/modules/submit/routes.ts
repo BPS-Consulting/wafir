@@ -52,8 +52,9 @@ const submitRoute: FastifyPluginAsync = async (
         const validationResult = await validateSubmission({
           configUrl: input.configUrl,
           installationId: input.installationId,
-          owner: input.owner,
-          repo: input.repo,
+          targetType: input.targetType,
+          target: input.target,
+          authRef: input.authRef,
           formFields: input.formFields || {},
           tabId: input.tabId,
           requestOrigin,
@@ -73,11 +74,67 @@ const submitRoute: FastifyPluginAsync = async (
         // Use ONLY values from the validated config, not from client submission
         const config = validationResult.config!;
         const installationId = config.installationId;
-        const owner = config.storage.owner;
-        const repo = config.storage.repo;
-        const storageType = config.storage.type || "issue";
-        const projectNumber = config.storage.projectNumber;
-        const projectOwner = config.storage.projectOwner || owner;
+
+        // Determine which targets to use for this submission
+        // 1. If a tab is specified and it has targets, use those
+        // 2. Otherwise, use all targets from config
+        const tab = config.tabs?.find((t) => t.id === input.tabId);
+        const targetIds =
+          tab?.targets && tab.targets.length > 0
+            ? tab.targets
+            : config.targets.map((t) => t.id);
+
+        // Get the actual target configurations
+        const submissionTargets = config.targets.filter((t) =>
+          targetIds.includes(t.id),
+        );
+
+        if (submissionTargets.length === 0) {
+          return reply.code(400).send({
+            error: "No valid targets configured for this submission",
+          });
+        }
+
+        // For backward compatibility, extract owner/repo from the first github/issues or github/project target
+        const githubTarget = submissionTargets.find(
+          (t) => t.type === "github/issues" || t.type === "github/project",
+        );
+
+        if (!githubTarget) {
+          return reply.code(400).send({
+            error: "No GitHub target configured",
+          });
+        }
+
+        // Parse owner/repo from target string (format: "owner/repo" or "owner/projectNum")
+        const [owner, repoOrProject] = githubTarget.target.split("/");
+        const repo = repoOrProject; // For now, assume it's a repo; we'll check type below
+
+        // Determine submission behavior based on target types
+        const hasIssueTarget = submissionTargets.some(
+          (t) => t.type === "github/issues",
+        );
+        const hasProjectTarget = submissionTargets.some(
+          (t) => t.type === "github/project",
+        );
+        const storageType =
+          hasIssueTarget && hasProjectTarget
+            ? "both"
+            : hasIssueTarget
+              ? "issue"
+              : "project";
+
+        // Extract project number if there's a project target
+        let projectNumber: number | undefined;
+        let projectOwner = owner;
+        const projectTarget = submissionTargets.find(
+          (t) => t.type === "github/project",
+        );
+        if (projectTarget) {
+          const [projOwner, projNum] = projectTarget.target.split("/");
+          projectOwner = projOwner;
+          projectNumber = parseInt(projNum, 10);
+        }
 
         // Feedback project settings from config
         const feedbackProjectNumber =
@@ -168,11 +225,11 @@ const submitRoute: FastifyPluginAsync = async (
 
         // Add to project (if configured)
         const shouldAddToProject =
-          projectNumber &&
+          projectNumber !== undefined &&
           !isFeedback &&
           (storageType === "project" || storageType === "both");
 
-        if (shouldAddToProject) {
+        if (shouldAddToProject && projectNumber !== undefined) {
           const targetNodeId =
             storageType === "both" ? issueData.nodeId : undefined;
 

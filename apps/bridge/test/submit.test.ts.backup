@@ -43,7 +43,7 @@ vi.mock("@aws-sdk/client-s3", () => {
 });
 
 // Import the submit route after mocking
-import submitRoute from "../src/modules/submit/routes.js";
+import submitRoute from "../src/domains/submit/routes.js";
 
 // Sample config URL for tests
 const TEST_CONFIG_URL = "https://example.com/wafir.yaml";
@@ -104,7 +104,7 @@ describe("POST /submit", () => {
     await app.register(import("@fastify/multipart"));
 
     // Register the submit route
-    await app.register(submitRoute, { prefix: "/submit" });
+    await app.register(submitRoute);
     await app.ready();
 
     // Default mock for config fetch - returns minimal config
@@ -136,9 +136,8 @@ describe("POST /submit", () => {
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Test Issue",
           tabId: "issue",
           formFields: {
@@ -158,9 +157,8 @@ describe("POST /submit", () => {
 
       // Verify issue was created with correct parameters
       expect(mockOctokit.rest.issues.create).toHaveBeenCalledWith({
-        targetType: "github/issues",
-        target: "testowner/testrepo",
-        authRef: "123",
+        owner: "testowner",
+        repo: "testrepo",
         title: "Test Issue",
         body: expect.stringContaining("Message"),
         labels: ["wafir-feedback"],
@@ -188,9 +186,8 @@ describe("POST /submit", () => {
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Bug Report",
           tabId: "issue",
           labels: ["bug", "priority-high"],
@@ -214,11 +211,9 @@ describe("POST /submit", () => {
       mockFetch.mockResolvedValue(
         createMockConfigResponse(`
 installationId: 123
-targets:
-  - id: default
-    type: github/issues
-    target: testowner/testrepo
-    authRef: "123"
+storage:
+  owner: testowner
+  repo: testrepo
 tabs:
   - id: issue
     fields:
@@ -247,9 +242,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Ordered Fields Test",
           tabId: "issue",
           formFields: {
@@ -281,11 +275,9 @@ tabs:
       mockFetch.mockResolvedValue(
         createMockConfigResponse(`
 installationId: 123
-targets:
-  - id: default
-    type: github/issues
-    target: testowner/testrepo
-    authRef: "123"
+storage:
+  owner: testowner
+  repo: testrepo
 tabs:
   - id: feedback
     isFeedback: true
@@ -313,9 +305,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Feedback with Rating",
           submissionType: "feedback",
           tabId: "feedback",
@@ -348,9 +339,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Issue with Browser Info",
           tabId: "issue",
           formFields: {
@@ -392,9 +382,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Issue with Console Logs",
           tabId: "issue",
           formFields: {
@@ -439,9 +428,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           tabId: "issue",
           formFields: {
             title: "Title from Form Fields",
@@ -471,9 +459,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Test Issue",
           tabId: "issue",
           formFields: {
@@ -505,9 +492,8 @@ tabs:
         payload: {
           configUrl: "https://attacker-site.com/malicious.yaml",
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Test Issue",
           tabId: "issue",
           formFields: {
@@ -547,9 +533,8 @@ tabs:
         payload: {
           configUrl: "https://example.com/config/wafir.yaml",
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Test Issue",
           tabId: "issue",
           formFields: {
@@ -583,9 +568,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Test Issue",
           tabId: "issue",
           formFields: {
@@ -609,9 +593,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Test Issue",
           tabId: "issue",
           formFields: {
@@ -635,9 +618,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Test Issue",
           tabId: "issue",
           formFields: {
@@ -663,9 +645,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 999, // Does not match config (123)
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Test Issue",
           tabId: "issue",
           formFields: {
@@ -692,6 +673,7 @@ tabs:
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
           owner: "malicious-owner", // Does not match config (testowner)
+          repo: "testrepo",
           title: "Test Issue",
           tabId: "issue",
           formFields: {
@@ -717,9 +699,7 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
           repo: "malicious-repo", // Does not match config (testrepo)
           title: "Test Issue",
           formFields: {
@@ -739,11 +719,9 @@ tabs:
       mockFetch.mockResolvedValue(
         createMockConfigResponse(`
 installationId: 123
-targets:
-  - id: default
-    type: github/issues
-    target: real-owner/real-repo
-    authRef: "456"
+storage:
+  owner: real-owner
+  repo: real-repo
 tabs:
   - id: issue
     fields:
@@ -801,11 +779,9 @@ tabs:
       mockFetch.mockResolvedValue(
         createMockConfigResponse(`
 installationId: 123
-targets:
-  - id: default
-    type: github/issues
-    target: testowner/testrepo
-    authRef: "123"
+storage:
+  owner: testowner
+  repo: testrepo
 tabs:
   - id: feedback
     fields:
@@ -822,9 +798,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Test Issue",
           tabId: "feedback",
           formFields: {
@@ -847,11 +822,9 @@ tabs:
       mockFetch.mockResolvedValue(
         createMockConfigResponse(`
 installationId: 123
-targets:
-  - id: default
-    type: github/issues
-    target: testowner/testrepo
-    authRef: "123"
+storage:
+  owner: testowner
+  repo: testrepo
 tabs:
   - id: feedback
     fields:
@@ -872,9 +845,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Test Issue",
           tabId: "feedback",
           formFields: {
@@ -899,11 +871,9 @@ tabs:
       mockFetch.mockResolvedValue(
         createMockConfigResponse(`
 installationId: 123
-targets:
-  - id: default
-    type: github/issues
-    target: testowner/testrepo
-    authRef: "123"
+storage:
+  owner: testowner
+  repo: testrepo
 tabs:
   - id: feedback
     fields:
@@ -922,9 +892,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Test Issue",
           tabId: "feedback",
           formFields: {
@@ -946,11 +915,9 @@ tabs:
       mockFetch.mockResolvedValue(
         createMockConfigResponse(`
 installationId: 123
-targets:
-  - id: default
-    type: github/issues
-    target: testowner/testrepo
-    authRef: "123"
+storage:
+  owner: testowner
+  repo: testrepo
 tabs:
   - id: feedback
     fields:
@@ -969,9 +936,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Test Issue",
           tabId: "feedback",
           formFields: {
@@ -993,11 +959,9 @@ tabs:
       mockFetch.mockResolvedValue(
         createMockConfigResponse(`
 installationId: 123
-targets:
-  - id: default
-    type: github/issues
-    target: testowner/testrepo
-    authRef: "123"
+storage:
+  owner: testowner
+  repo: testrepo
 tabs:
   - id: feedback
     fields:
@@ -1021,9 +985,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Test Issue",
           tabId: "feedback",
           formFields: {
@@ -1045,11 +1008,9 @@ tabs:
       mockFetch.mockResolvedValue(
         createMockConfigResponse(`
 installationId: 123
-targets:
-  - id: default
-    type: github/issues
-    target: testowner/testrepo
-    authRef: "123"
+storage:
+  owner: testowner
+  repo: testrepo
 tabs:
   - id: feedback
     fields:
@@ -1084,9 +1045,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Test Issue",
           tabId: "feedback",
           formFields: {
@@ -1249,7 +1209,7 @@ tabs:
   });
 
   describe("project-based submission", () => {
-    it("adds draft issue to project when target type is github/project", async () => {
+    it("adds draft issue to project when storage type is project", async () => {
       // Config with project storage
       mockFetch.mockResolvedValue(
         createMockConfigResponse(sampleConfigs.withProject),
@@ -1273,9 +1233,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Project Draft Issue",
           tabId: "issue",
           formFields: {
@@ -1309,9 +1268,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Project Issue",
           tabId: "issue",
           formFields: {
@@ -1387,9 +1345,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "User Feedback",
           rating: 4,
           submissionType: "feedback",
@@ -1428,9 +1385,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Feedback without Project",
           submissionType: "feedback",
           tabId: "issue",
@@ -1463,9 +1419,7 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
           // Missing repo and title
         },
       });
@@ -1482,9 +1436,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           tabId: "issue",
           formFields: {
             message: "No title provided",
@@ -1508,9 +1461,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "This will fail",
           tabId: "issue",
           formFields: {
@@ -1527,9 +1479,9 @@ tabs:
     });
   });
 
-  describe("multiple targets (issue + project)", () => {
-    it("creates issue and adds to project when targets include both github/issues and github/project", async () => {
-      // Config with both target types
+  describe("both storage type (issue + project)", () => {
+    it("creates issue and adds to project when storage type is both", async () => {
+      // Config with "both" storage type
       mockFetch.mockResolvedValue(createMockConfigResponse(sampleConfigs.full));
 
       mockOctokit.rest.issues.create.mockResolvedValue({
@@ -1558,9 +1510,8 @@ tabs:
         payload: {
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
+          owner: "testowner",
+          repo: "testrepo",
           title: "Issue for Both",
           tabId: "issue",
           formFields: {
@@ -1588,15 +1539,11 @@ tabs:
       mockFetch.mockResolvedValue(
         createMockConfigResponse(`
 installationId: 123
-targets:
-  - id: github-issues
-    type: github/issues
-    target: testuser/testrepo
-    authRef: "123"
-  - id: github-project
-    type: github/project
-    target: testuser/1
-    authRef: "123"
+storage:
+  type: project
+  owner: testuser
+  repo: testrepo
+  projectNumber: 1
 tabs:
   - id: issue
     fields:
@@ -1636,6 +1583,7 @@ tabs:
           configUrl: TEST_CONFIG_URL,
           installationId: 123,
           owner: "testuser",
+          repo: "testrepo",
           title: "User Project Issue",
           tabId: "issue",
           formFields: {

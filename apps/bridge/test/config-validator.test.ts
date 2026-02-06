@@ -113,10 +113,14 @@ describe("validateSameOrigin", () => {
 describe("validateFormFields", () => {
   const minimalConfig: WafirConfig = {
     installationId: 123,
-    storage: {
-      owner: "testowner",
-      repo: "testrepo",
-    },
+    targets: [
+      {
+        id: "default",
+        type: "github/issues",
+        target: "testowner/testrepo",
+        authRef: "123",
+      },
+    ],
   };
 
   it("accepts valid form fields matching config", () => {

@@ -6,11 +6,11 @@ installationId: 12345678
 
 title: "Report a Bug"
 
-storage:
-  type: issue
-  # Required: Target repository for issues
-  owner: your-username
-  repo: your-repo
+targets:
+  - id: default
+    type: github/issues
+    target: your-username/your-repo
+    authRef: "YOUR_INSTALLATION_ID"  # Replace with your installation ID
 
 # Widget tabs - only showing issue tab for basic bug reporting
 tabs:

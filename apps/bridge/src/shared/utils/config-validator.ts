@@ -7,11 +7,14 @@ import * as yaml from "js-yaml";
 const DEFAULT_CONFIG: WafirConfig = {
   installationId: 0,
   title: "Contact Us",
-  storage: {
-    type: "issue",
-    owner: "",
-    repo: "",
-  },
+  targets: [
+    {
+      id: "default",
+      type: "github/issues",
+      target: "",
+      authRef: "",
+    },
+  ],
   telemetry: {
     screenshot: true,
     browserInfo: true,
@@ -127,6 +130,17 @@ interface TabConfig {
   icon?: string;
   isFeedback?: boolean;
   fields?: FieldConfig[];
+  targets?: string[];
+}
+
+/**
+ * Represents a target destination for form submissions.
+ */
+export interface TargetConfig {
+  id: string;
+  type: "github/issues" | "github/project";
+  target: string;
+  authRef: string;
 }
 
 /**
@@ -135,13 +149,7 @@ interface TabConfig {
 export interface WafirConfig {
   installationId: number;
   title?: string;
-  storage: {
-    type?: "issue" | "project" | "both";
-    owner: string;
-    repo: string;
-    projectNumber?: number;
-    projectOwner?: string;
-  };
+  targets: TargetConfig[];
   telemetry?: {
     screenshot?: boolean;
     browserInfo?: boolean;
@@ -226,52 +234,110 @@ export async function fetchConfig(configUrl?: string): Promise<WafirConfig> {
     throw new Error("Invalid config: installationId must be a number");
   }
 
-  if (!cfg.storage || typeof cfg.storage !== "object") {
-    throw new Error("Invalid config: storage section is required");
+  if (!cfg.targets || !Array.isArray(cfg.targets) || cfg.targets.length === 0) {
+    throw new Error(
+      "Invalid config: targets must be a non-empty array of target configurations",
+    );
   }
 
-  const storage = cfg.storage as Record<string, unknown>;
-  if (typeof storage.owner !== "string" || typeof storage.repo !== "string") {
-    throw new Error(
-      "Invalid config: storage.owner and storage.repo are required strings",
-    );
+  // Validate each target
+  const targets = cfg.targets as unknown[];
+  for (let i = 0; i < targets.length; i++) {
+    const target = targets[i];
+    if (!target || typeof target !== "object") {
+      throw new Error(`Invalid config: targets[${i}] must be an object`);
+    }
+
+    const t = target as Record<string, unknown>;
+    if (typeof t.id !== "string" || t.id.trim() === "") {
+      throw new Error(
+        `Invalid config: targets[${i}].id must be a non-empty string`,
+      );
+    }
+    if (
+      typeof t.type !== "string" ||
+      !["github/issues", "github/project"].includes(t.type)
+    ) {
+      throw new Error(
+        `Invalid config: targets[${i}].type must be "github/issues" or "github/project"`,
+      );
+    }
+    if (typeof t.target !== "string" || t.target.trim() === "") {
+      throw new Error(
+        `Invalid config: targets[${i}].target must be a non-empty string`,
+      );
+    }
+    if (typeof t.authRef !== "string" || t.authRef.trim() === "") {
+      throw new Error(
+        `Invalid config: targets[${i}].authRef must be a non-empty string`,
+      );
+    }
+  }
+
+  // Validate that target IDs are unique
+  const targetIds = new Set<string>();
+  for (const target of targets as Array<{ id: string }>) {
+    if (targetIds.has(target.id)) {
+      throw new Error(
+        `Invalid config: duplicate target ID "${target.id}" found`,
+      );
+    }
+    targetIds.add(target.id);
+  }
+
+  // Validate tab targets reference valid target IDs
+  if (cfg.tabs && Array.isArray(cfg.tabs)) {
+    const tabs = cfg.tabs as unknown[];
+    for (let i = 0; i < tabs.length; i++) {
+      const tab = tabs[i];
+      if (tab && typeof tab === "object") {
+        const t = tab as Record<string, unknown>;
+        if (t.targets && Array.isArray(t.targets)) {
+          for (const targetId of t.targets as unknown[]) {
+            if (typeof targetId !== "string") {
+              throw new Error(
+                `Invalid config: tabs[${i}].targets must contain only strings`,
+              );
+            }
+            if (!targetIds.has(targetId)) {
+              throw new Error(
+                `Invalid config: tabs[${i}].targets references unknown target ID "${targetId}"`,
+              );
+            }
+          }
+        }
+      }
+    }
   }
 
   return config as WafirConfig;
 }
 
 /**
- * Validates that submitted storage/installation values match the authoritative config.
+ * Validates that submitted target values match a configured target.
+ * Returns the matched target config if valid.
  */
-export function validateConfigMatch(
-  submittedInstallationId: number,
-  submittedOwner: string,
-  submittedRepo: string,
+export function validateTargetMatch(
+  submittedTargetType: string,
+  submittedTarget: string,
+  submittedAuthRef: string,
   authoritativeConfig: WafirConfig,
-): ValidationResult {
+): ValidationResult & { target?: TargetConfig } {
   const errors: ValidationError[] = [];
 
-  if (submittedInstallationId !== authoritativeConfig.installationId) {
-    errors.push({
-      code: "INSTALLATION_ID_MISMATCH",
-      message: `Submitted installationId (${submittedInstallationId}) does not match config (${authoritativeConfig.installationId})`,
-      field: "installationId",
-    });
-  }
+  // Find a matching target in the config
+  const matchedTarget = authoritativeConfig.targets.find(
+    (t) =>
+      t.type === submittedTargetType &&
+      t.target === submittedTarget &&
+      t.authRef === submittedAuthRef,
+  );
 
-  if (submittedOwner !== authoritativeConfig.storage.owner) {
+  if (!matchedTarget) {
     errors.push({
-      code: "OWNER_MISMATCH",
-      message: `Submitted owner (${submittedOwner}) does not match config (${authoritativeConfig.storage.owner})`,
-      field: "owner",
-    });
-  }
-
-  if (submittedRepo !== authoritativeConfig.storage.repo) {
-    errors.push({
-      code: "REPO_MISMATCH",
-      message: `Submitted repo (${submittedRepo}) does not match config (${authoritativeConfig.storage.repo})`,
-      field: "repo",
+      code: "TARGET_MISMATCH",
+      message: `No matching target found in config for type="${submittedTargetType}", target="${submittedTarget}", authRef="${submittedAuthRef}"`,
+      field: "target",
     });
   }
 
@@ -279,6 +345,7 @@ export function validateConfigMatch(
     valid: errors.length === 0,
     errors,
     config: authoritativeConfig,
+    target: matchedTarget,
   };
 }
 
@@ -601,23 +668,25 @@ export function validateSameOrigin(
 }
 
 /**
- * Full validation: fetches config and validates both config match and form fields.
+ * Full validation: fetches config and validates both target match and form fields.
  * If no configUrl is provided, uses the default configuration merged with submitted values.
  */
 export async function validateSubmission(params: {
   configUrl?: string;
   installationId: number;
-  owner: string;
-  repo: string;
+  targetType?: string;
+  target?: string;
+  authRef?: string;
   formFields: Record<string, unknown>;
   tabId?: string;
   requestOrigin?: string;
-}): Promise<ValidationResult> {
+}): Promise<ValidationResult & { matchedTarget?: TargetConfig }> {
   const {
     configUrl,
     installationId,
-    owner,
-    repo,
+    targetType,
+    target,
+    authRef,
     formFields,
     tabId,
     requestOrigin,
@@ -637,16 +706,19 @@ export async function validateSubmission(params: {
     config = await fetchConfig(configUrl);
 
     // If no configUrl was provided, merge the submitted values with default config
-    // This allows users to specify installationId, owner, repo directly on the widget
-    if (!configUrl) {
+    // This allows users to specify target details directly on the widget
+    if (!configUrl && targetType && target && authRef) {
       config = {
         ...config,
         installationId: installationId || config.installationId,
-        storage: {
-          ...config.storage,
-          owner: owner || config.storage.owner,
-          repo: repo || config.storage.repo,
-        },
+        targets: [
+          {
+            id: "widget-default",
+            type: targetType as "github/issues" | "github/project",
+            target: target,
+            authRef: authRef,
+          },
+        ],
       };
     }
   } catch (error: unknown) {
@@ -662,15 +734,34 @@ export async function validateSubmission(params: {
     };
   }
 
-  // Validate config match
-  const configMatchResult = validateConfigMatch(
-    installationId,
-    owner,
-    repo,
-    config,
-  );
-  if (!configMatchResult.valid) {
-    return configMatchResult;
+  // Validate installation ID matches config
+  if (installationId !== config.installationId) {
+    return {
+      valid: false,
+      errors: [
+        {
+          code: "INSTALLATION_ID_MISMATCH",
+          message: `Submitted installationId (${installationId}) does not match config (${config.installationId})`,
+          field: "installationId",
+        },
+      ],
+      config,
+    };
+  }
+
+  // Validate target match if provided
+  let matchedTarget: TargetConfig | undefined;
+  if (targetType && target && authRef) {
+    const targetMatchResult = validateTargetMatch(
+      targetType,
+      target,
+      authRef,
+      config,
+    );
+    if (!targetMatchResult.valid) {
+      return targetMatchResult;
+    }
+    matchedTarget = targetMatchResult.target;
   }
 
   // Validate form fields
@@ -683,5 +774,6 @@ export async function validateSubmission(params: {
     valid: true,
     errors: [],
     config,
+    matchedTarget,
   };
 }

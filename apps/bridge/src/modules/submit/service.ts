@@ -5,8 +5,9 @@ import { v4 as uuidv4 } from "uuid";
 export interface SubmitBody {
   configUrl?: string;
   installationId: number;
-  owner: string;
-  repo: string;
+  targetType?: string;
+  target?: string;
+  authRef?: string;
   title: string;
   tabId?: string;
   labels?: string[];

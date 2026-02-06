@@ -31,11 +31,14 @@ export class RequestParserService {
             case "installationId":
               result.installationId = Number(val);
               break;
-            case "owner":
-              result.owner = val;
+            case "targetType":
+              result.targetType = val;
               break;
-            case "repo":
-              result.repo = val;
+            case "target":
+              result.target = val;
+              break;
+            case "authRef":
+              result.authRef = val;
               break;
             case "title":
               result.title = val;
@@ -94,11 +97,16 @@ export class RequestParserService {
       Object.assign(result, request.body as SubmitBody);
     }
 
-    // Validation: If configUrl is null or not provided, require installationId, owner, and repo
+    // Validation: If configUrl is null or not provided, require installationId and target info
     if (!result.configUrl) {
-      if (!result.installationId || !result.owner || !result.repo) {
+      if (
+        !result.installationId ||
+        !result.targetType ||
+        !result.target ||
+        !result.authRef
+      ) {
         throw new Error(
-          "Missing required fields (installationId, owner, or repo)",
+          "Missing required fields (installationId, targetType, target, or authRef)",
         );
       }
     }
