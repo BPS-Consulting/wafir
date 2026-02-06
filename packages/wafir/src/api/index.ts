@@ -199,25 +199,25 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            /** @description GitHub App installation ID. Required for authenticating with the GitHub API. */
-                            installationId: number;
                             /**
                              * @description Modal title
                              * @default Contact Us
                              */
                             title: string;
-                            storage: {
+                            /** @description Target destinations for form submissions. Each target defines where and how submissions are stored. */
+                            targets: {
+                                /** @description Unique identifier for this target, referenced by tabs to route submissions. */
+                                id: string;
                                 /**
-                                 * @default issue
+                                 * @description Target type using MIME-type convention. Currently supported: github/issues, github/project.
                                  * @enum {string}
                                  */
-                                type: "issue" | "project" | "both";
-                                /** @description GitHub repository owner (user or organization) */
-                                owner: string;
-                                /** @description GitHub repository name */
-                                repo: string;
-                                projectNumber?: number;
-                            };
+                                type: "github/issues" | "github/project";
+                                /** @description Target identifier. Format depends on type: 'owner/repo' for github/issues, 'owner/projectNum' for github/project. */
+                                target: string;
+                                /** @description Authentication reference used to authorize communication with the target. For GitHub types, this is the installation ID. */
+                                authRef: string;
+                            }[];
                             /** @description Automatic data collection settings */
                             telemetry?: {
                                 /**
@@ -288,6 +288,8 @@ export interface paths {
                                         required?: boolean;
                                     };
                                 }[];
+                                /** @description IDs of target(s) for this tab. If omitted or empty, all targets will be used. Each ID must reference a valid target from the top-level targets array. */
+                                targets?: string[];
                             }[];
                             /** @description Available issue types from the organization (auto-populated) */
                             issueTypes?: {

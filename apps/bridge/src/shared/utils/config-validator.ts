@@ -147,7 +147,6 @@ export interface TargetConfig {
  * Represents the full wafir config structure.
  */
 export interface WafirConfig {
-  installationId: number;
   title?: string;
   targets: TargetConfig[];
   telemetry?: {
@@ -229,10 +228,6 @@ export async function fetchConfig(configUrl?: string): Promise<WafirConfig> {
   }
 
   const cfg = config as Record<string, unknown>;
-
-  if (typeof cfg.installationId !== "number") {
-    throw new Error("Invalid config: installationId must be a number");
-  }
 
   if (!cfg.targets || !Array.isArray(cfg.targets) || cfg.targets.length === 0) {
     throw new Error(
@@ -731,21 +726,6 @@ export async function validateSubmission(params: {
           message: `Failed to fetch config from ${configUrl}: ${message}`,
         },
       ],
-    };
-  }
-
-  // Validate installation ID matches config
-  if (installationId !== config.installationId) {
-    return {
-      valid: false,
-      errors: [
-        {
-          code: "INSTALLATION_ID_MISMATCH",
-          message: `Submitted installationId (${installationId}) does not match config (${config.installationId})`,
-          field: "installationId",
-        },
-      ],
-      config,
     };
   }
 

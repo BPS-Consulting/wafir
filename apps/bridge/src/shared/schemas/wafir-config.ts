@@ -130,13 +130,8 @@ const tabSchema = {
 export const wafirConfigSchema = {
   $id: "wafirConfig",
   type: "object",
-  required: ["installationId", "targets"],
+  required: ["targets"],
   properties: {
-    installationId: {
-      type: "number",
-      description:
-        "GitHub App installation ID. Required for authenticating with the GitHub API.",
-    },
     title: {
       type: "string",
       default: "Contact Us",

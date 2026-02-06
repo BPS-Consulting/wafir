@@ -17,20 +17,22 @@ const getClient = () => {
 };
 
 export type WafirConfigBase =
-  paths["/config"]["get"]["responses"][200]["content"]["application/json"];
+  paths["/config/"]["get"]["responses"][200]["content"]["application/json"];
 
 // Extended WafirConfig type that includes installationId (required for user-hosted configs)
 export type WafirConfig = WafirConfigBase & {
   /** GitHub App installation ID. Required for authenticating with the GitHub API. */
   installationId: number;
-  storage: {
-    type: "issue" | "project" | "both";
-    /** GitHub repository owner (user or organization) */
-    owner: string;
-    /** GitHub repository name */
-    repo: string;
-    projectNumber?: number;
-  };
+  targets: Array<{
+    /** Unique identifier for this target, referenced by tabs to route submissions. */
+    id: string;
+    /** Target type using MIME-type convention. Currently supported: github/issues, github/project. */
+    type: "github/issues" | "github/project";
+    /** Target identifier. Format depends on type: 'owner/repo' for github/issues, 'owner/projectNum' for github/project. */
+    target: string;
+    /** Authentication reference used to authorize communication with the target. For GitHub types, this is the installation ID. */
+    authRef: string;
+  }>;
 };
 
 // Canonical tab and field types from API schema
@@ -63,12 +65,12 @@ export const getWafirConfig = async (
   owner: string,
   repo: string,
   bridgeUrl?: string,
-) => {
+): Promise<WafirConfigBase | undefined> => {
   if (bridgeUrl) {
     setBridgeUrl(bridgeUrl);
   }
 
-  const { data, error } = await getClient().GET("/config", {
+  const { data, error } = await getClient().GET("/config/", {
     params: {
       query: {
         installationId,
@@ -79,7 +81,7 @@ export const getWafirConfig = async (
   });
 
   if (error) {
-    throw new Error(error.message || "Failed to fetch config");
+    throw new Error("Failed to fetch config");
   }
 
   return data;
@@ -176,7 +178,7 @@ export const submitIssue = async (params: SubmitIssueParams) => {
     formData.append("consoleLogs", JSON.stringify(consoleLogs));
   }
 
-  const response = await getClient().POST("/submit", {
+  const response = await getClient().POST("/submit/", {
     // @ts-expect-error FormData type compatibility with openapi-fetch
     body: formData,
   });

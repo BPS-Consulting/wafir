@@ -3,17 +3,13 @@
 # Use this as a reference for the default behavior.
 # Host this file anywhere and point your widget to it via configUrl
 
-# Required: Your GitHub App installation ID
-installationId: 12345678
-
 title: "Contact Us"
 
-storage:
-  type: issue # Options: issue, project, both
-  # Required: Target repository for issues
-  owner: your-username
-  repo: your-repo
-  # projectNumber: 1        # Required for project storage
+targets:
+  - id: default
+    type: github/issues
+    target: your-username/your-repo
+    authRef: "YOUR_INSTALLATION_ID" # Replace with your installation ID
 
 # Optional: Dedicated project for feedback with rating field
 # feedbackProject:

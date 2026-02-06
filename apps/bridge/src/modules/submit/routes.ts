@@ -73,7 +73,6 @@ const submitRoute: FastifyPluginAsync = async (
 
         // Use ONLY values from the validated config, not from client submission
         const config = validationResult.config!;
-        const installationId = config.installationId;
 
         // Determine which targets to use for this submission
         // 1. If a tab is specified and it has targets, use those
@@ -105,6 +104,9 @@ const submitRoute: FastifyPluginAsync = async (
             error: "No GitHub target configured",
           });
         }
+
+        // Use installationId from githubTarget.authRef
+        const installationId = Number(githubTarget.authRef);
 
         // Parse owner/repo from target string (format: "owner/repo" or "owner/projectNum")
         const [owner, repoOrProject] = githubTarget.target.split("/");

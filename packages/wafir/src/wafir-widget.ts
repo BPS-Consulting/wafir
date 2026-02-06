@@ -174,11 +174,19 @@ export class WafirWidget extends LitElement {
       this._config = {
         ...defaultConfig,
         installationId: this.installationId ?? defaultConfig.installationId,
-        storage: {
-          ...defaultConfig.storage,
-          owner: this.owner || defaultConfig.storage.owner,
-          repo: this.repo || defaultConfig.storage.repo,
-        },
+        targets:
+          this.owner && this.repo
+            ? [
+                {
+                  id: "default",
+                  type: "github/issues",
+                  target: `${this.owner}/${this.repo}`,
+                  authRef: String(
+                    this.installationId ?? defaultConfig.installationId,
+                  ),
+                },
+              ]
+            : defaultConfig.targets,
       };
 
       this._applyConfig(this._config);
@@ -222,11 +230,11 @@ export class WafirWidget extends LitElement {
       // Validate required fields
       if (
         !config.installationId ||
-        !config.storage?.owner ||
-        !config.storage?.repo
+        !config.targets ||
+        config.targets.length === 0
       ) {
         console.warn(
-          "Wafir: Config missing required fields (installationId, storage.owner, storage.repo), using defaults",
+          "Wafir: Config missing required fields (installationId, targets), using defaults",
           config,
         );
         this._config = getDefaultConfig();
@@ -328,18 +336,44 @@ export class WafirWidget extends LitElement {
     if (
       !this._config ||
       !this._config.installationId ||
-      !this._config.storage?.owner ||
-      !this._config.storage?.repo
+      !this._config.targets ||
+      this._config.targets.length === 0
     ) {
-      console.error(
-        "Wafir: Missing configuration (installationId, storage.owner, or storage.repo)",
-      );
+      console.error("Wafir: Missing configuration (installationId or targets)");
       alert("Widget configuration error");
       return;
     }
 
-    const { installationId, storage } = this._config;
-    const { owner, repo } = storage;
+    const { installationId, targets } = this._config;
+
+    // Find the target for the active tab
+    const activeTabTargets = activeTab?.targets;
+    let targetConfig = targets[0]; // Default to first target
+
+    if (activeTabTargets && activeTabTargets.length > 0) {
+      // Use the first target specified for this tab
+      const targetId = activeTabTargets[0];
+      const foundTarget = targets.find(
+        (t: { id: string }) => t.id === targetId,
+      );
+      if (foundTarget) {
+        targetConfig = foundTarget;
+      }
+    }
+
+    // Parse owner/repo from target string (format: owner/repo)
+    const targetParts = targetConfig.target.split("/");
+    const owner = targetParts[0] || "";
+    const repo = targetParts[1] || "";
+
+    if (!owner || !repo) {
+      console.error(
+        "Wafir: Invalid target format. Expected 'owner/repo', got:",
+        targetConfig.target,
+      );
+      alert("Widget configuration error");
+      return;
+    }
 
     try {
       const title =

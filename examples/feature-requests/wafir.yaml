@@ -2,9 +2,6 @@
 # Optimized for collecting feature ideas and suggestions
 # Host this file anywhere and point your widget to it via configUrl
 
-# Required: Your GitHub App installation ID
-installationId: 12345678
-
 title: "Suggest a Feature"
 
 targets:

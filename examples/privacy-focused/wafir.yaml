@@ -2,9 +2,6 @@
 # Minimal data collection for privacy-conscious applications
 # Host this file anywhere and point your widget to it via configUrl
 
-# Required: Your GitHub App installation ID
-installationId: 12345678
-
 title: "Send Feedback"
 
 targets:
