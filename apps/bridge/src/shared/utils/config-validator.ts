@@ -5,7 +5,6 @@ import * as yaml from "js-yaml";
  * This matches the default configuration from packages/wafir/src/default-config.ts
  */
 const DEFAULT_CONFIG: WafirConfig = {
-  installationId: 0,
   title: "Contact Us",
   targets: [
     {
@@ -668,7 +667,6 @@ export function validateSameOrigin(
  */
 export async function validateSubmission(params: {
   configUrl?: string;
-  installationId: number;
   targetType?: string;
   target?: string;
   authRef?: string;
@@ -678,7 +676,6 @@ export async function validateSubmission(params: {
 }): Promise<ValidationResult & { matchedTarget?: TargetConfig }> {
   const {
     configUrl,
-    installationId,
     targetType,
     target,
     authRef,
@@ -705,7 +702,6 @@ export async function validateSubmission(params: {
     if (!configUrl && targetType && target && authRef) {
       config = {
         ...config,
-        installationId: installationId || config.installationId,
         targets: [
           {
             id: "widget-default",
