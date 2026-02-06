@@ -29,6 +29,7 @@ To add the Wafir widget to your web application, add the custom element to your 
       project="your-github-project-number"  <-- Optional: will create items in project (see project URL for number)
       repo="your-github-repository-name"    <-- Optional: will create issues in repo
       bridgeUrl=""  <-- URL for your own bridge instance or leave blank to use our dev Wafir bridge
+      configUrl=""  <-- URL to your config file
     ></wafir-widget>
 </your-footer-or-header>
 ```
