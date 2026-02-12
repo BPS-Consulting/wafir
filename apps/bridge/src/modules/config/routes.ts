@@ -1,16 +1,13 @@
+// Copyright (C) 2024 BPS-Consulting - Licensed under AGPLv3
 import { FastifyPluginAsync } from "fastify";
-import yaml from "js-yaml";
-import { wafirConfigSchema } from "../schemas/wafir-config.js";
-
-interface ConfigQuery {
-  installationId: number;
-  owner: string;
-  repo: string;
-}
+import { wafirConfigSchema } from "../../shared/schemas/wafir-config.js";
+import { ConfigService, ConfigQuery } from "./service.js";
 
 const configRoute: FastifyPluginAsync = async (fastify): Promise<void> => {
+  const configService = new ConfigService();
+
   fastify.get<{ Querystring: ConfigQuery }>(
-    "/config",
+    "/",
     {
       schema: {
         tags: ["WAFIR"],
@@ -48,46 +45,18 @@ const configRoute: FastifyPluginAsync = async (fastify): Promise<void> => {
         const octokit = await fastify.getGitHubClient(installationId);
 
         // Fetch wafir.yaml
-        const { data } = await octokit.rest.repos.getContent({
+        const parsedConfig = await configService.fetchWafirConfig(
+          octokit,
           owner,
           repo,
-          path: ".github/wafir.yaml",
-        });
-
-        if (!("content" in data)) {
-          throw new Error("File not found or is a directory");
-        }
-
-        // Decode Base64 and parse YAML
-        const yamlContent = Buffer.from(data.content, "base64").toString(
-          "utf-8",
         );
-        const parsedConfig = yaml.load(yamlContent) as any;
 
         // Fetch issue types from organization (if available)
-        let issueTypes: { id: number; name: string; color: string }[] = [];
-
-        try {
-          const { data: ownerData } = await octokit.rest.users.getByUsername({
-            username: owner,
-          });
-
-          if (ownerData.type === "Organization") {
-            const { data: orgTypes } = await octokit.request(
-              "GET /orgs/{org}/issue-types",
-              { org: owner },
-            );
-            issueTypes = orgTypes.map((t: any) => ({
-              id: t.id,
-              name: t.name,
-              color: t.color,
-            }));
-          }
-        } catch (typeError: any) {
-          request.log.debug(
-            "Could not fetch issue types (org may not support them)",
-          );
-        }
+        const issueTypes = await configService.fetchIssueTypes(
+          octokit,
+          owner,
+          request.log,
+        );
 
         return {
           ...parsedConfig,

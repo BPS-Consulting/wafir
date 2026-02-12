@@ -1,8 +1,9 @@
+// Copyright (C) 2024 BPS-Consulting - Licensed under AGPLv3
 import { FastifyPluginAsync } from "fastify";
 
 const healthRoute: FastifyPluginAsync = async (fastify): Promise<void> => {
   fastify.get(
-    "/health",
+    "/",
     {
       schema: {
         tags: ["Health"],
@@ -24,7 +25,7 @@ const healthRoute: FastifyPluginAsync = async (fastify): Promise<void> => {
         status: "ok",
         timestamp: new Date().toISOString(),
       });
-    }
+    },
   );
 };
 

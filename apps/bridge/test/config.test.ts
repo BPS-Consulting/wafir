@@ -14,7 +14,7 @@ import {
 } from "./helper.js";
 
 // Import the config route
-import configRoute from "../src/routes/config.js";
+import configRoute from "../src/modules/config/routes.js";
 
 describe("GET /config", () => {
   let app: FastifyInstance;
@@ -37,7 +37,7 @@ describe("GET /config", () => {
     );
 
     // Register the config route
-    await app.register(configRoute);
+    await app.register(configRoute, { prefix: "/config" });
     await app.ready();
   });
 
@@ -73,11 +73,12 @@ describe("GET /config", () => {
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
       expect(body.title).toBe("Feedback");
-      expect(body.storage.type).toBe("issue");
+      expect(body.targets).toHaveLength(1);
+      expect(body.targets[0].type).toBe("github/issues");
       expect(body.issueTypes).toEqual([]);
     });
 
-    it("fetches config with project storage type", async () => {
+    it("fetches config with project target type", async () => {
       mockOctokit.rest.repos.getContent.mockResolvedValue({
         data: {
           content: encodeYamlToBase64(sampleConfigs.withProject),
@@ -101,8 +102,14 @@ describe("GET /config", () => {
 
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
-      expect(body.storage.type).toBe("project");
-      expect(body.storage.projectNumber).toBe(1);
+      expect(body.targets).toHaveLength(2);
+      expect(
+        body.targets.find((t: any) => t.type === "github/project"),
+      ).toBeDefined();
+      const projectTarget = body.targets.find(
+        (t: any) => t.type === "github/project",
+      );
+      expect(projectTarget.target).toContain("/1"); // Should contain project number
     });
 
     it("fetches config with feedbackProject settings", async () => {
@@ -158,7 +165,13 @@ describe("GET /config", () => {
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
       expect(body.title).toBe("Full Config");
-      expect(body.storage.type).toBe("both");
+      expect(body.targets).toHaveLength(2);
+      expect(body.targets.some((t: any) => t.type === "github/issues")).toBe(
+        true,
+      );
+      expect(body.targets.some((t: any) => t.type === "github/project")).toBe(
+        true,
+      );
       expect(body.telemetry.screenshot).toBe(true);
       expect(body.telemetry.browserInfo).toBe(true);
       expect(body.telemetry.consoleLog).toBe(true);

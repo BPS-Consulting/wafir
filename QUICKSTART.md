@@ -1,6 +1,8 @@
-# Quickstart Guide
+### Migration Notice
 
-Start collecting feedback with Wafir in minutes!
+> **Migration Notice:**
+> The legacy `storage` key configuration has been **removed**. All routing is now handled using the `targets` array and tab-level `targets` references. Update your config files as shown above.
+> Start collecting feedback with Wafir in minutes!
 
 - Get the Wafir GitHub App from [GitHub](https://github.com/apps/wafir-web-feedback-widget) and install it on your GitHub account. Make sure to note the _Installation ID_, which is the number at the end of the URL after you install the app.
 - Create a GitHub project on your GitHub account to receive feedback and bug reports. Create any custom fields you want to show up in the widget.

@@ -1,17 +1,20 @@
+// Copyright (C) 2024 BPS-Consulting - Licensed under AGPLv3
 import { FastifyPluginAsync } from "fastify";
-
-interface OAuthState {
-  installationId: number;
-  returnUrl?: string;
-}
+import { AuthService } from "./service.js";
 
 const authRoute: FastifyPluginAsync = async (fastify): Promise<void> => {
   const clientId = process.env.GITHUB_CLIENT_ID;
   const clientSecret = process.env.GITHUB_CLIENT_SECRET;
   const baseUrl = process.env.BASE_URL || "http://localhost:3000";
 
+  const authService = new AuthService({
+    clientId: clientId!,
+    clientSecret: clientSecret!,
+    baseUrl,
+  });
+
   fastify.get<{ Querystring: { installationId: string; returnUrl?: string } }>(
-    "/auth/github",
+    "/github",
     {
       schema: {
         tags: ["Auth"],
@@ -33,30 +36,17 @@ const authRoute: FastifyPluginAsync = async (fastify): Promise<void> => {
       }
 
       const { installationId, returnUrl } = request.query;
-
-      const state: OAuthState = {
-        installationId: Number(installationId),
+      const authUrl = authService.generateAuthUrl(
+        Number(installationId),
         returnUrl,
-      };
-      const encodedState = Buffer.from(JSON.stringify(state)).toString(
-        "base64url"
       );
 
-      const redirectUri = `${baseUrl}/auth/github/callback`;
-      const scope = "read:user,project";
-
-      const authUrl = new URL("https://github.com/login/oauth/authorize");
-      authUrl.searchParams.set("client_id", clientId);
-      authUrl.searchParams.set("redirect_uri", redirectUri);
-      authUrl.searchParams.set("scope", scope);
-      authUrl.searchParams.set("state", encodedState);
-
-      return reply.redirect(authUrl.toString());
-    }
+      return reply.redirect(authUrl);
+    },
   );
 
   fastify.get<{ Querystring: { code: string; state: string } }>(
-    "/auth/github/callback",
+    "/github/callback",
     {
       schema: {
         tags: ["Auth"],
@@ -79,39 +69,15 @@ const authRoute: FastifyPluginAsync = async (fastify): Promise<void> => {
 
       const { code, state } = request.query;
 
-      let parsedState: OAuthState;
+      let parsedState;
       try {
-        parsedState = JSON.parse(
-          Buffer.from(state, "base64url").toString("utf-8")
-        );
+        parsedState = authService.parseState(state);
       } catch {
         return reply.code(400).send({ error: "Invalid state parameter" });
       }
-      try {
-        const tokenResponse = await fetch(
-          "https://github.com/login/oauth/access_token",
-          {
-            method: "POST",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              client_id: clientId,
-              client_secret: clientSecret,
-              code,
-            }),
-          }
-        );
 
-        const tokenData = (await tokenResponse.json()) as {
-          access_token?: string;
-          refresh_token?: string;
-          expires_in?: number;
-          refresh_token_expires_in?: number;
-          error?: string;
-          error_description?: string;
-        };
+      try {
+        const tokenData = await authService.exchangeCodeForToken(code);
 
         if (tokenData.error || !tokenData.access_token) {
           request.log.error(
@@ -119,51 +85,39 @@ const authRoute: FastifyPluginAsync = async (fastify): Promise<void> => {
               error: tokenData.error,
               description: tokenData.error_description,
             },
-            "OAuth token exchange failed"
-          );
-          const errorUrl = new URL(
-            parsedState.returnUrl || "http://localhost:4321/connect"
+            "OAuth token exchange failed",
           );
           const errorCode =
             tokenData.error === "bad_verification_code"
               ? "session_expired"
               : tokenData.error || "unknown";
-          errorUrl.searchParams.set("error", errorCode);
-          return reply.redirect(errorUrl.toString());
+          const errorUrl = authService.buildErrorUrl(
+            parsedState.returnUrl,
+            errorCode,
+          );
+          return reply.redirect(errorUrl);
         }
 
-        const now = new Date();
-        await fastify.tokenStore.setUserToken(parsedState.installationId, {
-          accessToken: tokenData.access_token,
-          refreshToken: tokenData.refresh_token || "",
-          expiresAt: new Date(
-            now.getTime() + (tokenData.expires_in || 28800) * 1000
-          ).toISOString(),
-          refreshTokenExpiresAt: tokenData.refresh_token_expires_in
-            ? new Date(
-                now.getTime() + tokenData.refresh_token_expires_in * 1000
-              ).toISOString()
-            : new Date(now.getTime() + 15552000 * 1000).toISOString(),
-        });
+        const formattedToken = authService.formatTokenData(tokenData);
+        await fastify.tokenStore.setUserToken(
+          parsedState.installationId,
+          formattedToken,
+        );
 
-        const successUrl = new URL(
-          parsedState.returnUrl || "http://localhost:4321/connect"
+        const successUrl = authService.buildSuccessUrl(
+          parsedState.returnUrl,
+          parsedState.installationId,
         );
-        successUrl.searchParams.set("success", "true");
-        successUrl.searchParams.set(
-          "installationId",
-          String(parsedState.installationId)
-        );
-        return reply.redirect(successUrl.toString());
+        return reply.redirect(successUrl);
       } catch (error: any) {
         request.log.error({ error: error.message }, "OAuth callback failed");
         return reply.code(500).send({ error: "OAuth failed" });
       }
-    }
+    },
   );
 
   fastify.get<{ Params: { installationId: string } }>(
-    "/auth/status/:installationId",
+    "/status/:installationId",
     {
       schema: {
         tags: ["Auth"],
@@ -193,11 +147,11 @@ const authRoute: FastifyPluginAsync = async (fastify): Promise<void> => {
         connected: await fastify.tokenStore.hasUserToken(installationId),
         installationId,
       };
-    }
+    },
   );
 
   fastify.delete<{ Params: { installationId: string } }>(
-    "/auth/:installationId",
+    "/:installationId",
     {
       schema: {
         tags: ["Auth"],
@@ -219,7 +173,7 @@ const authRoute: FastifyPluginAsync = async (fastify): Promise<void> => {
         success: deleted,
         installationId,
       });
-    }
+    },
   );
 };
 

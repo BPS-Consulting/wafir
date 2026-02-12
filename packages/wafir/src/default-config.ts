@@ -129,13 +129,15 @@ export function getDefaultTabs(): TabConfig[] {
 
 export function getDefaultConfig(): WafirConfig {
   return {
-    installationId: 0,
     title: "Contact Us",
-    storage: {
-      type: "issue",
-      owner: "",
-      repo: "",
-    },
+    targets: [
+      {
+        id: "default",
+        type: "github/issues",
+        target: "/",
+        authRef: "0",
+      },
+    ],
     telemetry: {
       screenshot: true,
       browserInfo: true,

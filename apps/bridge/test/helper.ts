@@ -89,12 +89,12 @@ export function encodeYamlToBase64(yamlContent: string): string {
 // Sample configs for testing
 export const sampleConfigs = {
   minimal: `
-installationId: 123
 title: "Feedback"
-storage:
-  type: issue
-  owner: testowner
-  repo: testrepo
+targets:
+  - id: default
+    type: github/issues
+    target: testowner/testrepo
+    authRef: "123"
 tabs:
   - id: issue
     label: "Report Issue"
@@ -109,13 +109,16 @@ tabs:
           required: true
 `,
   withProject: `
-installationId: 123
 title: "Feedback"
-storage:
-  type: project
-  owner: testowner
-  repo: testrepo
-  projectNumber: 1
+targets:
+  - id: github-issues
+    type: github/issues
+    target: testowner/testrepo
+    authRef: "123"
+  - id: github-project
+    type: github/project
+    target: testowner/1
+    authRef: "123"
 tabs:
   - id: issue
     label: "Report Issue"
@@ -130,12 +133,12 @@ tabs:
           required: true
 `,
   withFeedbackProject: `
-installationId: 123
 title: "Feedback"
-storage:
-  type: issue
-  owner: testowner
-  repo: testrepo
+targets:
+  - id: default
+    type: github/issues
+    target: testowner/testrepo
+    authRef: "123"
 feedbackProject:
   projectNumber: 2
   ratingField: "Rating"
@@ -156,13 +159,16 @@ tabs:
         type: textarea
 `,
   full: `
-installationId: 123
 title: "Full Config"
-storage:
-  type: both
-  owner: testowner
-  repo: testrepo
-  projectNumber: 1
+targets:
+  - id: github-issues
+    type: github/issues
+    target: testowner/testrepo
+    authRef: "123"
+  - id: github-project
+    type: github/project
+    target: testowner/1
+    authRef: "123"
 telemetry:
   screenshot: true
   browserInfo: true

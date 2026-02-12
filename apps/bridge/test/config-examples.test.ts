@@ -16,7 +16,7 @@ import {
 } from "./helper.js";
 
 // Import the config route
-import configRoute from "../src/routes/config.js";
+import configRoute from "../src/modules/config/routes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -61,7 +61,7 @@ describe("Example Configurations", () => {
     );
 
     // Register the config route
-    await app.register(configRoute);
+    await app.register(configRoute, { prefix: "/config" });
     await app.ready();
 
     // Default mock for user lookup
@@ -105,9 +105,13 @@ describe("Example Configurations", () => {
         expect(body.title).toBeDefined();
         expect(typeof body.title).toBe("string");
 
-        // All configs should have storage (even if just defaults)
-        if (body.storage) {
-          expect(["issue", "project", "both"]).toContain(body.storage.type);
+        // All configs should have targets (even if just defaults)
+        expect(body.targets).toBeDefined();
+        expect(Array.isArray(body.targets)).toBe(true);
+        if (body.targets.length > 0) {
+          expect(["github/issues", "github/project"]).toContain(
+            body.targets[0].type,
+          );
         }
 
         // issueTypes should always be present (possibly empty array)
@@ -143,7 +147,8 @@ describe("Example Configurations", () => {
       const body = JSON.parse(response.body);
 
       expect(body.title).toBe("Feedback");
-      expect(body.storage.type).toBe("issue");
+      expect(body.targets).toHaveLength(1);
+      expect(body.targets[0].type).toBe("github/issues");
       // No tabs defined - should be absent (widget uses defaults)
       expect(body.tabs).toBeUndefined();
     });
@@ -195,7 +200,7 @@ describe("Example Configurations", () => {
   });
 
   describe("project-based config validation", () => {
-    it("loads project-based config with project storage", async () => {
+    it("loads project-based config with project target", async () => {
       const projectConfig = exampleConfigs.find(
         (c) => c.name === "project-based",
       );
@@ -221,9 +226,11 @@ describe("Example Configurations", () => {
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
 
-      expect(body.storage.type).toBe("project");
-      expect(body.storage.projectNumber).toBeDefined();
-      expect(typeof body.storage.projectNumber).toBe("number");
+      const projectTarget = body.targets.find(
+        (t: any) => t.type === "github/project",
+      );
+      expect(projectTarget).toBeDefined();
+      expect(projectTarget.target).toContain("/"); // Should have owner/projectNum format
     });
   });
 

@@ -118,42 +118,57 @@ const tabSchema = {
       description:
         "Form fields for this tab. If omitted, defaults are used for known tab IDs.",
     },
+    targets: {
+      type: "array",
+      items: { type: "string" },
+      description:
+        "IDs of target(s) for this tab. If omitted or empty, all targets will be used. Each ID must reference a valid target from the top-level targets array.",
+    },
   },
 };
 
 export const wafirConfigSchema = {
   $id: "wafirConfig",
   type: "object",
-  required: ["installationId", "storage"],
+  required: ["targets"],
   properties: {
-    installationId: {
-      type: "number",
-      description:
-        "GitHub App installation ID. Required for authenticating with the GitHub API.",
-    },
     title: {
       type: "string",
       default: "Contact Us",
       description: "Modal title",
     },
-    storage: {
-      type: "object",
-      required: ["owner", "repo"],
-      properties: {
-        type: {
-          type: "string",
-          enum: ["issue", "project", "both"],
-          default: "issue",
+    targets: {
+      type: "array",
+      minItems: 1,
+      description:
+        "Target destinations for form submissions. Each target defines where and how submissions are stored.",
+      items: {
+        type: "object",
+        required: ["id", "type", "target", "authRef"],
+        properties: {
+          id: {
+            type: "string",
+            description:
+              "Unique identifier for this target, referenced by tabs to route submissions.",
+          },
+          type: {
+            type: "string",
+            enum: ["github/issues", "github/project"],
+            description:
+              "Target type using MIME-type convention. Currently supported: github/issues, github/project.",
+          },
+          target: {
+            type: "string",
+            description:
+              "Target identifier. Format depends on type: 'owner/repo' for github/issues, 'owner/projectNum' for github/project.",
+          },
+          authRef: {
+            type: "string",
+            description:
+              "Authentication reference used to authorize communication with the target. For GitHub types, this is the installation ID.",
+          },
         },
-        owner: {
-          type: "string",
-          description: "GitHub repository owner (user or organization)",
-        },
-        repo: {
-          type: "string",
-          description: "GitHub repository name",
-        },
-        projectNumber: { type: "number" },
+        additionalProperties: false,
       },
     },
     telemetry: {

@@ -3,23 +3,17 @@
 # Use this as a reference for the default behavior.
 # Host this file anywhere and point your widget to it via configUrl
 
-# Required: Your GitHub App installation ID
-installationId: 12345678
-
 title: "Contact Us"
 
-storage:
-  type: issue # Options: issue, project, both
-  # Required: Target repository for issues
-  owner: your-username
-  repo: your-repo
-  # projectNumber: 1        # Required for project storage
-
-# Optional: Dedicated project for feedback with rating field
-# feedbackProject:
-#   projectNumber: 1          # Your feedback project number
-#   owner: org-name           # Project owner (defaults to repo owner)
-#   ratingField: "Rating"     # Name of the Rating field in your project
+targets:
+  - id: default
+    type: github/issues
+    target: your-username/your-repo
+    authRef: "YOUR_INSTALLATION_ID" # Replace with your installation ID
+  - id: project
+    type: github/project
+    target: your-username/your-project-id
+    authRef: "YOUR_INSTALLATION_ID" # Replace with your installation ID
 
 telemetry:
   screenshot: true
@@ -31,6 +25,7 @@ tabs:
     label: Feedback
     icon: thumbsup
     isFeedback: true
+    targets: [project] # This tab will send feedback to the project target only
     fields:
       - id: rating
         type: rating
@@ -45,7 +40,7 @@ tabs:
         validations:
           required: false
 
-  - id: suggestion
+  - id: suggestion # this tab will send feedback to the both targets since it doesn't specify targets
     label: Suggestion
     icon: lightbulb
     fields:
@@ -65,6 +60,7 @@ tabs:
   - id: issue
     label: Issue
     icon: bug
+    targets: [default] # This tab will send feedback to the default target only
     fields:
       - id: title
         type: input

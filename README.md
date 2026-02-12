@@ -42,8 +42,7 @@ The repo includes source code for the following:
 </p>
 
 - **Fastify**: Fast and low overhead web framework for Node.js.
-- **AWS S3**: Secure storage for screenshots and assets.
-- **Octokit**: Integration with GitHub for automated issue creation.
+- **Multi-destination Feedback Routing**: Route user feedback, bug reports, and suggestions to multiple projects or repositories using the new `targets` key in your configuration. Screenshots and assets are routed via targets instead of a storage key.- **Octokit**: Integration with GitHub for automated issue creation.
 - **Swagger/OpenAPI**: Automated API documentation.
 
 ### Monorepo Tooling
@@ -65,15 +64,80 @@ This project is a monorepo managed by **pnpm** and **Turborepo**.
 
 1.  **Clone the repository:**
 
-    ```bash
-    git clone https://github.com/BPS-Consulting/wafir.git
-    cd wafir
-    ```
+```bash
+git clone https://github.com/BPS-Consulting/wafir.git
+cd wafir
+```
 
 2.  **Install dependencies:**
-    ```bash
-    pnpm install
-    ```
+
+```bash
+pnpm install
+```
+
+---
+
+## Configuration (Targets-based)
+
+The Wafir widget now routes feedback with a flexible `targets:` config block—allowing routing to multiple destinations (projects/repos).
+
+**Migration from legacy `storage` config:**
+
+> The legacy `storage` key configuration has been **removed**. All routing is now handled using the `targets` array and tab-level `targets` references. To migrate, define each destination under the `targets` key, and update your tabs to reference the appropriate target via `targets: [targetId]`.
+
+### Example (see `/examples/default/wafir.yaml` for full template)
+
+```yaml
+title: "Contact Us"
+targets:
+  - id: default
+    type: github/issues
+    target: your-username/your-repo
+    authRef: "YOUR_INSTALLATION_ID"
+  - id: project
+    type: github/project
+    target: your-username/your-project-id
+    authRef: "YOUR_INSTALLATION_ID"
+tabs:
+  - id: feedback
+    label: Feedback
+    icon: thumbsup
+    targets: [project] # Routes feedback to 'project' target
+    fields:
+      - id: rating
+        type: rating
+        attributes:
+          label: "How satisfied are you with our website?"
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: "What is the main reason for this rating?"
+        validations:
+          required: false
+  - id: issue
+    label: Issue
+    icon: bug
+    targets: [default] # Routes feedback to 'default' target
+    fields:
+      - id: title
+        type: input
+        attributes:
+          label: "What issue did you encounter?"
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: "Additional information:"
+        validations:
+          required: true
+```
+
+> See `/examples` for reference configs using the new targets paradigm.
+
+---
 
 ## 🏃‍♂️ Running Locally
 

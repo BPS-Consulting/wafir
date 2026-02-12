@@ -167,7 +167,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/config": {
+    "/config/": {
         parameters: {
             query?: never;
             header?: never;
@@ -175,8 +175,9 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get WAFIR Configuration
-         * @description Fetches and parses .github/wafir.yaml from the target repository.
+         * Get WAFIR Configuration (Deprecated)
+         * @deprecated
+         * @description DEPRECATED: The widget now fetches config directly from a user-hosted URL. This endpoint is kept for backward compatibility but will be removed in a future version. Fetches and parses .github/wafir.yaml from the target repository.
          */
         get: {
             parameters: {
@@ -203,16 +204,20 @@ export interface paths {
                              * @default Contact Us
                              */
                             title: string;
-                            storage?: {
+                            /** @description Target destinations for form submissions. Each target defines where and how submissions are stored. */
+                            targets: {
+                                /** @description Unique identifier for this target, referenced by tabs to route submissions. */
+                                id: string;
                                 /**
-                                 * @default issue
+                                 * @description Target type using MIME-type convention. Currently supported: github/issues, github/project.
                                  * @enum {string}
                                  */
-                                type: "issue" | "project" | "both";
-                                owner?: string;
-                                repo?: string;
-                                projectNumber?: number;
-                            };
+                                type: "github/issues" | "github/project";
+                                /** @description Target identifier. Format depends on type: 'owner/repo' for github/issues, 'owner/projectNum' for github/project. */
+                                target: string;
+                                /** @description Authentication reference used to authorize communication with the target. For GitHub types, this is the installation ID. */
+                                authRef: string;
+                            }[];
                             /** @description Automatic data collection settings */
                             telemetry?: {
                                 /**
@@ -283,6 +288,8 @@ export interface paths {
                                         required?: boolean;
                                     };
                                 }[];
+                                /** @description IDs of target(s) for this tab. If omitted or empty, all targets will be used. Each ID must reference a valid target from the top-level targets array. */
+                                targets?: string[];
                             }[];
                             /** @description Available issue types from the organization (auto-populated) */
                             issueTypes?: {
@@ -327,7 +334,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/health": {
+    "/health/": {
         parameters: {
             query?: never;
             header?: never;
@@ -369,7 +376,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/submit": {
+    "/submit/": {
         parameters: {
             query?: never;
             header?: never;
@@ -380,7 +387,7 @@ export interface paths {
         put?: never;
         /**
          * Submit Feedback/Issue
-         * @description Creates a new issue or project draft. Supports multipart/form-data.
+         * @description Creates a GitHub issue or project draft from form fields. Supports multipart/form-data.
          */
         post: {
             parameters: {
