@@ -35,27 +35,49 @@ import { WafirWidget } from "@wafir/react";
 
 ## Configuration Reference
 
+### Migration from legacy `storage` config
+
+> The legacy `storage` key configuration has been **removed**. All routing is now handled using the `targets` array and tab-level `targets` references. To migrate, define each destination under the `targets` key and update your tabs to reference the appropriate target via `targets: [targetId]`. See `/default/wafir.yaml` for updated config patterns.
+
 ### Required Fields
 
 ```yaml
 # Your GitHub App installation ID (required)
 installationId: 12345678
 
-storage:
-  type: issue # Options: issue, project, both
-  owner: your-username # Required: repository owner
-  repo: your-repo # Required: repository name
-  projectNumber: 1 # Required for project storage
+targets:
+  - id: default
+    type: github/issues
+    target: your-username/your-repo
+    authRef: "YOUR_INSTALLATION_ID" # Replace with your installation ID
+  - id: project
+    type: github/project
+    target: your-username/your-project-id
+    authRef: "YOUR_INSTALLATION_ID"
 ```
 
-### Optional: Dedicated Feedback Project
+### Example Tab Routing
 
 ```yaml
-# Dedicated project for feedback with rating field
-feedbackProject:
-  projectNumber: 1 # Your feedback project number
-  owner: org-name # Project owner (defaults to repo owner)
-  ratingField: "Rating" # Name of the Rating field in your project
+tabs:
+  - id: feedback
+    label: "Feedback"
+    icon: thumbsup
+    targets: [project]
+    fields:
+      - id: title
+        type: input
+        attributes:
+          label: "Title"
+          placeholder: "Enter a title"
+        validations:
+          required: true
+      - id: rating
+        type: rating
+        attributes:
+          label: "How satisfied are you with our website?"
+        validations:
+          required: true
 ```
 
 ### Automatic Data Collection

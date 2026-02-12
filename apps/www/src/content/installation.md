@@ -57,52 +57,84 @@ Or
 
 Place the `wafir.yaml` config file in your app's `public` directory (e.g. `public/wafir.yaml`). This file is loaded by the Wafir widget at runtime.
 
+### Migration from legacy `storage` config
+
+> The legacy `storage` key configuration has been **removed**. All routing is now handled using the `targets` array and tab-level `targets` references. To migrate, define each destination under the `targets` key, and update your tabs to reference the appropriate target via `targets: [targetId]`. See `/examples/default/wafir.yaml` for updated config patterns.
+
 **Required top-level keys:**
 
 - `installationId`: The numeric GitHub App installation ID
-- `storage`: The storage configuration for issues and/or project items
+- `targets`: The array describing feedback routing destinations
 
 Example:
 
 ```yaml
 # public/wafir.yaml
 installationId: 12345 # Your GitHub App installation ID
-mode: issue # Options: issue, feedback, both
-
-storage:
-  type: issue # Options: issue, project, both
-  owner: "your-org" # (optional)
-  repo: "your-repo" # (optional)
-  projectNumber: 1 # (if type is project)
-
-feedback:
-  title: "Submit Feedback"
-
-fields:
-  - id: title
-    type: input
-    attributes:
-      label: "Title"
-      placeholder: "Short summary"
-    validations:
-      required: true
-
-  - id: description
-    type: textarea
-    attributes:
-      label: "Description"
-      placeholder: "Describe the issue"
-    validations:
-      required: true
-
-  - id: type
-    type: dropdown
-    attributes:
-      label: "Type"
-      options: ["Bug", "Feature Request", "Question"]
-    validations:
-      required: true
+targets:
+  - id: default
+    type: github/issues
+    target: your-username/your-repo
+    authRef: "YOUR_INSTALLATION_ID"
+  - id: project
+    type: github/project
+    target: your-username/your-project-id
+    authRef: "YOUR_INSTALLATION_ID"
+tabs:
+  - id: feedback
+    label: "Feedback"
+    icon: thumbsup
+    targets: [project] # Routes feedback to 'project'
+    fields:
+      - id: title
+        type: input
+        attributes:
+          label: "Title"
+          placeholder: "Short summary"
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: "Description"
+          placeholder: "Describe the feedback"
+        validations:
+          required: true
+      - id: rating
+        type: rating
+        attributes:
+          label: "How satisfied are you with our website?"
+        validations:
+          required: true
+  - id: issue
+    label: "Issue"
+    icon: bug
+    targets: [default] # Routes feedback to 'default'
+    fields:
+      - id: title
+        type: input
+        attributes:
+          label: "Issue title"
+          placeholder: "Summarize the issue"
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: "Description"
+          placeholder: "Describe the issue"
+        validations:
+          required: true
+      - id: type
+        type: dropdown
+        attributes:
+          label: "Type"
+          options: ["Bug", "Feature Request", "Question"]
+        validations:
+          required: true
 ```
+
+> See `/examples/default/wafir.yaml` for up-to-date config templates using the new targets paradigm.
 
 ## Props Reference
 

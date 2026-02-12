@@ -4,7 +4,7 @@ WAFIR consists of the following components:
 
 - Widget. A small UI component that can be added to any web app to collect feedback and issues. The Widget is implemented in LIT and uses the shadow DOM to provide complete isolation from your application.
 - Bridge. A small service that connects the widget to your GitHub repo. The Bridge is implemented as a Fastify service that will run on an AWS Lambda function and is available as a free service for development and demonstration purposes. For production use, we recommend running the Bridge on your own infrastructure.
-- SnapStore. Temporary storage used to upload screenshots. The SnapStore is implemented as an AWS S3 bucket.
+- Screenshot Hosting. Screenshots are uploaded to S3 (or similar) for storage, managed by the backend.
 - Config. A small file in your GitHub repo (.github/wafir.yaml) used to specify where to store feedback/issues and (optionally) to tailor the associated forms.
 - GitHub App. A standard GitHub App component that you install on your GitHub repo/project to allow the Bridge to read configuration information and write feedback and issues.
 
@@ -38,11 +38,10 @@ WAFIR is simple to install and configure:
 - Configurable form
   - Developer can optionally tailor form (fields displayed, order, mandatory/optional)
   - Field validation (other than security filtering/encoding) is not required, but error messages from GitHub should be available to use if backend validation fails
-- Configurable storage
-  - As GitHub issue, project item, or both
-  - Primary use case is user input is stored as draft project item
-  - Feedback and issues can be stored in same or different GitHub Project
-- Configurable default description
+- Configurable feedback routing
+  - As GitHub issue, project item, or both, via the `targets` array in the widget YAML config
+  - Primary use case is user input is routed to draft project items or issues
+  - Feedback and issues can be routed to different projects/repos via `targets`- Configurable default description
   - Retrieved from GitHub issue template, configuration string, or null
   - If both template and string are configured, append template to string after newline
   - Strip header from template if it exists
@@ -56,7 +55,9 @@ WAFIR is simple to install and configure:
 - Good support for Shadow DOMs
 - Should be completely isolated from the outside HTML/CSS. Should not effect the site.
 
-# Alternatives Considered
+# Migration from legacy storage config
+
+> The legacy `storage` key configuration has been **removed**. All feedback routing is now managed via the `targets` array and tab-level `targets` references in the widget config. To migrate, define each feedback destination under `targets`, and ensure each tab references the appropriate target via `targets: [targetId]`.
 
 ## UI Framework:
 
@@ -85,7 +86,7 @@ WAFIR is simple to install and configure:
 
 - npm module. Easily installed into client app.
 - CDN or S3. BPS maintains responsibility for ensuring widget compatibility and availability. Would require the ability to configure the widget to connect to client app backend
-- User storage (e.g., S3). Easily installed with file copy.
+- Screenshot hosting (e.g., S3). Managed by backend for file uploads, implementation detail only.
 
 ## Existing Widgets:
 

@@ -259,47 +259,102 @@ When `mode: feedback` is set, users see a 5-star rating component followed by op
 
 ---
 
-## Storage Options
+## Target Configuration
 
-The `storage` key in your `public/wafir.yaml` file determines where feedback is stored in your GitHub repository.
+The `targets` key in your `public/wafir.yaml` file allows you to define multiple destinations for user feedback, bug reports, and suggestions. Each target is an object specifying its id, type, destination, and authentication reference:
 
-### Storage Types
-
-| Type      | Description                              |
-| --------- | ---------------------------------------- |
-| `issue`   | Create GitHub Issues for each submission |
-| `project` | Add items to a GitHub Project board      |
-| `both`    | Create both an issue and a project item  |
-
-### Example Storage Configs
-
-Add this section to your `public/wafir.yaml` file under the top-level `storage` key:
+### Example Targets Config
 
 ```yaml
-storage:
-  type: issue
-  owner: my-org # (optional) Different organization
-  repo: feedback-repo # (optional) Different repository
+targets:
+  - id: default
+    type: github/issues
+    target: your-username/your-repo
+    authRef: "YOUR_INSTALLATION_ID" # Replace with your installation ID
+  - id: project
+    type: github/project
+    target: your-username/your-project-id
+    authRef: "YOUR_INSTALLATION_ID"
 ```
 
+Tabs in your configuration reference targets:
+
 ```yaml
-storage:
-  type: project
-  projectNumber: 1 # GitHub Project number from URL
+tabs:
+  - id: feedback
+    label: Feedback
+    icon: thumbsup
+    isFeedback: true
+    targets: [project] # Routes this tab's feedback to 'project' target
+    fields:
+      - id: rating
+        type: rating
+        attributes:
+          label: "How satisfied are you with our website?"
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: "What is the main reason for this rating?"
+        validations:
+          required: false
+
+  - id: suggestion
+    label: Suggestion
+    icon: lightbulb
+    fields:
+      - id: title
+        type: input
+        attributes:
+          label: "What is your suggestion?"
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: "Additional information:"
+        validations:
+          required: false
+
+  - id: issue
+    label: Issue
+    icon: bug
+    targets: [default] # Routes this tab's feedback to 'default' target
+    fields:
+      - id: title
+        type: input
+        attributes:
+          label: "What issue did you encounter?"
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: "Additional information:"
+        validations:
+          required: true
 ```
+
+---
+
+### Migration from the legacy `storage` configuration
+
+> **Migration Notice:**
+> The legacy `storage` key has been **removed**. All feedback routing now uses the `targets` array and tab-level `targets` references. To migrate, define each destination under the `targets` key, and update your tabs to reference the appropriate target via `targets: [targetId]`. See above examples for details.
 
 ---
 
 ## Configuration Examples
 
-Place your Wafir configuration file in the `public` folder of your app, e.g. `public/wafir.yaml`. We provide ready-to-use configuration templates for common use cases (see `/examples`). All examples use the new config format and schema:
+Place your Wafir configuration file in the `public` folder of your app, e.g. `public/wafir.yaml`. We provide ready-to-use configuration templates for common use cases (see `/examples`). All examples use the new targets config format and schema:
 
 Required top-level keys:
 
 - `installationId`: Your numeric GitHub App installation ID
-- `storage`: Storage configuration/capture options
+- `targets`: Array of target definitions for feedback routing
 
-- **Basic** — Standard bug reporting setup
+- **Basic** — Standard bug reporting setup with targets
 - **Minimal** — Simplest possible config
 - **Full Featured** — All options demonstrated
 - **Privacy Focused** — No automatic data collection
