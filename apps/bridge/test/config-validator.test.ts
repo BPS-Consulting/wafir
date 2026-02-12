@@ -112,7 +112,6 @@ describe("validateSameOrigin", () => {
 
 describe("validateFormFields", () => {
   const minimalConfig: WafirConfig = {
-    installationId: 123,
     targets: [
       {
         id: "default",
