@@ -37,6 +37,9 @@ export default defineConfig(({ mode }) => {
     define: isIIFE ? browserDefines : {},
     // Don't copy public folder for library builds
     publicDir: false,
+    server: {
+      port: 5173,
+    },
     build: {
       lib: {
         entry: "src/wafir-widget.ts",

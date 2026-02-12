@@ -89,7 +89,6 @@ export function encodeYamlToBase64(yamlContent: string): string {
 // Sample configs for testing
 export const sampleConfigs = {
   minimal: `
-installationId: 123
 title: "Feedback"
 targets:
   - id: default
@@ -110,7 +109,6 @@ tabs:
           required: true
 `,
   withProject: `
-installationId: 123
 title: "Feedback"
 targets:
   - id: github-issues
@@ -135,7 +133,6 @@ tabs:
           required: true
 `,
   withFeedbackProject: `
-installationId: 123
 title: "Feedback"
 targets:
   - id: default
@@ -162,7 +159,6 @@ tabs:
         type: textarea
 `,
   full: `
-installationId: 123
 title: "Full Config"
 targets:
   - id: github-issues

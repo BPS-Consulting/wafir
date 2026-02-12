@@ -129,7 +129,6 @@ export function getDefaultTabs(): TabConfig[] {
 
 export function getDefaultConfig(): WafirConfig {
   return {
-    installationId: 0,
     title: "Contact Us",
     targets: [
       {

@@ -1,16 +1,13 @@
 # WAFIR Configuration Example - Basic Usage
 # Host this file anywhere (S3, Gist, CDN, etc.) and point your widget to it via configUrl
 
-# Required: Your GitHub App installation ID
-installationId: 12345678
-
 title: "Report a Bug"
 
 targets:
   - id: default
     type: github/issues
     target: your-username/your-repo
-    authRef: "YOUR_INSTALLATION_ID"  # Replace with your installation ID
+    authRef: "YOUR_INSTALLATION_ID" # Replace with your GitHub App installation ID
 
 # Widget tabs - only showing issue tab for basic bug reporting
 tabs:

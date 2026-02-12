@@ -1,20 +1,19 @@
 # WAFIR Configuration Example - Default
 # This example shows what the widget displays when no tabs are specified.
 # Use this as a reference for the default behavior.
+# Host this file anywhere and point your widget to it via configUrl
 
 title: "Contact Us"
-installationId: 105081464
 
-storage:
-  type: issue # Options: issue, project, both
-  owner: BPS-Consulting  
-  repo: wafir
-
-# Optional: Dedicated project for feedback with rating field
-# feedbackProject:
-#   projectNumber: 1          # Your feedback project number
-#   owner: org-name           # Project owner (defaults to repo owner)
-#   ratingField: "Rating"     # Name of the Rating field in your project
+targets:
+  - id: default
+    type: github/issues
+    target: BPS-Consulting/wafir
+    authRef: "105081464"
+  - id: project
+    type: github/project
+    target: BPS-Consulting/9
+    authRef: "105081464"
 
 telemetry:
   screenshot: true
@@ -26,11 +25,12 @@ tabs:
     label: Feedback
     icon: thumbsup
     isFeedback: true
+    targets: [project]
     fields:
       - id: rating
         type: rating
         attributes:
-          label: "How satisfied are you with our website? (if you see this, then the config fetching works!)"
+          label: "How satisfied are you with our website? AGAGAG"
         validations:
           required: true
       - id: description
@@ -60,6 +60,7 @@ tabs:
   - id: issue
     label: Issue
     icon: bug
+    targets: [default]
     fields:
       - id: title
         type: input

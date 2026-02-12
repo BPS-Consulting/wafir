@@ -19,10 +19,8 @@ const getClient = () => {
 export type WafirConfigBase =
   paths["/config/"]["get"]["responses"][200]["content"]["application/json"];
 
-// Extended WafirConfig type that includes installationId (required for user-hosted configs)
+// Extended WafirConfig type with targets array (required for user-hosted configs)
 export type WafirConfig = WafirConfigBase & {
-  /** GitHub App installation ID. Required for authenticating with the GitHub API. */
-  installationId: number;
   targets: Array<{
     /** Unique identifier for this target, referenced by tabs to route submissions. */
     id: string;
@@ -104,9 +102,12 @@ export interface ConsoleLogEntry {
 export interface SubmitIssueParams {
   /** URL to the authoritative config file - required for server-side validation */
   configUrl: string;
-  installationId: number;
-  owner: string;
-  repo: string;
+  /** Target type (e.g., github/issues, github/project) */
+  targetType: string;
+  /** Target identifier (e.g., owner/repo) */
+  target: string;
+  /** Authentication reference (e.g., installation ID for GitHub) */
+  authRef: string;
   title: string;
   /** The active tab ID for field validation */
   tabId?: string;
@@ -124,9 +125,9 @@ export interface SubmitIssueParams {
 export const submitIssue = async (params: SubmitIssueParams) => {
   const {
     configUrl,
-    installationId,
-    owner,
-    repo,
+    targetType,
+    target,
+    authRef,
     title,
     tabId,
     labels,
@@ -146,9 +147,9 @@ export const submitIssue = async (params: SubmitIssueParams) => {
 
   const formData = new FormData();
   formData.append("configUrl", configUrl);
-  formData.append("installationId", String(installationId));
-  formData.append("owner", owner);
-  formData.append("repo", repo);
+  formData.append("targetType", targetType);
+  formData.append("target", target);
+  formData.append("authRef", authRef);
   formData.append("title", title);
   if (tabId) {
     formData.append("tabId", tabId);

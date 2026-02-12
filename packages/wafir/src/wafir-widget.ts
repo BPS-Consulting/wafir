@@ -173,7 +173,6 @@ export class WafirWidget extends LitElement {
       // Merge direct widget properties with default config
       this._config = {
         ...defaultConfig,
-        installationId: this.installationId ?? defaultConfig.installationId,
         targets:
           this.owner && this.repo
             ? [
@@ -181,9 +180,7 @@ export class WafirWidget extends LitElement {
                   id: "default",
                   type: "github/issues",
                   target: `${this.owner}/${this.repo}`,
-                  authRef: String(
-                    this.installationId ?? defaultConfig.installationId,
-                  ),
+                  authRef: "0",
                 },
               ]
             : defaultConfig.targets,
@@ -228,13 +225,9 @@ export class WafirWidget extends LitElement {
       }
 
       // Validate required fields
-      if (
-        !config.installationId ||
-        !config.targets ||
-        config.targets.length === 0
-      ) {
+      if (!config.targets || config.targets.length === 0) {
         console.warn(
-          "Wafir: Config missing required fields (installationId, targets), using defaults",
+          "Wafir: Config missing required fields (targets), using defaults",
           config,
         );
         this._config = getDefaultConfig();
@@ -317,9 +310,6 @@ export class WafirWidget extends LitElement {
   @property({ type: String })
   bridgeUrl = "";
 
-  @property({ type: Number })
-  installationId?: number;
-
   @property({ type: String })
   owner = "";
 
@@ -335,18 +325,19 @@ export class WafirWidget extends LitElement {
 
     if (
       !this._config ||
-      !this._config.installationId ||
       !this._config.targets ||
       this._config.targets.length === 0
     ) {
-      console.error("Wafir: Missing configuration (installationId or targets)");
+      console.error("Wafir: Missing configuration (targets)");
       alert("Widget configuration error");
       return;
     }
 
-    const { installationId, targets } = this._config;
+    const { targets } = this._config;
 
     // Find the target for the active tab
+    // If tab has targets specified, use the first one for validation
+    // If tab has no targets specified, backend will route to all targets
     const activeTabTargets = activeTab?.targets;
     let targetConfig = targets[0]; // Default to first target
 
@@ -358,6 +349,12 @@ export class WafirWidget extends LitElement {
       );
       if (foundTarget) {
         targetConfig = foundTarget;
+      } else {
+        console.error(
+          `Wafir: Tab "${activeTab.id}" references unknown target "${targetId}". Available targets: ${targets.map((t) => t.id).join(", ")}`,
+        );
+        alert("Widget configuration error: Invalid target reference");
+        return;
       }
     }
 
@@ -412,11 +409,14 @@ export class WafirWidget extends LitElement {
         ? this._resolveConfigUrl(this.configUrl)
         : "";
 
+      // Note: We send one target for validation, but the backend will determine
+      // which targets to actually submit to based on the tab's targets array in the config.
+      // If the tab has no targets specified, the backend will route to all configured targets.
       await submitIssue({
         configUrl: resolvedConfigUrl,
-        installationId,
-        owner,
-        repo,
+        targetType: targetConfig.type,
+        target: targetConfig.target,
+        authRef: targetConfig.authRef,
         title,
         tabId: this._activeTabId,
         labels,
