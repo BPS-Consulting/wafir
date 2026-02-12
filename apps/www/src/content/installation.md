@@ -49,7 +49,7 @@ Import and add the widget component to your application:
 Or
 
 ```html
-<wafir-widget configUrl="/config.yaml" position="bottom-right"></wafir-widget>
+<wafir-widget config-url="/config.yaml" position="bottom-right"></wafir-widget>
 ```
 
 ## 4. Configure Your App
