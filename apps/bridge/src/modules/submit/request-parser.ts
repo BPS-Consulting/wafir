@@ -28,9 +28,6 @@ export class RequestParserService {
         } else if (part.type === "field") {
           const val = part.value as string;
           switch (part.fieldname) {
-            case "installationId":
-              result.installationId = Number(val);
-              break;
             case "targetType":
               result.targetType = val;
               break;
@@ -97,16 +94,11 @@ export class RequestParserService {
       Object.assign(result, request.body as SubmitBody);
     }
 
-    // Validation: If configUrl is null or not provided, require installationId and target info
+    // Validation: If configUrl is null or not provided, require authRef and target info
     if (!result.configUrl) {
-      if (
-        !result.installationId ||
-        !result.targetType ||
-        !result.target ||
-        !result.authRef
-      ) {
+      if (!result.targetType || !result.target || !result.authRef) {
         throw new Error(
-          "Missing required fields (installationId, targetType, target, or authRef)",
+          "Missing required fields (targetType, target, or authRef)",
         );
       }
     }

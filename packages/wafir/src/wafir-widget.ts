@@ -41,20 +41,29 @@ const TAB_ICONS: Record<string, string> = {
 
 @customElement("wafir-widget")
 export class WafirWidget extends LitElement {
-  @property({ type: String })
+  @property({ type: String, attribute: "button-text" })
   buttonText = "";
 
-  @property({ type: String })
+  @property({ type: String, attribute: "modal-title" })
   modalTitle = "Contact Us";
 
   @property({ type: String })
   position: WidgetPosition = "bottom-right";
 
-  @property({ type: String })
+  @property({ type: String, attribute: "tooltip-text" })
   tooltipText = "Open Issue Widget";
 
   @property({ type: Array })
   tabs: TabConfig[] = [];
+
+  @property({ type: String, attribute: "target-type" })
+  targetType = "";
+
+  @property({ type: String })
+  target = "";
+
+  @property({ type: String, attribute: "auth-ref" })
+  authRef = "";
 
   private _isSelectingController = new StoreController(this, isSelecting);
   private _isCapturingController = new StoreController(this, isCapturing);
@@ -171,19 +180,21 @@ export class WafirWidget extends LitElement {
       const defaultConfig = getDefaultConfig();
 
       // Merge direct widget properties with default config
+      // Use new target-type/target/auth-ref props
+      const hasTargetProps = this.target && this.targetType;
+
       this._config = {
         ...defaultConfig,
-        targets:
-          this.owner && this.repo
-            ? [
-                {
-                  id: "default",
-                  type: "github/issues",
-                  target: `${this.owner}/${this.repo}`,
-                  authRef: "0",
-                },
-              ]
-            : defaultConfig.targets,
+        targets: hasTargetProps
+          ? [
+              {
+                id: "default",
+                type: this.targetType as "github/issues" | "github/project",
+                target: this.target,
+                authRef: this.authRef || "0",
+              },
+            ]
+          : defaultConfig.targets,
       };
 
       this._applyConfig(this._config);
@@ -304,17 +315,11 @@ export class WafirWidget extends LitElement {
     this._activeTabId = tabId;
   }
 
-  @property({ type: String })
+  @property({ type: String, attribute: "config-url" })
   configUrl = "";
 
-  @property({ type: String })
+  @property({ type: String, attribute: "bridge-url" })
   bridgeUrl = "";
-
-  @property({ type: String })
-  owner = "";
-
-  @property({ type: String })
-  repo = "";
 
   @state()
   private _config: WafirConfig | null = null;

@@ -107,7 +107,7 @@ const submitRoute: FastifyPluginAsync = async (
           });
         }
 
-        // Use installationId from githubTarget.authRef
+        // Get GitHub installation ID from authRef
         const installationId = Number(githubTarget.authRef);
 
         // Parse owner/repo from target string (format: "owner/repo" or "owner/projectNum")
