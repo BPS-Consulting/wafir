@@ -96,9 +96,9 @@ Update `wafir/index.html` with your test details:
 
 ```html
 <wafir-widget
-  installationId="YOUR_INSTALLATION_ID"
-  owner="YOUR_GITHUB_USERNAME"
-  repo="YOUR_REPO_NAME"
+  target-type="string"   # github/issues | github/project
+  target="string"        # e.g., owner/repo or owner/projectNum
+  auth-ref="string"       # e.g., GitHub installation ID
 ></wafir-widget>
 ```
 
@@ -110,7 +110,11 @@ import "wafir";
 function App() {
   return (
     <>
-      <wafir-widget installationId={12345678} owner="owner" repo="repo" />
+      <wafir-widget
+        target-type="string"   # github/issues | github/project
+        target="string"        # e.g., owner/repo or owner/projectNum
+        auth-ref="string"       # e.g., GitHub installation ID
+      ></wafir-widget>
       <h1>Wafir Test</h1>
     </>
   );
@@ -206,22 +210,11 @@ Configure the widget to use your self-hosted bridge:
 
 ```html
 <wafir-widget
-  installationId="YOUR_INSTALLATION_ID"
-  owner="YOUR_GITHUB_USERNAME"
-  repo="YOUR_REPO_NAME"
-  bridgeUrl="https://your-bridge.example.com"
+  target-type="string"   # github/issues | github/project
+  target="string"        # e.g., owner/repo or owner/projectNum
+  auth-ref="string"       # e.g., GitHub installation ID
+  bridge-url="" # link to the bridge
 ></wafir-widget>
-```
-
-Or in React:
-
-```tsx
-<wafir-widget
-  installationId={12345678}
-  owner="owner"
-  repo="repo"
-  bridgeUrl="https://your-bridge.example.com"
-/>
 ```
 
 ---

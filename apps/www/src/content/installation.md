@@ -40,10 +40,9 @@ Import and add the widget component to your application:
 ```html
 <!-- Add the widget -->
 <wafir-widget
-  installationId="12345"
-  owner="your-username"
-  repo="your-repo"
-  position="bottom-right"
+  target-type="string"   # github/issues | github/project
+  target="string"        # e.g., owner/repo or owner/projectNum
+  auth-ref="string"       # e.g., GitHub installation ID
 ></wafir-widget>
 ```
 
@@ -154,35 +153,13 @@ tabs:
 
 If you're self-hosting the Wafir bridge server, you can configure the widget to use your custom bridge URL:
 
-### React
-
-```jsx
-<WafirWidget
-  installationId={12345}
-  owner="your-username"
-  repo="your-repo"
-  bridgeUrl="https://your-bridge.example.com"
-/>
-```
-
-### Vue
-
-```vue
-<WafirWidget
-  :installation-id="12345"
-  owner="your-username"
-  repo="your-repo"
-  bridge-url="https://your-bridge.example.com"
-/>
-```
-
 ### Vanilla JS
 
 ```html
 <wafir-widget
-  installationId="12345"
-  owner="your-username"
-  repo="your-repo"
+  target-type="string"   # github/issues | github/project
+  target="string"        # e.g., owner/repo or owner/projectNum
+  auth-ref="string"       # e.g., GitHub installation ID
   bridgeUrl="https://your-bridge.example.com"
 ></wafir-widget>
 ```

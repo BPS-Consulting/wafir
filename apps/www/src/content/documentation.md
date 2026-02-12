@@ -122,7 +122,11 @@ Replace the default floating button with your own custom trigger element using t
 ### Vanilla HTML Example
 
 ```html
-<wafir-widget installationId="12345" owner="your-org" repo="your-repo">
+<wafir-widget
+  target-type="string"   # github/issues | github/project
+  target="string"        # e.g., owner/repo or owner/projectNum
+  auth-ref="string"       # e.g., GitHub installation ID
+>
   <button slot="trigger" class="my-custom-button">Report an Issue</button>
 </wafir-widget>
 ```

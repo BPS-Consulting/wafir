@@ -45,20 +45,38 @@ const features = [
 const quickstartCode = `<script type="module" src="https://wafir-all.s3.us-east-2.amazonaws.com/wafir/latest/wafir.js"></script>
 
 <wafir-widget
-  installationid="12345"
-  owner="your-org"
-  repo="your-repo"
+  target-type="string"   # github/issues | github/project
+  target="string"        # e.g., owner/repo or owner/projectNum
+  auth-ref="string"       # e.g., GitHub installation ID
 ></wafir-widget>`;
 
 const configCode = `# .github/wafir.yaml
-storage:
-  type: issue
+title: "Report a Bug"
 
-fields:
-  - name: title
-    label: "Title"
-    type: text
-    required: true`;
+targets:
+  - id: default
+    type: github/issues
+    target: your-username/your-repo
+    authRef: "YOUR_INSTALLATION_ID" # Replace with your GitHub App installation ID
+
+# Widget tabs - only showing issue tab for basic bug reporting
+tabs:
+  - id: issue
+    label: Issue
+    icon: bug
+    fields:
+      - id: title
+        type: input
+        attributes:
+          label: "Issue Title"
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: "Description"
+        validations:
+          required: true`;
 ---
 
 <Layout>
