@@ -2,7 +2,7 @@
   "type": "module",
   "name": "bridge",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "This project was bootstrapped with Fastify-CLI.",
   "main": "app.ts",
   "directories": {
