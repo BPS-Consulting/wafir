@@ -26,6 +26,7 @@ tabs:
     icon: thumbsup
     isFeedback: true
     targets: [project]
+    currentDate: true
     fields:
       - id: rating
         type: rating

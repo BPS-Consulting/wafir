@@ -42,6 +42,11 @@ const FIND_PROJECT_FIELDS_QUERY = `
                 name
               }
             }
+            ... on ProjectV2Field {
+              id
+              name
+              dataType
+            }
           }
         }
       }
@@ -56,6 +61,19 @@ const UPDATE_PROJECT_FIELD_MUTATION = `
       itemId: $itemId
       fieldId: $fieldId
       value: { singleSelectOptionId: $optionId }
+    }) {
+      projectV2Item { id }
+    }
+  }
+`;
+
+const UPDATE_PROJECT_DATE_FIELD_MUTATION = `
+  mutation UpdateProjectDateField($projectId: ID!, $itemId: ID!, $fieldId: ID!, $dateValue: Date!) {
+    updateProjectV2ItemFieldValue(input: {
+      projectId: $projectId
+      itemId: $itemId
+      fieldId: $fieldId
+      value: { date: $dateValue }
     }) {
       projectV2Item { id }
     }
@@ -268,6 +286,61 @@ export class GitHubProjectService {
       return { success: true };
     } catch (e: any) {
       log.error({ error: e.message }, "Failed to set Rating field");
+      return { success: false, error: e.message };
+    }
+  }
+
+  /**
+   * Sets a date field on a project item if a field starting with "Submitted" is found.
+   */
+  async setSubmittedDateField(params: {
+    octokit: any;
+    projectId: string;
+    itemId: string;
+    log: any;
+  }): Promise<RatingFieldResult> {
+    const { octokit, projectId, itemId, log } = params;
+
+    try {
+      const fieldsResult: any = await octokit.graphql(
+        FIND_PROJECT_FIELDS_QUERY,
+        {
+          projectId,
+        },
+      );
+
+      const fields = fieldsResult.node?.fields?.nodes || [];
+
+      // Find a field that starts with "Submitted" and is a DATE type
+      const submittedField = fields.find(
+        (f: any) =>
+          f?.name?.toLowerCase().startsWith("submitted") &&
+          f?.dataType === "DATE",
+      );
+
+      if (!submittedField) {
+        log.debug("No 'Submitted' date field found in project");
+        return { success: true }; // Not an error, just not found
+      }
+
+      // Format current date as ISO date string (YYYY-MM-DD) for GitHub API
+      const now = new Date();
+      const dateValue = now.toISOString().split("T")[0];
+
+      await octokit.graphql(UPDATE_PROJECT_DATE_FIELD_MUTATION, {
+        projectId,
+        itemId,
+        fieldId: submittedField.id,
+        dateValue,
+      });
+
+      log.info(
+        { fieldName: submittedField.name, itemId, dateValue },
+        "Set Submitted date field on project item",
+      );
+      return { success: true };
+    } catch (e: any) {
+      log.error({ error: e.message }, "Failed to set Submitted date field");
       return { success: false, error: e.message };
     }
   }

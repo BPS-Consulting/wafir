@@ -128,6 +128,7 @@ interface TabConfig {
   label?: string;
   icon?: string;
   isFeedback?: boolean;
+  currentDate?: boolean;
   fields?: FieldConfig[];
   targets?: string[];
 }

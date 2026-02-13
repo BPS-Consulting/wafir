@@ -20,6 +20,7 @@ export interface GithubSubmissionContext extends SubmissionContext {
   feedbackProjectNumber?: number;
   feedbackProjectOwner?: string;
   ratingFieldName?: string;
+  currentDate?: boolean;
 }
 
 /**
@@ -153,6 +154,26 @@ export class GithubIssueSubmission extends SubmissionBase {
         issueNodeId: targetNodeId,
         log: context.log,
       });
+
+      // Set submitted date field if currentDate is enabled and item was added
+      if (projectResult.added && projectResult.itemId && context.currentDate) {
+        const { nodeId: projId } = await this.projectService.findProjectNodeId(
+          context.appOctokit,
+          context.userOctokit,
+          context.projectOwner!,
+          context.projectNumber,
+          context.log,
+        );
+
+        if (projId) {
+          await this.projectService.setSubmittedDateField({
+            octokit: context.appOctokit,
+            projectId: projId,
+            itemId: projectResult.itemId,
+            log: context.log,
+          });
+        }
+      }
     }
 
     // Handle feedback submissions
@@ -189,6 +210,24 @@ export class GithubIssueSubmission extends SubmissionBase {
             itemId: projectResult.itemId,
             ratingFieldName: context.ratingFieldName || "Rating",
             rating: context.rating,
+            log: context.log,
+          });
+        }
+
+        // Set submitted date field if currentDate is enabled
+        if (
+          projectResult.added &&
+          projectResult.itemId &&
+          context.currentDate
+        ) {
+          const client =
+            shouldUseUserToken && context.userOctokit
+              ? context.userOctokit
+              : context.appOctokit;
+          await this.projectService.setSubmittedDateField({
+            octokit: client,
+            projectId: feedbackProjId,
+            itemId: projectResult.itemId,
             log: context.log,
           });
         }
