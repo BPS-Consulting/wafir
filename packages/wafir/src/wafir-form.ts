@@ -7,7 +7,8 @@ import { StoreController } from "@nanostores/lit";
 import {
   startSelection,
   formData,
-  setFormData,
+  getTabFormData,
+  setTabFormData,
   browserInfo,
   consoleLogs,
   capturedImage,
@@ -23,6 +24,10 @@ import { unsafeHTML } from "lit/directives/unsafe-html.js";
 export class WafirForm extends LitElement {
   @property({ type: String })
   formLabel = "";
+
+  @property({ type: String })
+  tabId = "";
+
   private _fields: FieldConfig[] = [];
 
   @property({ type: Array })
@@ -57,7 +62,7 @@ export class WafirForm extends LitElement {
 
   willUpdate(changedProperties: Map<string, any>) {
     if (changedProperties.has("fields")) {
-      const currentData = formData.get();
+      const currentData = getTabFormData(this.tabId);
       let hasChanges = false;
       const newData = { ...currentData };
 
@@ -69,7 +74,7 @@ export class WafirForm extends LitElement {
       });
 
       if (hasChanges) {
-        setFormData(newData);
+        setTabFormData(this.tabId, newData);
       }
     }
   }
@@ -84,15 +89,17 @@ export class WafirForm extends LitElement {
         ? (target as HTMLInputElement).checked
         : target.value;
 
-    setFormData({ ...formData.get(), [fieldId]: value });
+    const currentData = getTabFormData(this.tabId);
+    setTabFormData(this.tabId, { ...currentData, [fieldId]: value });
   }
 
   private _handleSubmit(event: Event) {
     event.preventDefault();
     this.loading = true;
+    const currentData = getTabFormData(this.tabId);
     this.dispatchEvent(
       new CustomEvent("form-submit", {
-        detail: { formData: formData.get() },
+        detail: { formData: currentData },
         bubbles: true,
         composed: true,
       }),
@@ -102,7 +109,8 @@ export class WafirForm extends LitElement {
   // Helper to render specific input types
   // Render form field input for all supported types
   private _renderFieldInput(field: FieldConfig) {
-    const value = this._formDataController.value[String(field.id)] || "";
+    const tabData = this._formDataController.value[this.tabId] || {};
+    const value = tabData[String(field.id)] || "";
     const opts = field.attributes?.options;
     function isOptionObjectArray(
       opts: FieldConfig["attributes"] extends undefined
@@ -178,8 +186,9 @@ export class WafirForm extends LitElement {
                             arr = arr.filter(
                               (v) => String(v) !== String(opt.label),
                             );
-                          setFormData({
-                            ...formData.get(),
+                          const currentData = getTabFormData(this.tabId);
+                          setTabFormData(this.tabId, {
+                            ...currentData,
                             [String(field.id)]: arr,
                           });
                         }}"
@@ -207,8 +216,9 @@ export class WafirForm extends LitElement {
                               arr = arr.filter(
                                 (v) => String(v) !== String(opt),
                               );
-                            setFormData({
-                              ...formData.get(),
+                            const currentData = getTabFormData(this.tabId);
+                            setTabFormData(this.tabId, {
+                              ...currentData,
                               [String(field.id)]: arr,
                             });
                           }}"
@@ -226,8 +236,9 @@ export class WafirForm extends LitElement {
             .value="${Number(value) || 0}"
             .labels="${field.attributes!.ratingLabels || []}"
             @rating-change="${(e: CustomEvent) => {
-              setFormData({
-                ...formData.get(),
+              const currentData = getTabFormData(this.tabId);
+              setTabFormData(this.tabId, {
+                ...currentData,
                 [String(field.id)]: e.detail.value,
               });
             }}"

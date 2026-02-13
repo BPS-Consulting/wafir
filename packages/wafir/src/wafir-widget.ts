@@ -11,7 +11,7 @@ import {
   isSelecting,
   isCapturing,
   capturedImage,
-  resetState,
+  clearTabFormData,
   setBrowserInfo,
   setConsoleLogs,
   browserInfo,
@@ -298,7 +298,6 @@ export class WafirWidget extends LitElement {
 
   private _closeModal() {
     this.isModalOpen = false;
-    resetState();
   }
 
   private _getActiveTab(): TabConfig | undefined {
@@ -438,7 +437,8 @@ export class WafirWidget extends LitElement {
       });
 
       alert("Thank you for your input!");
-      resetState();
+      clearTabFormData(this._activeTabId);
+      capturedImage.set(null);
       this.isModalOpen = false;
     } catch (error) {
       console.error("Wafir: Submit failed", error);
@@ -534,6 +534,7 @@ export class WafirWidget extends LitElement {
                   })()}
                 </div>
                 <wafir-form
+                  .tabId="${this._activeTabId}"
                   .fields="${this._getActiveFormConfig()}"
                   .formLabel="${this._getActiveTab()?.label || ""}"
                   .showBrowserInfo="${this._telemetry.browserInfo}"
