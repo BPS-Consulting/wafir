@@ -8,5 +8,5 @@ targets:
   - id: default
     type: github/issues
     target: your-username/your-repo
-    authRef: "YOUR_INSTALLATION_ID"  # Replace with your installation ID
+    authRef: "YOUR_INSTALLATION_ID" # Replace with your installation ID
 # No tabs specified - uses defaults (feedback, suggestion, issue)

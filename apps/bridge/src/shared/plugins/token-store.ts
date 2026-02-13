@@ -19,7 +19,7 @@ declare module "fastify" {
     tokenStore: {
       setUserToken: (
         installationId: number,
-        data: AccessTokenData
+        data: AccessTokenData,
       ) => Promise<void>;
       getUserToken: (installationId: number) => Promise<string | undefined>;
       deleteUserToken: (installationId: number) => Promise<boolean>;
@@ -41,7 +41,7 @@ async function refreshAccessToken(
   log: {
     info: (...args: unknown[]) => void;
     error: (...args: unknown[]) => void;
-  }
+  },
 ): Promise<AccessTokenData | null> {
   const clientId = process.env.GITHUB_CLIENT_ID;
   const clientSecret = process.env.GITHUB_CLIENT_SECRET;
@@ -55,7 +55,7 @@ async function refreshAccessToken(
   if (refreshTokenExpiry <= new Date()) {
     log.info(
       { installationId },
-      "Refresh token expired, user must re-authenticate"
+      "Refresh token expired, user must re-authenticate",
     );
     return null;
   }
@@ -76,7 +76,7 @@ async function refreshAccessToken(
           grant_type: "refresh_token",
           refresh_token: data.refreshToken,
         }),
-      }
+      },
     );
 
     const tokenData = (await response.json()) as {
@@ -97,11 +97,11 @@ async function refreshAccessToken(
       accessToken: tokenData.access_token,
       refreshToken: tokenData.refresh_token || data.refreshToken,
       expiresAt: new Date(
-        now.getTime() + (tokenData.expires_in || 28800) * 1000
+        now.getTime() + (tokenData.expires_in || 28800) * 1000,
       ).toISOString(),
       refreshTokenExpiresAt: tokenData.refresh_token_expires_in
         ? new Date(
-            now.getTime() + tokenData.refresh_token_expires_in * 1000
+            now.getTime() + tokenData.refresh_token_expires_in * 1000,
           ).toISOString()
         : data.refreshTokenExpiresAt,
     };
@@ -113,7 +113,7 @@ async function refreshAccessToken(
         Body: JSON.stringify(newData),
         ContentType: "application/json",
         ServerSideEncryption: "AES256",
-      })
+      }),
     );
 
     log.info({ installationId }, "Token refreshed and stored");
@@ -133,7 +133,7 @@ export default fp(async (fastify) => {
   fastify.decorate("tokenStore", {
     setUserToken: async (
       installationId: number,
-      data: AccessTokenData
+      data: AccessTokenData,
     ): Promise<void> => {
       if (!bucketName) {
         fastify.log.warn("Cannot store token: S3_BUCKET_NAME not configured");
@@ -147,13 +147,13 @@ export default fp(async (fastify) => {
           Body: JSON.stringify(data),
           ContentType: "application/json",
           ServerSideEncryption: "AES256",
-        })
+        }),
       );
       fastify.log.info({ installationId }, "Stored user token in S3");
     },
 
     getUserToken: async (
-      installationId: number
+      installationId: number,
     ): Promise<string | undefined> => {
       if (!bucketName) {
         return undefined;
@@ -164,7 +164,7 @@ export default fp(async (fastify) => {
           new GetObjectCommand({
             Bucket: bucketName,
             Key: getTokenKey(installationId),
-          })
+          }),
         );
 
         const body = await response.Body?.transformToString();
@@ -179,7 +179,7 @@ export default fp(async (fastify) => {
           const refreshedData = await refreshAccessToken(
             data,
             installationId,
-            fastify.log
+            fastify.log,
           );
           if (refreshedData) {
             return refreshedData.accessToken;
@@ -196,7 +196,7 @@ export default fp(async (fastify) => {
         const message = error instanceof Error ? error.message : String(error);
         fastify.log.error(
           { error: message, installationId },
-          "Failed to get user token"
+          "Failed to get user token",
         );
         return undefined;
       }
@@ -212,7 +212,7 @@ export default fp(async (fastify) => {
           new DeleteObjectCommand({
             Bucket: bucketName,
             Key: getTokenKey(installationId),
-          })
+          }),
         );
         fastify.log.info({ installationId }, "Deleted user token from S3");
         return true;
@@ -220,7 +220,7 @@ export default fp(async (fastify) => {
         const message = error instanceof Error ? error.message : String(error);
         fastify.log.error(
           { error: message, installationId },
-          "Failed to delete user token"
+          "Failed to delete user token",
         );
         return false;
       }
@@ -236,7 +236,7 @@ export default fp(async (fastify) => {
           new HeadObjectCommand({
             Bucket: bucketName,
             Key: getTokenKey(installationId),
-          })
+          }),
         );
         return true;
       } catch {

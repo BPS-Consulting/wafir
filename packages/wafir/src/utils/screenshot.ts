@@ -2,7 +2,7 @@ import { domToDataUrl } from "modern-screenshot";
 import { isCapturing, setCapturedImage } from "../store";
 
 export async function takeFullPageScreenshot(
-  highlightEl: HTMLElement | null = null
+  highlightEl: HTMLElement | null = null,
 ) {
   isCapturing.set(true);
 
@@ -37,12 +37,12 @@ export async function takeFullPageScreenshot(
     const width = Math.max(
       document.documentElement.scrollWidth,
       document.body.scrollWidth,
-      window.innerWidth
+      window.innerWidth,
     );
     const height = Math.max(
       document.documentElement.scrollHeight,
       document.body.scrollHeight,
-      window.innerHeight
+      window.innerHeight,
     );
 
     const computedStyle = window.getComputedStyle(document.body);

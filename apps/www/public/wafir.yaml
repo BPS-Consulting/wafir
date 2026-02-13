@@ -7,7 +7,7 @@ installationId: 105081464
 
 storage:
   type: issue # Options: issue, project, both
-  owner: BPS-Consulting  
+  owner: BPS-Consulting
   repo: wafir
   projectNumber: 9
 
