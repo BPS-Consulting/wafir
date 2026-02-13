@@ -112,6 +112,12 @@ const tabSchema = {
       description:
         "If true, rating from this tab populates project Rating field",
     },
+    currentDate: {
+      type: "boolean",
+      default: false,
+      description:
+        "If true, the current date and time will be automatically inserted into the issue body in a human-readable format",
+    },
     fields: {
       type: "array",
       items: fieldSchema,

@@ -232,38 +232,6 @@ telemetry:
 
 ---
 
-## Mode Configuration
-
-Choose what type of input the widget collects in your `public/wafir.yaml` config file.
-
-### Widget Modes
-
-| Mode       | Description                                                          |
-| ---------- | -------------------------------------------------------------------- |
-| `issue`    | Bug reporting form with title, description, and type (default)       |
-| `feedback` | Star rating with optional comments for user satisfaction             |
-| `both`     | Tabbed interface allowing users to choose between issue and feedback |
-
-### Configuration
-
-```yaml
-mode: issue # Options: issue, feedback, both
-```
-
-### Feedback Mode Example
-
-```yaml
-mode: feedback
-
-feedback:
-  title: "How are we doing?"
-  labels: ["feedback", "user-satisfaction"]
-```
-
-When `mode: feedback` is set, users see a 5-star rating component followed by optional comment fields.
-
----
-
 ## Target Configuration
 
 The `targets` key in your `public/wafir.yaml` file allows you to define multiple destinations for user feedback, bug reports, and suggestions. Each target is an object specifying its id, type, destination, and authentication reference:
@@ -291,6 +259,7 @@ tabs:
     icon: thumbsup
     isFeedback: true
     targets: [project] # Routes this tab's feedback to 'project' target
+    currentDate: true # Includes the current date into the issue body
     fields:
       - id: rating
         type: rating
@@ -340,13 +309,6 @@ tabs:
         validations:
           required: true
 ```
-
----
-
-### Migration from the legacy `storage` configuration
-
-> **Migration Notice:**
-> The legacy `storage` key has been **removed**. All feedback routing now uses the `targets` array and tab-level `targets` references. To migrate, define each destination under the `targets` key, and update your tabs to reference the appropriate target via `targets: [targetId]`. See above examples for details.
 
 ---
 
