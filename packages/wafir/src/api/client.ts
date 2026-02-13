@@ -37,6 +37,12 @@ export type WafirConfig = WafirConfigBase & {
 export type TabConfigApi = NonNullable<WafirConfig["tabs"]>[number];
 export type FieldConfigApi = NonNullable<TabConfigApi["fields"]>[number];
 
+// Helper type: Field config when it's definitely a field object (not a URL string)
+export type FieldObject = Exclude<FieldConfigApi, string>;
+
+// Helper type: Tabs after fields have been resolved (fields is always an array, never URL string)
+export type ResolvedFieldsArray = FieldObject[];
+
 export const checkBridgeHealth = async (
   bridgeUrl?: string,
 ): Promise<boolean> => {

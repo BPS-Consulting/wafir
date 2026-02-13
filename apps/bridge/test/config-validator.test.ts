@@ -410,4 +410,112 @@ describe("validateFormFields", () => {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0].code).toBe("MISSING_TAB_ID");
   });
+
+  describe("URL-based fields", () => {
+    it("accepts tab with fields as URL string (skips validation)", () => {
+      const config: WafirConfig = {
+        ...minimalConfig,
+        tabs: [
+          {
+            id: "bug",
+            fields: "https://example.com/bug_report.yml",
+          },
+        ],
+      };
+
+      // With URL-based fields, server can't validate field names
+      // So this should pass even with any field names
+      const formFields = {
+        title: "Bug Title",
+        description: "Bug description",
+        anyField: "Any value",
+      };
+
+      const result = validateFormFields(formFields, config, "bug");
+
+      // Should be valid because server-side validation is skipped for URL-based fields
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it("handles config with mix of array-based and URL-based field tabs", () => {
+      const config: WafirConfig = {
+        ...minimalConfig,
+        tabs: [
+          {
+            id: "feedback",
+            fields: [
+              { id: "rating", type: "rating" },
+              { id: "comment", type: "textarea" },
+            ],
+          },
+          {
+            id: "bug",
+            fields: "https://example.com/bug_report.yml",
+          },
+        ],
+      };
+
+      // Array-based tab should validate normally
+      const feedbackResult = validateFormFields(
+        {
+          rating: 5,
+          comment: "Great!",
+        },
+        config,
+        "feedback",
+      );
+
+      expect(feedbackResult.valid).toBe(true);
+      expect(feedbackResult.errors).toHaveLength(0);
+
+      // URL-based tab should skip validation
+      const bugResult = validateFormFields(
+        {
+          title: "Bug",
+          anyField: "Any value",
+        },
+        config,
+        "bug",
+      );
+
+      expect(bugResult.valid).toBe(true);
+      expect(bugResult.errors).toHaveLength(0);
+    });
+
+    it("array-based fields tab still validates field names strictly", () => {
+      const config: WafirConfig = {
+        ...minimalConfig,
+        tabs: [
+          {
+            id: "feedback",
+            fields: [
+              { id: "rating", type: "rating" },
+              { id: "comment", type: "textarea" },
+            ],
+          },
+          {
+            id: "bug",
+            fields: "https://example.com/bug_report.yml",
+          },
+        ],
+      };
+
+      // Array-based tab should reject unknown fields
+      const result = validateFormFields(
+        {
+          rating: 5,
+          comment: "Great!",
+          unknownField: "Should be rejected",
+        },
+        config,
+        "feedback",
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0].code).toBe("UNKNOWN_FIELD");
+      expect(result.errors[0].field).toBe("unknownField");
+    });
+  });
 });

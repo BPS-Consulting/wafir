@@ -129,7 +129,7 @@ interface TabConfig {
   icon?: string;
   isFeedback?: boolean;
   currentDate?: boolean;
-  fields?: FieldConfig[];
+  fields?: FieldConfig[] | string;
   targets?: string[];
 }
 
@@ -345,8 +345,7 @@ export function validateTargetMatch(
 }
 
 /**
- * Gets the allowed field IDs for a specific tab from the config.
- * Only returns fields explicitly defined in the tab configuration.
+ * Gets all allowed field IDs for a specific tab from the config.
  * If no tab is found or no fields are defined, returns an empty set.
  */
 function getAllowedFieldIds(config: WafirConfig, tabId?: string): Set<string> {
@@ -361,7 +360,8 @@ function getAllowedFieldIds(config: WafirConfig, tabId?: string): Set<string> {
   const tab = config.tabs?.find((t) => t.id === tabId);
 
   // Only use fields explicitly defined in the tab configuration
-  if (tab?.fields && tab.fields.length > 0) {
+  // If fields is a string (URL), we can't determine allowed fields at server validation time
+  if (tab?.fields && Array.isArray(tab.fields) && tab.fields.length > 0) {
     for (const field of tab.fields) {
       if (field.id) {
         allowedFields.add(field.id);
@@ -387,7 +387,8 @@ function getRequiredFieldIds(config: WafirConfig, tabId?: string): Set<string> {
   const tab = config.tabs?.find((t) => t.id === tabId);
 
   // Only use fields explicitly marked as required in the tab configuration
-  if (tab?.fields) {
+  // If fields is a string (URL), we can't determine required fields at server validation time
+  if (tab?.fields && Array.isArray(tab.fields)) {
     for (const field of tab.fields) {
       if (field.id && field.validations?.required) {
         requiredFields.add(field.id);
@@ -407,7 +408,11 @@ function getFieldConfig(
   fieldId: string,
 ): FieldConfig | undefined {
   const tab = config.tabs?.find((t) => t.id === tabId);
-  return tab?.fields?.find((f) => f.id === fieldId);
+  // If fields is a string (URL), we can't get field config at server validation time
+  if (!tab?.fields || typeof tab.fields === "string") {
+    return undefined;
+  }
+  return tab.fields.find((f: FieldConfig) => f.id === fieldId);
 }
 
 /**
@@ -566,6 +571,17 @@ export function validateFormFields(
     return {
       valid: false,
       errors,
+      config,
+    };
+  }
+
+  // If tab uses URL-based fields, skip server-side field validation
+  // The fields will be resolved and validated on the client side
+  if (typeof tab.fields === "string") {
+    // URL-based fields - skip server-side validation
+    return {
+      valid: true,
+      errors: [],
       config,
     };
   }

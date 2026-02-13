@@ -1,5 +1,5 @@
 import type {
-  FieldConfigApi as FieldConfig,
+  FieldObject as FieldConfig,
   TabConfigApi as TabConfig,
   WafirConfig,
 } from "./api/client";
@@ -88,6 +88,7 @@ export const DEFAULT_TABS: TabConfig[] = [
     label: "Feedback",
     icon: "thumbsup",
     isFeedback: true,
+    currentDate: false,
     fields: DEFAULT_FEEDBACK_FIELDS,
   },
   {
@@ -95,6 +96,7 @@ export const DEFAULT_TABS: TabConfig[] = [
     label: "Suggestion",
     icon: "lightbulb",
     isFeedback: false,
+    currentDate: false,
     fields: DEFAULT_SUGGESTION_FIELDS,
   },
   {
@@ -102,6 +104,7 @@ export const DEFAULT_TABS: TabConfig[] = [
     label: "Issue",
     icon: "bug",
     isFeedback: false,
+    currentDate: false,
     fields: DEFAULT_ISSUE_FIELDS,
   },
 ];

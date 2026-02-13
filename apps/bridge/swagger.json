@@ -12,7 +12,9 @@
     "/auth/github": {
       "get": {
         "summary": "Initiate GitHub OAuth",
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "description": "Redirects to GitHub OAuth for user authorization",
         "parameters": [
           {
@@ -42,7 +44,9 @@
     "/auth/github/callback": {
       "get": {
         "summary": "GitHub OAuth Callback",
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "description": "Handles OAuth callback from GitHub",
         "parameters": [
           {
@@ -72,7 +76,9 @@
     "/auth/status/{installationId}": {
       "get": {
         "summary": "Check Auth Status",
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "description": "Check if user token exists for installation",
         "parameters": [
           {
@@ -109,7 +115,9 @@
     "/auth/{installationId}": {
       "delete": {
         "summary": "Disconnect Auth",
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "description": "Remove stored user token for installation",
         "parameters": [
           {
@@ -131,7 +139,9 @@
     "/config/": {
       "get": {
         "summary": "Get WAFIR Configuration (Deprecated)",
-        "tags": ["WAFIR"],
+        "tags": [
+          "WAFIR"
+        ],
         "description": "DEPRECATED: The widget now fetches config directly from a user-hosted URL. This endpoint is kept for backward compatibility but will be removed in a future version. Fetches and parses .github/wafir.yaml from the target repository.",
         "parameters": [
           {
@@ -167,7 +177,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["targets"],
+                  "required": [
+                    "targets"
+                  ],
                   "properties": {
                     "title": {
                       "type": "string",
@@ -180,7 +192,12 @@
                       "description": "Target destinations for form submissions. Each target defines where and how submissions are stored.",
                       "items": {
                         "type": "object",
-                        "required": ["id", "type", "target", "authRef"],
+                        "required": [
+                          "id",
+                          "type",
+                          "target",
+                          "authRef"
+                        ],
                         "properties": {
                           "id": {
                             "type": "string",
@@ -188,7 +205,10 @@
                           },
                           "type": {
                             "type": "string",
-                            "enum": ["github/issues", "github/project"],
+                            "enum": [
+                              "github/issues",
+                              "github/project"
+                            ],
                             "description": "Target type using MIME-type convention. Currently supported: github/issues, github/project."
                           },
                           "target": {
@@ -228,7 +248,9 @@
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "required": ["id"],
+                        "required": [
+                          "id"
+                        ],
                         "properties": {
                           "id": {
                             "type": "string",
@@ -240,7 +262,11 @@
                           },
                           "icon": {
                             "type": "string",
-                            "enum": ["thumbsup", "lightbulb", "bug"],
+                            "enum": [
+                              "thumbsup",
+                              "lightbulb",
+                              "bug"
+                            ],
                             "description": "Tab icon"
                           },
                           "isFeedback": {
@@ -248,104 +274,123 @@
                             "default": false,
                             "description": "If true, rating from this tab populates project Rating field"
                           },
+                          "currentDate": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "If true, the current date and time will be automatically inserted into the issue body in a human-readable format"
+                          },
                           "fields": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "required": ["type"],
-                              "properties": {
-                                "type": {
-                                  "type": "string",
-                                  "enum": [
-                                    "input",
-                                    "email",
-                                    "textarea",
-                                    "dropdown",
-                                    "checkboxes",
-                                    "markdown",
-                                    "rating"
-                                  ],
-                                  "description": "Field input type. Matches GitHub Form Schema types plus Wafir extensions."
-                                },
-                                "id": {
-                                  "type": "string",
-                                  "description": "Unique identifier for the field (used as key in JSON output/issue body)."
-                                },
-                                "attributes": {
+                            "oneOf": [
+                              {
+                                "type": "array",
+                                "items": {
                                   "type": "object",
-                                  "description": "Visual and behavioral attributes for the field.",
+                                  "required": [
+                                    "type"
+                                  ],
                                   "properties": {
-                                    "label": {
+                                    "type": {
                                       "type": "string",
-                                      "description": "Display label for the field."
+                                      "enum": [
+                                        "input",
+                                        "email",
+                                        "textarea",
+                                        "dropdown",
+                                        "checkboxes",
+                                        "markdown",
+                                        "rating"
+                                      ],
+                                      "description": "Field input type. Matches GitHub Form Schema types plus Wafir extensions."
                                     },
-                                    "description": {
+                                    "id": {
                                       "type": "string",
-                                      "description": "Helper text displayed below the label."
+                                      "description": "Unique identifier for the field (used as key in JSON output/issue body)."
                                     },
-                                    "placeholder": {
-                                      "type": "string",
-                                      "description": "Placeholder text (input, textarea, email only)."
-                                    },
-                                    "value": {
-                                      "type": "string",
-                                      "description": "Default value or the Markdown content (markdown type)."
-                                    },
-                                    "render": {
-                                      "type": "string",
-                                      "description": "Syntax highlighting style for textarea (e.g., 'shell', 'javascript')."
-                                    },
-                                    "multiple": {
-                                      "type": "boolean",
-                                      "description": "Allow multiple selections (dropdown type only)."
-                                    },
-                                    "options": {
-                                      "description": "Options for dropdown or checkboxes.",
-                                      "oneOf": [
-                                        {
+                                    "attributes": {
+                                      "type": "object",
+                                      "description": "Visual and behavioral attributes for the field.",
+                                      "properties": {
+                                        "label": {
+                                          "type": "string",
+                                          "description": "Display label for the field."
+                                        },
+                                        "description": {
+                                          "type": "string",
+                                          "description": "Helper text displayed below the label."
+                                        },
+                                        "placeholder": {
+                                          "type": "string",
+                                          "description": "Placeholder text (input, textarea, email only)."
+                                        },
+                                        "value": {
+                                          "type": "string",
+                                          "description": "Default value or the Markdown content (markdown type)."
+                                        },
+                                        "render": {
+                                          "type": "string",
+                                          "description": "Syntax highlighting style for textarea (e.g., 'shell', 'javascript')."
+                                        },
+                                        "multiple": {
+                                          "type": "boolean",
+                                          "description": "Allow multiple selections (dropdown type only)."
+                                        },
+                                        "options": {
+                                          "description": "Options for dropdown or checkboxes.",
+                                          "oneOf": [
+                                            {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "object",
+                                                "required": [
+                                                  "label"
+                                                ],
+                                                "properties": {
+                                                  "label": {
+                                                    "type": "string"
+                                                  },
+                                                  "required": {
+                                                    "type": "boolean"
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "ratingLabels": {
                                           "type": "array",
                                           "items": {
                                             "type": "string"
-                                          }
-                                        },
-                                        {
-                                          "type": "array",
-                                          "items": {
-                                            "type": "object",
-                                            "required": ["label"],
-                                            "properties": {
-                                              "label": {
-                                                "type": "string"
-                                              },
-                                              "required": {
-                                                "type": "boolean"
-                                              }
-                                            }
-                                          }
+                                          },
+                                          "description": "Custom labels for star rating (Wafir extension only)."
                                         }
-                                      ]
+                                      }
                                     },
-                                    "ratingLabels": {
-                                      "type": "array",
-                                      "items": {
-                                        "type": "string"
-                                      },
-                                      "description": "Custom labels for star rating (Wafir extension only)."
+                                    "validations": {
+                                      "type": "object",
+                                      "properties": {
+                                        "required": {
+                                          "type": "boolean",
+                                          "description": "Whether the field is required."
+                                        }
+                                      }
                                     }
                                   }
                                 },
-                                "validations": {
-                                  "type": "object",
-                                  "properties": {
-                                    "required": {
-                                      "type": "boolean",
-                                      "description": "Whether the field is required."
-                                    }
-                                  }
-                                }
+                                "description": "Array of field configurations"
+                              },
+                              {
+                                "type": "string",
+                                "format": "uri",
+                                "description": "URL to a YAML file containing a GitHub Issue Form template (https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-issue-forms)"
                               }
-                            },
-                            "description": "Form fields for this tab. If omitted, defaults are used for known tab IDs."
+                            ],
+                            "description": "Form fields for this tab. Can be an array of field objects or a URL to a GitHub Issue Form YAML template. If omitted, defaults are used for known tab IDs."
                           },
                           "targets": {
                             "type": "array",
@@ -425,7 +470,9 @@
     "/health/": {
       "get": {
         "summary": "Health Check",
-        "tags": ["Health"],
+        "tags": [
+          "Health"
+        ],
         "description": "Returns the health status of the bridge service",
         "responses": {
           "200": {
@@ -452,7 +499,9 @@
     "/submit/": {
       "post": {
         "summary": "Submit Feedback/Issue",
-        "tags": ["WAFIR"],
+        "tags": [
+          "WAFIR"
+        ],
         "description": "Creates a GitHub issue or project draft from form fields. Supports multipart/form-data.",
         "responses": {
           "200": {

@@ -22,7 +22,7 @@ import {
 import { StoreController } from "@nanostores/lit";
 import type {
   TabConfigApi as TabConfig,
-  FieldConfigApi as FieldConfig,
+  FieldObject as FieldConfig,
   WafirConfig,
 } from "./api/client.js";
 import { dataURLtoBlob } from "./utils/file.js";
@@ -32,8 +32,17 @@ import {
   getDefaultFields,
   getDefaultConfig,
 } from "./default-config.js";
+import { fetchAndTransformGitHubIssueForm } from "./utils/github-issue-form.js";
 
 type WidgetPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
+
+/**
+ * Internal tab config with fields always resolved to an array.
+ * Used after fields have been resolved from URLs or arrays.
+ */
+type ResolvedTabConfig = Omit<TabConfig, "fields"> & {
+  fields?: FieldConfig[]; // Always an array, never a string URL
+};
 
 const TAB_ICONS: Record<string, string> = {
   thumbsup: thumbsupIcon,
@@ -87,7 +96,7 @@ export class WafirWidget extends LitElement {
   private _hasCustomTrigger = false;
 
   @state()
-  private _tabs: TabConfig[] = getDefaultTabs();
+  private _tabs: ResolvedTabConfig[] = getDefaultTabs() as ResolvedTabConfig[];
 
   @state()
   private _activeTabId: string = "feedback";
@@ -107,6 +116,7 @@ export class WafirWidget extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._checkCustomTrigger();
+    // Start resolving inline tabs asynchronously
     this._mergeInlineTabs();
   }
 
@@ -114,15 +124,65 @@ export class WafirWidget extends LitElement {
     this._hasCustomTrigger = this.querySelector('[slot="trigger"]') !== null;
   }
 
-  private _mergeInlineTabs() {
+  /**
+   * Resolves fields from either an array or a URL string.
+   * If fields is a string (URL), fetches and transforms the GitHub Issue Form template.
+   * If fetch fails, logs error and returns empty array to suppress the form.
+   * @param fields - Array of field configs or URL string
+   * @param tabId - Tab ID for default fields fallback
+   * @returns Array of FieldConfig objects (never includes string URLs)
+   */
+  private async _resolveFields(
+    fields: FieldConfig[] | string | undefined,
+    tabId: string,
+  ): Promise<FieldConfig[]> {
+    // If fields is undefined or empty array, use defaults
+    if (!fields) {
+      return getDefaultFields(tabId) as FieldConfig[];
+    }
+
+    // If fields is an array, use it directly (cast to exclude string from union)
+    if (Array.isArray(fields)) {
+      return (
+        fields.length > 0 ? fields : getDefaultFields(tabId)
+      ) as FieldConfig[];
+    }
+
+    // If fields is a string, treat it as a URL
+    if (typeof fields === "string") {
+      try {
+        const fetchedFields = await fetchAndTransformGitHubIssueForm(fields);
+        if (fetchedFields.length === 0) {
+          console.warn(
+            `Wafir: GitHub Issue Form template at ${fields} has no fields. Using defaults for tab ${tabId}.`,
+          );
+          return getDefaultFields(tabId) as FieldConfig[];
+        }
+        return fetchedFields as FieldConfig[];
+      } catch (error) {
+        console.error(
+          `Wafir: Failed to load fields from URL ${fields} for tab ${tabId}:`,
+          error,
+        );
+        // Return empty array to suppress the form (as per requirement)
+        return [];
+      }
+    }
+
+    // Fallback to defaults
+    return getDefaultFields(tabId) as FieldConfig[];
+  }
+
+  private async _mergeInlineTabs() {
     if (this.tabs && this.tabs.length > 0) {
-      this._tabs = this.tabs.map((tab) => ({
-        ...tab,
-        fields:
-          tab.fields && tab.fields.length > 0
-            ? tab.fields
-            : getDefaultFields(tab.id),
-      }));
+      // Resolve all tab fields (may involve fetching from URLs)
+      const resolvedTabs = await Promise.all(
+        this.tabs.map(async (tab) => ({
+          ...tab,
+          fields: await this._resolveFields(tab.fields, tab.id),
+        })),
+      );
+      this._tabs = resolvedTabs;
       if (this._tabs.length > 0) {
         this._activeTabId = this._tabs[0].id;
       }
@@ -293,7 +353,7 @@ export class WafirWidget extends LitElement {
           : defaultConfig.targets,
       };
 
-      this._applyConfig(this._config);
+      await this._applyConfig(this._config);
       return;
     }
 
@@ -338,36 +398,39 @@ export class WafirWidget extends LitElement {
           config,
         );
         this._config = getDefaultConfig();
-        this._applyConfig(this._config);
+        await this._applyConfig(this._config);
         return;
       }
 
       this._config = config;
-      this._applyConfig(config);
+      await this._applyConfig(config);
     } catch (error) {
       console.error("Wafir: Failed to fetch remote config, using defaults", {
         error,
         configUrl: this.configUrl,
       });
       this._config = getDefaultConfig();
-      this._applyConfig(this._config);
+      await this._applyConfig(this._config);
     } finally {
       this.isConfigLoading = false;
     }
   }
 
-  private _applyConfig(config: WafirConfig) {
+  private async _applyConfig(config: WafirConfig) {
     if (config.tabs && Array.isArray(config.tabs)) {
-      this._tabs = config.tabs.map((tab: TabConfig) => ({
-        id: tab.id,
-        label: tab.label || this._capitalize(tab.id),
-        icon: tab.icon,
-        isFeedback: tab.isFeedback ?? false,
-        fields:
-          tab.fields && tab.fields.length > 0
-            ? tab.fields
-            : getDefaultFields(tab.id),
-      }));
+      // Resolve all tab fields (may involve fetching from URLs)
+      const resolvedTabs = await Promise.all(
+        config.tabs.map(async (tab: TabConfig) => ({
+          id: tab.id,
+          label: tab.label || this._capitalize(tab.id),
+          icon: tab.icon,
+          isFeedback: tab.isFeedback ?? false,
+          currentDate: tab.currentDate ?? false,
+          fields: await this._resolveFields(tab.fields, tab.id),
+          targets: tab.targets,
+        })),
+      );
+      this._tabs = resolvedTabs as ResolvedTabConfig[];
       if (this._tabs.length > 0) {
         this._activeTabId = this._tabs[0].id;
       }
@@ -402,7 +465,7 @@ export class WafirWidget extends LitElement {
 
   private _getActiveFormConfig(): FieldConfig[] {
     const tab = this._getActiveTab();
-    const fields = tab?.fields || [];
+    const fields = (tab?.fields || []) as FieldConfig[];
     return fields;
   }
 

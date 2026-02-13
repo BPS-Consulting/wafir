@@ -15,7 +15,7 @@ import {
   setCapturedImage,
 } from "./store";
 import { takeFullPageScreenshot } from "./utils/screenshot";
-import type { FieldConfigApi as FieldConfig } from "./api/client";
+import type { FieldObject as FieldConfig } from "./api/client";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";

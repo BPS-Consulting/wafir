@@ -2377,4 +2377,303 @@ tabs:
       expect(updateDateCall).toBeUndefined();
     });
   });
+
+  describe("URL-based fields", () => {
+    it("accepts submission when tab uses URL for fields", async () => {
+      // Config with URL-based fields
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(`
+targets:
+  - id: default
+    type: github/issues
+    target: testowner/testrepo
+    authRef: "123"
+tabs:
+  - id: bug
+    fields: "https://example.com/bug_report.yml"
+`),
+      );
+
+      mockOctokit.rest.issues.create.mockResolvedValue({
+        data: {
+          number: 200,
+          html_url: "https://github.com/testowner/testrepo/issues/200",
+          node_id: "I_url_fields",
+        },
+      });
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          installationId: 123,
+          targetType: "github/issues",
+          target: "testowner/testrepo",
+          authRef: "123",
+          title: "Bug Report",
+          tabId: "bug",
+          formFields: {
+            title: "Bug Report",
+            description: "Found a bug",
+            stepsToReproduce: "1. Click button\n2. See error",
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(201);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+      expect(body.issueNumber).toBe(200);
+
+      // Issue should be created
+      expect(mockOctokit.rest.issues.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          owner: "testowner",
+          repo: "testrepo",
+          title: "Bug Report",
+        }),
+      );
+    });
+
+    it("skips field validation when tab uses URL for fields", async () => {
+      // Config with URL-based fields
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(`
+targets:
+  - id: default
+    type: github/issues
+    target: testowner/testrepo
+    authRef: "123"
+tabs:
+  - id: feature
+    fields: "https://github.com/owner/repo/main/.github/ISSUE_TEMPLATE/feature.yml"
+`),
+      );
+
+      mockOctokit.rest.issues.create.mockResolvedValue({
+        data: {
+          number: 201,
+          html_url: "https://github.com/testowner/testrepo/issues/201",
+          node_id: "I_url_no_validation",
+        },
+      });
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          installationId: 123,
+          targetType: "github/issues",
+          target: "testowner/testrepo",
+          authRef: "123",
+          title: "Feature Request",
+          tabId: "feature",
+          formFields: {
+            title: "Feature Request",
+            anyFieldName: "Any value",
+            anotherField: "Also accepted",
+            dynamicField: "Server can't validate these",
+          },
+        },
+      });
+
+      // Should succeed even with arbitrary field names
+      // because server-side validation is skipped for URL-based fields
+      expect(response.statusCode).toBe(201);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+    });
+
+    it("validates array-based fields normally in mixed config", async () => {
+      const configYaml = `
+targets:
+  - id: default
+    type: github/issues
+    target: testowner/testrepo
+    authRef: "123"
+tabs:
+  - id: feedback
+    fields:
+      - id: rating
+        type: rating
+        validations:
+          required: true
+      - id: comment
+        type: textarea
+        validations:
+          required: true
+  - id: bug
+    fields: "https://example.com/bug_report.yml"
+`;
+
+      // Mock fetch to return a new Response each time it's called
+      mockFetch.mockImplementation(() => {
+        return Promise.resolve(createMockConfigResponse(configYaml));
+      });
+
+      // Test array-based tab - should reject extra fields
+      const feedbackResponse = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          installationId: 123,
+          targetType: "github/issues",
+          target: "testowner/testrepo",
+          authRef: "123",
+          title: "Feedback",
+          tabId: "feedback",
+          formFields: {
+            rating: 5,
+            comment: "Great!",
+            extraField: "Should be rejected",
+          },
+        },
+      });
+
+      expect(feedbackResponse.statusCode).toBe(400);
+      const feedbackBody = JSON.parse(feedbackResponse.body);
+      expect(feedbackBody.error).toBe("Validation Failed");
+      expect(feedbackBody.details[0].code).toBe("UNKNOWN_FIELD");
+      expect(feedbackBody.details[0].field).toBe("extraField");
+
+      // Reset mocks before second request
+      mockOctokit.rest.issues.create.mockReset();
+
+      // Test URL-based tab - should accept any fields
+      mockOctokit.rest.issues.create.mockResolvedValue({
+        data: {
+          number: 202,
+          html_url: "https://github.com/testowner/testrepo/issues/202",
+          node_id: "I_url_mixed",
+        },
+      });
+
+      const bugResponse = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          installationId: 123,
+          targetType: "github/issues",
+          target: "testowner/testrepo",
+          authRef: "123",
+          title: "Bug Report",
+          tabId: "bug",
+          formFields: {
+            title: "Bug Report",
+            dynamicField1: "Accepted",
+            dynamicField2: "Also accepted",
+          },
+        },
+      });
+
+      expect(bugResponse.statusCode).toBe(201);
+      const bugBody = JSON.parse(bugResponse.body);
+      expect(bugBody.success).toBe(true);
+    });
+
+    it("still validates required fields for URL-based tabs when possible", async () => {
+      // Config with URL-based fields
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(`
+targets:
+  - id: default
+    type: github/issues
+    target: testowner/testrepo
+    authRef: "123"
+tabs:
+  - id: bug
+    fields: "https://example.com/bug_report.yml"
+`),
+      );
+
+      // Missing title - should still be rejected
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          installationId: 123,
+          targetType: "github/issues",
+          target: "testowner/testrepo",
+          authRef: "123",
+          tabId: "bug",
+          formFields: {
+            description: "Bug description without title",
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error).toContain("Missing required field: title");
+    });
+
+    it("creates issue body from URL-based fields", async () => {
+      // Config with URL-based fields
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(`
+targets:
+  - id: default
+    type: github/issues
+    target: testowner/testrepo
+    authRef: "123"
+tabs:
+  - id: bug
+    fields: "https://example.com/bug_report.yml"
+`),
+      );
+
+      mockOctokit.rest.issues.create.mockResolvedValue({
+        data: {
+          number: 203,
+          html_url: "https://github.com/testowner/testrepo/issues/203",
+          node_id: "I_url_body",
+        },
+      });
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          installationId: 123,
+          targetType: "github/issues",
+          target: "testowner/testrepo",
+          authRef: "123",
+          title: "Bug with Details",
+          tabId: "bug",
+          formFields: {
+            title: "Bug with Details",
+            description: "Detailed description",
+            stepsToReproduce: "1. Do this\n2. Do that",
+            expectedBehavior: "Should work",
+            actualBehavior: "Does not work",
+          },
+          fieldOrder: [
+            "description",
+            "stepsToReproduce",
+            "expectedBehavior",
+            "actualBehavior",
+          ],
+        },
+      });
+
+      expect(response.statusCode).toBe(201);
+
+      // Verify issue body includes all fields
+      const createCall = mockOctokit.rest.issues.create.mock.calls[0][0];
+      const body = createCall.body;
+
+      expect(body).toContain("Description");
+      expect(body).toContain("Detailed description");
+      expect(body).toContain("Steps To Reproduce");
+      expect(body).toContain("1. Do this");
+      expect(body).toContain("Expected Behavior");
+      expect(body).toContain("Actual Behavior");
+    });
+  });
 });

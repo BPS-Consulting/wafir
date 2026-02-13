@@ -119,10 +119,21 @@ const tabSchema = {
         "If true, the current date and time will be automatically inserted into the issue body in a human-readable format",
     },
     fields: {
-      type: "array",
-      items: fieldSchema,
+      oneOf: [
+        {
+          type: "array",
+          items: fieldSchema,
+          description: "Array of field configurations",
+        },
+        {
+          type: "string",
+          format: "uri",
+          description:
+            "URL to a YAML file containing a GitHub Issue Form template (https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-issue-forms)",
+        },
+      ],
       description:
-        "Form fields for this tab. If omitted, defaults are used for known tab IDs.",
+        "Form fields for this tab. Can be an array of field objects or a URL to a GitHub Issue Form YAML template. If omitted, defaults are used for known tab IDs.",
     },
     targets: {
       type: "array",
