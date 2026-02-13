@@ -47,7 +47,7 @@ class ConsoleInterceptor {
   private addLog(type: "warn" | "error", args: any[]) {
     const message = args
       .map((arg) =>
-        typeof arg === "object" ? JSON.stringify(arg) : String(arg)
+        typeof arg === "object" ? JSON.stringify(arg) : String(arg),
       )
       .join(" ")
       .trim();

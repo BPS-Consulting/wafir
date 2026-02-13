@@ -26,11 +26,11 @@ try {
   // Expecting 400 because querystring key "installationId", "owner", "repo" are missing
   if (response.statusCode === 400) {
     console.log(
-      "Verification SUCCESS: Fastify handled the request and returned 400 as expected."
+      "Verification SUCCESS: Fastify handled the request and returned 400 as expected.",
     );
   } else {
     console.log(
-      `Verification WARNING: Expected 400 but got ${response.statusCode}. Check response body.`
+      `Verification WARNING: Expected 400 but got ${response.statusCode}. Check response body.`,
     );
     // If 500, it might still mean fastify ran but crashed inside.
     // If 404, routing failed?

@@ -16,7 +16,7 @@ export default fp(async (fastify, opts) => {
 
   if (!appId || !privateKey) {
     fastify.log.warn(
-      "GITHUB_APP_ID or GITHUB_PRIVATE_KEY missing. Bridge will fail to connect."
+      "GITHUB_APP_ID or GITHUB_PRIVATE_KEY missing. Bridge will fail to connect.",
     );
     return;
   }

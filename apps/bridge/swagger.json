@@ -12,9 +12,7 @@
     "/auth/github": {
       "get": {
         "summary": "Initiate GitHub OAuth",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "description": "Redirects to GitHub OAuth for user authorization",
         "parameters": [
           {
@@ -44,9 +42,7 @@
     "/auth/github/callback": {
       "get": {
         "summary": "GitHub OAuth Callback",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "description": "Handles OAuth callback from GitHub",
         "parameters": [
           {
@@ -76,9 +72,7 @@
     "/auth/status/{installationId}": {
       "get": {
         "summary": "Check Auth Status",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "description": "Check if user token exists for installation",
         "parameters": [
           {
@@ -115,9 +109,7 @@
     "/auth/{installationId}": {
       "delete": {
         "summary": "Disconnect Auth",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "description": "Remove stored user token for installation",
         "parameters": [
           {
@@ -139,9 +131,7 @@
     "/config/": {
       "get": {
         "summary": "Get WAFIR Configuration (Deprecated)",
-        "tags": [
-          "WAFIR"
-        ],
+        "tags": ["WAFIR"],
         "description": "DEPRECATED: The widget now fetches config directly from a user-hosted URL. This endpoint is kept for backward compatibility but will be removed in a future version. Fetches and parses .github/wafir.yaml from the target repository.",
         "parameters": [
           {
@@ -177,9 +167,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": [
-                    "targets"
-                  ],
+                  "required": ["targets"],
                   "properties": {
                     "title": {
                       "type": "string",
@@ -192,12 +180,7 @@
                       "description": "Target destinations for form submissions. Each target defines where and how submissions are stored.",
                       "items": {
                         "type": "object",
-                        "required": [
-                          "id",
-                          "type",
-                          "target",
-                          "authRef"
-                        ],
+                        "required": ["id", "type", "target", "authRef"],
                         "properties": {
                           "id": {
                             "type": "string",
@@ -205,10 +188,7 @@
                           },
                           "type": {
                             "type": "string",
-                            "enum": [
-                              "github/issues",
-                              "github/project"
-                            ],
+                            "enum": ["github/issues", "github/project"],
                             "description": "Target type using MIME-type convention. Currently supported: github/issues, github/project."
                           },
                           "target": {
@@ -248,9 +228,7 @@
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "required": [
-                          "id"
-                        ],
+                        "required": ["id"],
                         "properties": {
                           "id": {
                             "type": "string",
@@ -262,11 +240,7 @@
                           },
                           "icon": {
                             "type": "string",
-                            "enum": [
-                              "thumbsup",
-                              "lightbulb",
-                              "bug"
-                            ],
+                            "enum": ["thumbsup", "lightbulb", "bug"],
                             "description": "Tab icon"
                           },
                           "isFeedback": {
@@ -278,9 +252,7 @@
                             "type": "array",
                             "items": {
                               "type": "object",
-                              "required": [
-                                "type"
-                              ],
+                              "required": ["type"],
                               "properties": {
                                 "type": {
                                   "type": "string",
@@ -340,9 +312,7 @@
                                           "type": "array",
                                           "items": {
                                             "type": "object",
-                                            "required": [
-                                              "label"
-                                            ],
+                                            "required": ["label"],
                                             "properties": {
                                               "label": {
                                                 "type": "string"
@@ -455,9 +425,7 @@
     "/health/": {
       "get": {
         "summary": "Health Check",
-        "tags": [
-          "Health"
-        ],
+        "tags": ["Health"],
         "description": "Returns the health status of the bridge service",
         "responses": {
           "200": {
@@ -484,9 +452,7 @@
     "/submit/": {
       "post": {
         "summary": "Submit Feedback/Issue",
-        "tags": [
-          "WAFIR"
-        ],
+        "tags": ["WAFIR"],
         "description": "Creates a GitHub issue or project draft from form fields. Supports multipart/form-data.",
         "responses": {
           "200": {

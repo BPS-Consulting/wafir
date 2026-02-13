@@ -517,36 +517,45 @@ export class WafirWidget extends LitElement {
                   </button>
                 </div>
 
+                <div class="mode-tabs">
+                  ${(() => {
+                    return this._tabs.map(
+                      (tab) => html`
+                        <button
+                          class="mode-tab ${this._activeTabId === tab.id
+                            ? "active"
+                            : ""}"
+                          @click="${() => this._switchTab(tab.id)}"
+                        >
+                          ${this._renderTabIcon(tab.icon)} ${tab.label}
+                        </button>
+                      `,
+                    );
+                  })()}
+                </div>
+                <wafir-form
+                  .fields="${this._getActiveFormConfig()}"
+                  .formLabel="${this._getActiveTab()?.label || ""}"
+                  .showBrowserInfo="${this._telemetry.browserInfo}"
+                  .showConsoleLog="${this._telemetry.consoleLog}"
+                  .showScreenshot="${this._telemetry.screenshot}"
+                  @form-submit="${this._handleSubmit}"
+                ></wafir-form>
                 ${this.isConfigLoading
-                  ? html`<div style="padding: 20px; text-align: center;">
-                      Loading configuration...
-                    </div>`
-                  : html`
-                      <div class="mode-tabs">
-                        ${(() => {
-                          return this._tabs.map(
-                            (tab) => html`
-                              <button
-                                class="mode-tab ${this._activeTabId === tab.id
-                                  ? "active"
-                                  : ""}"
-                                @click="${() => this._switchTab(tab.id)}"
-                              >
-                                ${this._renderTabIcon(tab.icon)} ${tab.label}
-                              </button>
-                            `,
-                          );
-                        })()}
+                  ? html`
+                      <div
+                        class="loading-overlay"
+                        role="status"
+                        aria-live="polite"
+                        aria-busy="true"
+                      >
+                        <div class="loading-content">
+                          <div class="spinner" aria-hidden="true"></div>
+                          <span class="loading-text">Loading</span>
+                        </div>
                       </div>
-                      <wafir-form
-                        .fields="${this._getActiveFormConfig()}"
-                        .formLabel="${this._getActiveTab()?.label || ""}"
-                        .showBrowserInfo="${this._telemetry.browserInfo}"
-                        .showConsoleLog="${this._telemetry.consoleLog}"
-                        .showScreenshot="${this._telemetry.screenshot}"
-                        @form-submit="${this._handleSubmit}"
-                      ></wafir-form>
-                    `}
+                    `
+                  : ""}
               </div>
             </div>
           `
