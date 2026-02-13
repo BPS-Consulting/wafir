@@ -127,6 +127,7 @@ button[part="button"] svg {
 
 /* Modal content */
 .modal-content {
+  position: relative;
   background: var(--wafir-modal-bg, white);
   border-radius: var(--wafir-modal-border-radius, 12px);
   width: 90%;
