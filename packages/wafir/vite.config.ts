@@ -42,7 +42,7 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       lib: {
-        entry: "src/wafir-widget.ts",
+        entry: "src/index.ts",
         formats: isIIFE ? ["iife"] : ["es", "cjs"],
         name: "Wafir", // Global name for IIFE build
         fileName: (format) => {
