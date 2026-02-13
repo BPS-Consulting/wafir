@@ -4,9 +4,9 @@ Get Wafir running in your application in minutes.
 
 ## 1. Install the GitHub App
 
-First, install the Wafir GitHub App on your repository. This allows Wafir to create issues and read your configuration.
+First, install the Wafir GitHub App on your repository. This allows Wafir to add items to the issue and project lists for your repository.
 
-[Install GitHub App](https://github.com/apps/wafir)
+[Install GitHub App](https://github.com/apps/wafir-web-feedback-widget)
 
 > **Note:** After installation, note your **Installation ID** from the URL. You'll need this to configure the widget.
 
