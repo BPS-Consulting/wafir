@@ -131,6 +131,27 @@ export class SubmitService {
   }
 
   /**
+   * Appends the current date and time in human-readable format if enabled.
+   */
+  appendCurrentDate(body: string, includeDate: boolean): string {
+    if (!includeDate) return body;
+
+    const now = new Date();
+    const formattedDate = now.toLocaleString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      timeZoneName: "short",
+    });
+
+    return body + `\n\n---\n\n**Submitted At**\n${formattedDate}`;
+  }
+
+  /**
    * Uploads screenshot to S3 and returns the markdown formatted image string.
    */
   async uploadScreenshot(

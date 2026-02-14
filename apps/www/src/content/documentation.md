@@ -414,7 +414,81 @@ forms:
 
 ---
 
-### Migration from the legacy `storage` configuration
+## JavaScript API
+
+Wafir provides a lightweight JavaScript API for programmatically opening the feedback widget, switching to a specific tab, or prefilling its fields. This lets you integrate advanced user flows (e.g., contextual help, report-a-bug, or dynamic survey entry from your app).
+
+### Usage Patterns
+
+#### NPM/Module Usage (Recommended)
+
+```ts
+import { wafirWidget } from "wafir";
+
+// Opens the widget (default tab);
+wafirWidget.open();
+
+// Opens the widget on a specific tab by tab ID
+wafirWidget.open({ tab: "suggestion" });
+
+// Opens the 'issue' tab with fields prefilled
+wafirWidget.open({
+  tab: "issue",
+  prefill: {
+    title: "Crash on upload",
+    description: "I experienced a crash when uploading a large file.",
+  },
+});
+```
+
+#### Script Tag/CDN Usage
+
+When loaded from a `<script>` tag, the same API is available on the global `window`:
+
+```js
+window.wafirWidget.open({
+  tab: "feedback",
+  prefill: {
+    rating: 5,
+    description: "Great experience!",
+  },
+});
+```
+
+- **Works from anywhere:** You can call `open()` before the widget is injected/loaded; your request will be queued until setup completes.
+- **Tab IDs**: Must match a defined `id` under `tabs:` in your YAML config. Invalid IDs will show a warning and fall back to the default tab.
+- **Field IDs**: Prefill keys must correspond to field `id`s for that tab. Invalid keys will warn and be ignored.
+- **Read-only/static fields**: Prefill does not affect fields of type `markdown` or other non-inputs.
+
+#### Example: Custom Button
+
+You can show the widget on _any_ user action, not just with the built-in trigger!
+
+```html
+<button onclick="window.wafirWidget.open({tab: 'suggestion'})">
+  Suggest a Feature
+</button>
+```
+
+#### API Reference
+
+```ts
+interface wafirWidget {
+  open(options?: {
+    tab?: string; // Tab ID from your config
+    prefill?: Record<string, any>; // Field ID/value for the activated tab
+  }): void;
+}
+```
+
+- Returns: `void` (shows the widget)
+
+##### Options
+
+- `tab` (optional): String tab identifier to activate on open.
+- `prefill` (optional): Object mapping field IDs (from YAML) to initial values (applied if field exists and is user-editable).
+
+#### Notes & Warnings
 
 > **Migration Notice:**
 > The legacy `storage` key has been **removed**. All feedback routing now uses the `targets` array and form-level `targets` references. To migrate, define each destination under the `targets` key, and update your forms to reference the appropriate target via `targets: [targetId]`. See above examples for details.

@@ -14,13 +14,13 @@
     "README.md",
     "LICENSE"
   ],
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "main": "dist/wafir.cjs",
   "module": "dist/wafir.js",
   "exports": {
     ".": {
-      "types": "./dist/wafir-widget.d.ts",
+      "types": "./dist/index.d.ts",
       "import": "./dist/wafir.js",
       "require": "./dist/wafir.cjs"
     },
@@ -62,7 +62,7 @@
     "src/**/*.ts",
     "dist/**/*.js"
   ],
-  "types": "dist/wafir-widget.d.ts",
+  "types": "dist/index.d.ts",
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
     "openapi-typescript": "^7.10.1",

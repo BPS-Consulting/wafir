@@ -11,7 +11,9 @@ import {
   isSelecting,
   isCapturing,
   capturedImage,
-  resetState,
+  clearTabFormData,
+  getTabFormData,
+  setTabFormData,
   setBrowserInfo,
   setConsoleLogs,
   browserInfo,
@@ -110,6 +112,9 @@ export class WafirWidget extends LitElement {
     consoleLog: false,
   };
 
+  // Requested tab from programmatic open() call, to be applied after config loads
+  private _requestedTabId: string | null = null;
+
   static styles = [unsafeCSS(widgetStyles)];
 
   connectedCallback() {
@@ -143,12 +148,103 @@ export class WafirWidget extends LitElement {
     }
   }
 
-  private async _openModal() {
+  /**
+   * Opens the widget programmatically with optional tab selection and prefilled data.
+   * @param options - Configuration for opening the widget
+   * @param options.tab - The tab ID to open
+   * @param options.prefill - Key-value pairs to prefill form fields (fieldId: value)
+   */
+  public open(options?: { tab?: string; prefill?: Record<string, any> }) {
+    // Store the requested tab to apply after config loads
+    if (options?.tab) {
+      this._requestedTabId = options.tab;
+    }
+
+    // Store prefill data to apply after config loads (if modal not yet open)
+    if (options?.prefill && !this.isModalOpen) {
+      // We'll apply prefill after the modal opens and config is loaded
+      // For now, just open the modal
+    } else if (options?.prefill && this.isModalOpen) {
+      // Modal is already open, apply prefill immediately
+      this._applyPrefillData(this._activeTabId, options.prefill);
+    }
+
+    // Open the modal (this will trigger config load and tab application)
+    if (!this.isModalOpen) {
+      this._openModal(options?.prefill);
+    } else if (options?.tab) {
+      // Modal is already open, just switch tabs
+      const tabExists = this._tabs.some((t) => t.id === options.tab);
+      if (tabExists) {
+        this._activeTabId = options.tab!;
+        if (options?.prefill) {
+          this._applyPrefillData(options.tab, options.prefill);
+        }
+      } else {
+        console.warn(
+          `Wafir: Unknown tab "${options.tab}". Available tabs: ${this._tabs.map((t) => t.id).join(", ")}`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Applies prefill data to form fields, validating field IDs against the tab's configuration.
+   * @param tabId - The tab ID to apply prefill data to
+   * @param prefill - Key-value pairs of field data
+   */
+  private _applyPrefillData(tabId: string, prefill: Record<string, any>) {
+    const tab = this._tabs.find((t) => t.id === tabId);
+    if (!tab || !tab.fields) {
+      console.warn(`Wafir: Cannot apply prefill, tab "${tabId}" not found`);
+      return;
+    }
+
+    // Get valid field IDs from the tab configuration
+    const validFieldIds = new Set(tab.fields.map((f) => String(f.id)));
+
+    // Filter and warn about unknown fields
+    const validPrefillData: Record<string, any> = {};
+    for (const [fieldId, value] of Object.entries(prefill)) {
+      if (validFieldIds.has(fieldId)) {
+        validPrefillData[fieldId] = value;
+      } else {
+        console.warn(
+          `Wafir: Unknown field "${fieldId}" for tab "${tabId}". Available fields: ${Array.from(validFieldIds).join(", ")}`,
+        );
+      }
+    }
+
+    // Merge prefill data with existing form data for this tab
+    const currentTabData = getTabFormData(tabId);
+    const mergedData = { ...currentTabData, ...validPrefillData };
+    setTabFormData(tabId, mergedData);
+  }
+
+  private async _openModal(prefillData?: Record<string, any>) {
     this.isModalOpen = true;
     setBrowserInfo(getBrowserInfo());
     setConsoleLogs(consoleInterceptor.getLogs());
     await this._checkBridgeHealth();
     await this._fetchConfig();
+
+    // After config is loaded, apply requested tab and prefill
+    if (this._requestedTabId) {
+      const tabExists = this._tabs.some((t) => t.id === this._requestedTabId);
+      if (tabExists) {
+        this._activeTabId = this._requestedTabId;
+      } else {
+        console.warn(
+          `Wafir: Unknown tab "${this._requestedTabId}". Available tabs: ${this._tabs.map((t) => t.id).join(", ")}`,
+        );
+      }
+      this._requestedTabId = null; // Clear after applying
+    }
+
+    // Apply prefill data after config and tab are set
+    if (prefillData) {
+      this._applyPrefillData(this._activeTabId, prefillData);
+    }
   }
 
   private async _handleTriggerClick() {
@@ -407,7 +503,6 @@ export class WafirWidget extends LitElement {
 
   private _closeModal() {
     this.isModalOpen = false;
-    resetState();
   }
 
   private _getActiveForm(): FormConfig | undefined {
@@ -537,7 +632,8 @@ export class WafirWidget extends LitElement {
       });
 
       alert("Thank you for your input!");
-      resetState();
+      clearTabFormData(this._activeTabId);
+      capturedImage.set(null);
       this.isModalOpen = false;
     } catch (error) {
       console.error("Wafir: Submit failed", error);
@@ -633,6 +729,7 @@ export class WafirWidget extends LitElement {
                   })()}
                 </div>
                 <wafir-form
+                  .tabId="${this._activeTabId}"
                   .fields="${this._getActiveFormConfig()}"
                   .formLabel="${this._getActiveForm()?.label || ""}"
                   .showBrowserInfo="${this._telemetry.browserInfo}"
