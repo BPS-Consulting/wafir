@@ -404,6 +404,52 @@ interface wafirWidget {
 
 ---
 
+## Connect Personal Projects
+
+GitHub personal projects require additional authorization beyond the GitHub App installation. To enable feedback submission to personal project boards, you need to connect your account with additional permissions.
+
+### Why is this needed?
+
+When you install the Wafir GitHub App, it only has access to organization repositories and projects. Personal projects (under your user account) require separate OAuth authorization to ensure your personal data remains secure.
+
+### How to Connect
+
+1. **Find your Installation ID** from your GitHub App installation URL:
+   ```
+   github.com/settings/installations/12345678
+   ```
+   The number at the end is your Installation ID.
+
+2. **Visit the Connect Page** on the Wafir website or your self-hosted instance.
+
+3. **Enter your Installation ID** and click "Authorize with GitHub".
+
+4. **Grant the requested permissions:**
+   - `read:user` — Read your GitHub profile
+   - `project` — Access your GitHub projects
+
+5. **Complete authorization** and you'll be redirected back with a success message.
+
+### Security & Privacy
+
+- Your access token is stored securely and only used to add issues to your personal projects
+- You can revoke access at any time from your GitHub settings
+- Wafir never stores or accesses any data beyond what's needed to create project items
+
+### Using Personal Projects
+
+Once connected, you can configure targets in your `wafir.yaml` to point to your personal projects:
+
+```yaml
+targets:
+  - id: personal-project
+    type: github/project
+    target: your-username/project-number
+    authRef: "YOUR_INSTALLATION_ID"
+```
+
+---
+
 ## Configuration Examples
 
 Place your Wafir configuration file in the `public` folder of your app, e.g. `public/wafir.yaml`. We provide ready-to-use configuration templates for common use cases (see `/examples`). All examples use the new targets config format and schema:
