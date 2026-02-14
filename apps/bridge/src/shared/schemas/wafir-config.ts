@@ -12,6 +12,7 @@ const fieldSchema = {
         "checkboxes",
         "markdown",
         "rating",
+        "date",
       ],
       description:
         "Field input type. Matches GitHub Form Schema types plus Wafir extensions.",

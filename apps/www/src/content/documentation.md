@@ -153,6 +153,7 @@ Make sure that it is publically accessible.
 | `checkboxes` | Multiple checkbox options                 | label, description?, options (array of objects with label, required?) |
 | `markdown`   | Read-only Markdown display                | label, description?, value (markdown, required)                       |
 | `rating`     | Star rating (displayed as stars, saved as number 1-5) | label, description?, ratingLabels?                       |
+| `date`       | Date picker input                         | label, description?, value?                                           |
 
 ### Field Structure
 
@@ -188,6 +189,31 @@ A markdown field can be used for headings, hints, or formatted instructions anyw
       ## Feedback Form
       Please fill out all required fields. Your responses help us improve!
 ```
+
+#### Date Field Example
+
+A date field renders a native date picker. The `value` attribute supports special tokens that resolve to dynamic dates at form load time.
+
+```yaml
+- id: target-date
+  type: date
+  attributes:
+    label: "Target Completion Date"
+    value: "today+30"  # Defaults to 30 days from now
+  validations:
+    required: false
+```
+
+##### Date Value Tokens
+
+| Token | Example | Description |
+| ----- | ------- | ----------- |
+| `today` | `value: "today"` | Current date |
+| `today+N` | `value: "today+7"` | N days in the future |
+| `today-N` | `value: "today-30"` | N days in the past |
+| `YYYY-MM-DD` | `value: "2026-03-01"` | Static ISO date (passed through) |
+
+> **Note:** Date values are stored and submitted in ISO 8601 format (`YYYY-MM-DD`). When submitting to a GitHub Project, date fields will automatically map to project Date fields with matching names.
 
 #### Field Properties Table
 
