@@ -23,6 +23,7 @@ export interface SubmissionContext {
   labels?: string[];
   rating?: number;
   submissionType?: "issue" | "feedback";
+  formFields?: Record<string, unknown>;
   log: any;
 }
 

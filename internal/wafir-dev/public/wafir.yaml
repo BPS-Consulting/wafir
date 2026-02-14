@@ -5,6 +5,9 @@
 
 title: "Contact Us"
 
+# Targets define where feedback gets sent. 
+# You can have multiple targets and specify which tabs send to which targets.  
+# The first target will be used by default.
 targets:
   - id: default
     type: github/issues
@@ -30,7 +33,7 @@ tabs:
       - id: rating
         type: rating
         attributes:
-          label: "How satisfied are you with our website? AGAGAG"
+          label: "How satisfied are you with our website?"
         validations:
           required: true
       - id: description
@@ -40,9 +43,10 @@ tabs:
         validations:
           required: false
 
-  - id: suggestion
+  - id: feature
     label: Suggestion
     icon: lightbulb
+    targets: [project]
     fields:
       - id: title
         type: input
@@ -56,8 +60,20 @@ tabs:
           label: "Additional information:"
         validations:
           required: false
-
-  - id: issue
+      - id: priority
+        type: dropdown
+        attributes:
+          label: "Priority Level"
+          options:
+            - label: "Low"
+              value: "Low"
+            - label: "Medium"
+              value: "Medium"
+            - label: "High"
+              value: "High"
+        validations:
+          required: false
+  - id: bug
     label: Issue
     icon: bug
     targets: [default]

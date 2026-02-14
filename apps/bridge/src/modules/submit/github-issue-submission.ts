@@ -153,6 +153,33 @@ export class GithubIssueSubmission extends SubmissionBase {
         issueNodeId: targetNodeId,
         log: context.log,
       });
+
+      // Set project fields from form data
+      if (projectResult.added && projectResult.itemId && context.formFields) {
+        const { nodeId: projId, shouldUseUserToken } =
+          await this.projectService.findProjectNodeId(
+            context.appOctokit,
+            context.userOctokit,
+            context.projectOwner!,
+            context.projectNumber,
+            context.log,
+          );
+
+        if (projId) {
+          const client =
+            shouldUseUserToken && context.userOctokit
+              ? context.userOctokit
+              : context.appOctokit;
+
+          await this.projectService.setProjectFields({
+            octokit: client,
+            projectId: projId,
+            itemId: projectResult.itemId,
+            formFields: context.formFields,
+            log: context.log,
+          });
+        }
+      }
     }
 
     // Handle feedback submissions
@@ -177,18 +204,18 @@ export class GithubIssueSubmission extends SubmissionBase {
           log: context.log,
         });
 
-        // Set rating field if provided
-        if (projectResult.added && projectResult.itemId && context.rating) {
+        // Set project fields from form data (includes rating as a NUMBER field)
+        if (projectResult.added && projectResult.itemId && context.formFields) {
           const client =
             shouldUseUserToken && context.userOctokit
               ? context.userOctokit
               : context.appOctokit;
-          await this.projectService.setProjectRatingField({
+
+          await this.projectService.setProjectFields({
             octokit: client,
             projectId: feedbackProjId,
             itemId: projectResult.itemId,
-            ratingFieldName: context.ratingFieldName || "Rating",
-            rating: context.rating,
+            formFields: context.formFields,
             log: context.log,
           });
         }
@@ -204,7 +231,7 @@ export class GithubIssueSubmission extends SubmissionBase {
         repo: context.repo,
         title: context.title,
         body: context.body,
-        labels: context.labels || ["feedback"],
+        labels: context.labels || ["wafir-feedback"],
       });
       issueData = {
         number: issue.data.number,

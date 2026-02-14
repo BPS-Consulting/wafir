@@ -201,6 +201,7 @@ const submitRoute: FastifyPluginAsync = async (
           labels,
           rating: input.rating,
           submissionType: input.submissionType,
+          formFields: input.formFields,
           log: request.log,
           owner,
           repo,
