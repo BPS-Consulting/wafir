@@ -130,7 +130,7 @@ describe("validateFormFields", () => {
       forms: [
         {
           id: "feedback",
-          fields: [
+          body: [
             { id: "title", type: "input" },
             { id: "message", type: "textarea" },
           ],
@@ -155,7 +155,7 @@ describe("validateFormFields", () => {
       forms: [
         {
           id: "feedback",
-          fields: [
+          body: [
             { id: "title", type: "input" },
             { id: "message", type: "textarea" },
           ],
@@ -183,7 +183,7 @@ describe("validateFormFields", () => {
       forms: [
         {
           id: "feedback",
-          fields: [
+          body: [
             {
               id: "title",
               type: "input",
@@ -218,7 +218,7 @@ describe("validateFormFields", () => {
       forms: [
         {
           id: "feedback",
-          fields: [
+          body: [
             { id: "title", type: "input" },
             { id: "email", type: "email" },
           ],
@@ -245,7 +245,7 @@ describe("validateFormFields", () => {
       forms: [
         {
           id: "feedback",
-          fields: [
+          body: [
             { id: "title", type: "input" },
             { id: "rating", type: "rating" },
           ],
@@ -272,7 +272,7 @@ describe("validateFormFields", () => {
       forms: [
         {
           id: "feedback",
-          fields: [
+          body: [
             { id: "title", type: "input" },
             {
               id: "category",
@@ -305,7 +305,7 @@ describe("validateFormFields", () => {
       forms: [
         {
           id: "feedback",
-          fields: [
+          body: [
             {
               id: "rating",
               type: "rating",
@@ -338,7 +338,7 @@ describe("validateFormFields", () => {
       forms: [
         {
           id: "feedback",
-          fields: [
+          body: [
             {
               id: "rating",
               type: "rating",
@@ -374,7 +374,7 @@ describe("validateFormFields", () => {
       forms: [
         {
           id: "feedback",
-          fields: [{ id: "rating", type: "rating" }],
+          body: [{ id: "rating", type: "rating" }],
         },
       ],
     };
@@ -397,7 +397,7 @@ describe("validateFormFields", () => {
       forms: [
         {
           id: "feedback",
-          fields: [{ id: "rating", type: "rating" }],
+          body: [{ id: "rating", type: "rating" }],
         },
       ],
     };
@@ -500,18 +500,18 @@ body:
 
     const bugForm = config.forms![0];
     expect(bugForm.id).toBe("bug");
-    expect(bugForm.fields).toBeDefined();
-    expect(bugForm.fields!.length).toBe(4);
+    expect(bugForm.body).toBeDefined();
+    expect(bugForm.body!.length).toBe(4);
 
     // Verify template labels were applied
     expect(bugForm.labels).toEqual(["bug", "needs-triage"]);
 
     // Verify field transformations
-    const markdownField = bugForm.fields![0];
+    const markdownField = bugForm.body![0];
     expect(markdownField.type).toBe("markdown");
     expect((markdownField.attributes as any).value).toContain("bug report");
 
-    const inputField = bugForm.fields![1];
+    const inputField = bugForm.body![1];
     expect(inputField.type).toBe("input");
     expect(inputField.id).toBe("contact");
     expect(inputField.attributes?.label).toBe("Contact Details");
@@ -520,12 +520,12 @@ body:
     );
     expect(inputField.validations?.required).toBe(false);
 
-    const textareaField = bugForm.fields![2];
+    const textareaField = bugForm.body![2];
     expect(textareaField.type).toBe("textarea");
     expect(textareaField.id).toBe("what-happened");
     expect(textareaField.validations?.required).toBe(true);
 
-    const dropdownField = bugForm.fields![3];
+    const dropdownField = bugForm.body![3];
     expect(dropdownField.type).toBe("dropdown");
     expect(dropdownField.attributes?.options).toEqual([
       "1.0.0",
@@ -584,10 +584,10 @@ forms:
 
     // Config should still be valid, just without template fields
     expect(config.forms).toBeDefined();
-    expect(config.forms![0].fields).toBeUndefined();
+    expect(config.forms![0].body).toBeUndefined();
   });
 
-  it("does not fetch template if form already has fields", async () => {
+  it("does not fetch template if form already has body", async () => {
     const configWithFields = `
 targets:
   - id: default
@@ -598,7 +598,7 @@ forms:
   - id: bug
     label: Bug Report
     templateUrl: https://raw.githubusercontent.com/owner/repo/main/.github/ISSUE_TEMPLATE/bug_report.yml
-    fields:
+    body:
       - id: title
         type: input
         attributes:
@@ -615,8 +615,8 @@ forms:
 
     // Only one fetch call (config), not template
     expect(mockFetch).toHaveBeenCalledTimes(1);
-    expect(config.forms![0].fields).toHaveLength(1);
-    expect(config.forms![0].fields![0].id).toBe("title");
+    expect(config.forms![0].body).toHaveLength(1);
+    expect(config.forms![0].body![0].id).toBe("title");
   });
 
   it("resolves relative template URLs against config URL", async () => {
@@ -654,8 +654,8 @@ forms:
       "https://example.com/config/templates/bug.yaml"
     );
 
-    expect(config.forms![0].fields).toBeDefined();
-    expect(config.forms![0].fields!.length).toBe(4);
+    expect(config.forms![0].body).toBeDefined();
+    expect(config.forms![0].body!.length).toBe(4);
   });
 
   it("resolves sibling file template URL", async () => {
@@ -761,3 +761,4 @@ describe("resolveTemplateUrl", () => {
     expect(url).toBe("http://other-server.com/template.yaml");
   });
 });
+

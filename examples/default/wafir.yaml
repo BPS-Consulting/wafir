@@ -27,7 +27,7 @@ forms:
     labels:
       - feedback
     targets: [project] # This tab will send feedback to the project target only
-    fields:
+    body:
       - id: rating
         type: rating
         attributes:
@@ -46,7 +46,7 @@ forms:
     icon: lightbulb
     labels:
       - enhancement
-    fields:
+    body:
       - id: title
         type: input
         attributes:
@@ -66,7 +66,7 @@ forms:
     labels:
       - bug
     targets: [default] # This tab will send feedback to the default target only
-    fields:
+    body:
       - id: title
         type: input
         attributes:

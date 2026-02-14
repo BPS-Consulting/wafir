@@ -194,8 +194,8 @@ describe("Example Configurations", () => {
       const firstForm = body.forms[0];
       expect(firstForm.id).toBeDefined();
       expect(firstForm.label).toBeDefined();
-      expect(firstForm.fields).toBeDefined();
-      expect(Array.isArray(firstForm.fields)).toBe(true);
+      expect(firstForm.body).toBeDefined();
+      expect(Array.isArray(firstForm.body)).toBe(true);
     });
   });
 
@@ -265,7 +265,7 @@ describe("Example Configurations", () => {
       expect(body.forms).toBeDefined();
       const feedbackForm = body.forms.find((t: any) => t.id === "feedback");
       expect(feedbackForm).toBeDefined();
-      const ratingField = feedbackForm.fields?.find(
+      const ratingField = feedbackForm.body?.find(
         (f: any) => f.type === "rating",
       );
       expect(ratingField).toBeDefined();
@@ -335,7 +335,7 @@ describe("Example Configurations", () => {
       // Collect all field types from all forms
       const fieldTypes = new Set<string>();
       for (const form of body.forms || []) {
-        for (const field of form.fields || []) {
+        for (const field of form.body || []) {
           fieldTypes.add(field.type);
         }
       }

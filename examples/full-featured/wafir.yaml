@@ -22,7 +22,7 @@ forms:
     labels:
       - feedback
       - user-submitted
-    fields:
+    body:
       - id: intro
         type: markdown
         attributes:
@@ -84,7 +84,7 @@ forms:
     labels:
       - bug
       - wafir-submitted
-    fields:
+    body:
       - id: bug_intro
         type: markdown
         attributes:
@@ -147,7 +147,7 @@ forms:
     labels:
       - enhancement
       - feature-request
-    fields:
+    body:
       - id: idea_intro
         type: markdown
         attributes:
@@ -191,7 +191,7 @@ forms:
   - id: docs
     label: "Docs Issue"
     icon: "book"
-    fields:
+    body:
       - id: docs_intro
         type: markdown
         attributes:
@@ -234,7 +234,7 @@ forms:
   - id: privacy
     label: "Privacy Question"
     icon: "lock"
-    fields:
+    body:
       - id: privacy_intro
         type: markdown
         attributes:

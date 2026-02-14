@@ -29,7 +29,7 @@ forms:
     icon: thumbsup
     isFeedback: true
     targets: [project]
-    fields:
+    body:
       - id: rating
         type: rating
         attributes:
@@ -47,7 +47,7 @@ forms:
     label: Suggestion
     icon: lightbulb
     targets: [project]
-    fields:
+    body:
       - id: title
         type: input
         attributes:

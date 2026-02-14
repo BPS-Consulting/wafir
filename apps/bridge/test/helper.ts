@@ -98,7 +98,7 @@ targets:
 forms:
   - id: issue
     label: "Report Issue"
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -122,7 +122,7 @@ targets:
 forms:
   - id: issue
     label: "Report Issue"
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -142,7 +142,7 @@ targets:
 forms:
   - id: feedback
     label: "Feedback"
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -172,7 +172,7 @@ telemetry:
 forms:
   - id: issue
     label: "Report Issue"
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -184,7 +184,7 @@ forms:
   - id: feedback
     label: "Feedback"
     icon: "thumbsup"
-    fields:
+    body:
       - id: rating
         type: rating
         attributes:

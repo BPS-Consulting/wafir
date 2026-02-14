@@ -126,9 +126,9 @@ export class WafirWidget extends LitElement {
     if (this.forms && this.forms.length > 0) {
       this._forms = this.forms.map((form) => ({
         ...form,
-        fields:
-          form.fields && form.fields.length > 0
-            ? form.fields
+        body:
+          form.body && form.body.length > 0
+            ? form.body
             : getDefaultFields(form.id),
       }));
       if (this._forms.length > 0) {
@@ -184,7 +184,7 @@ export class WafirWidget extends LitElement {
   private async _fetchTemplate(
     templateUrl: string,
     baseUrl?: string,
-  ): Promise<{ fields: FieldConfig[]; labels?: string[] } | undefined> {
+  ): Promise<{ body: FieldConfig[]; labels?: string[] } | undefined> {
     try {
       // Resolve relative URLs against the base config URL
       let resolvedUrl = templateUrl;
@@ -227,7 +227,7 @@ export class WafirWidget extends LitElement {
       }
 
       return {
-        fields: template.body,
+        body: template.body,
         labels: template.labels,
       };
     } catch (error) {
@@ -248,13 +248,13 @@ export class WafirWidget extends LitElement {
   ): Promise<FormConfig[]> {
     const processedForms = await Promise.all(
       forms.map(async (form) => {
-        // If form has templateUrl and no fields defined, fetch from template
-        if (form.templateUrl && (!form.fields || form.fields.length === 0)) {
+        // If form has templateUrl and no body defined, fetch from template
+        if (form.templateUrl && (!form.body || form.body.length === 0)) {
           const templateData = await this._fetchTemplate(form.templateUrl, baseUrl);
           if (templateData) {
             return {
               ...form,
-              fields: templateData.fields,
+              body: templateData.body,
               // Merge template labels with form labels (form labels take priority)
               labels: form.labels?.length
                 ? form.labels
@@ -376,9 +376,9 @@ export class WafirWidget extends LitElement {
         id: form.id,
         label: form.label || this._capitalize(form.id),
         icon: form.icon,
-        fields:
-          form.fields && form.fields.length > 0
-            ? form.fields
+        body:
+          form.body && form.body.length > 0
+            ? form.body
             : getDefaultFields(form.id),
       }));
       if (this._forms.length > 0) {
@@ -416,7 +416,7 @@ export class WafirWidget extends LitElement {
 
   private _getActiveFormConfig(): FieldConfig[] {
     const form = this._getActiveForm();
-    const fields = form?.fields || [];
+    const fields = form?.body || [];
     return fields;
   }
 

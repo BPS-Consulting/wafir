@@ -24,7 +24,7 @@ forms:
     icon: star
     isFeedback: true
     targets: [project]
-    fields:
+    body:
       - id: rating
         type: rating
         attributes:
@@ -42,7 +42,7 @@ forms:
     label: Suggestion
     icon: lightbulb
     targets: [project]
-    fields:
+    body:
       - id: title
         type: input
         attributes:
@@ -84,7 +84,7 @@ forms:
   - id: bug
     label: Issue
     icon: bug
-    fields:
+    body:
       - id: title
         type: input
         attributes:

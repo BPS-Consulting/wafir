@@ -24,7 +24,7 @@ const DEFAULT_CONFIG: WafirConfig = {
       id: "feedback",
       label: "Feedback",
       icon: "thumbsup",
-      fields: [
+      body: [
         {
           id: "rating",
           type: "rating",
@@ -51,7 +51,7 @@ const DEFAULT_CONFIG: WafirConfig = {
       id: "suggestion",
       label: "Suggestion",
       icon: "lightbulb",
-      fields: [
+      body: [
         {
           id: "title",
           type: "input",
@@ -78,7 +78,7 @@ const DEFAULT_CONFIG: WafirConfig = {
       id: "issue",
       label: "Issue",
       icon: "bug",
-      fields: [
+      body: [
         {
           id: "title",
           type: "input",
@@ -127,7 +127,7 @@ interface FormConfig {
   id: string;
   label?: string;
   icon?: string;
-  fields?: FieldConfig[];
+  body?: FieldConfig[];
   targets?: string[];
   labels?: string[];
   templateUrl?: string;
@@ -272,13 +272,13 @@ async function processFormTemplates(
 
   const processedForms = await Promise.all(
     forms.map(async (form) => {
-      // If form has templateUrl and no fields defined, fetch from template
-      if (form.templateUrl && (!form.fields || form.fields.length === 0)) {
+      // If form has templateUrl and no body defined, fetch from template
+      if (form.templateUrl && (!form.body || form.body.length === 0)) {
         const templateData = await fetchGitHubIssueTemplate(form.templateUrl, baseUrl);
         if (templateData) {
           return {
             ...form,
-            fields: templateData.fields,
+            body: templateData.fields,
             // Merge template labels with form labels (form labels take priority)
             labels: form.labels?.length
               ? form.labels
@@ -479,8 +479,8 @@ function getAllowedFieldIds(config: WafirConfig, formId?: string): Set<string> {
   const form = config.forms?.find((f) => f.id === formId);
 
   // Only use fields explicitly defined in the form configuration
-  if (form?.fields && form.fields.length > 0) {
-    for (const field of form.fields) {
+  if (form?.body && form.body.length > 0) {
+    for (const field of form.body) {
       if (field.id) {
         allowedFields.add(field.id);
       }
@@ -505,8 +505,8 @@ function getRequiredFieldIds(config: WafirConfig, formId?: string): Set<string> 
   const form = config.forms?.find((f) => f.id === formId);
 
   // Only use fields explicitly marked as required in the form configuration
-  if (form?.fields) {
-    for (const field of form.fields) {
+  if (form?.body) {
+    for (const field of form.body) {
       if (field.id && field.validations?.required) {
         requiredFields.add(field.id);
       }
@@ -525,7 +525,7 @@ function getFieldConfig(
   fieldId: string,
 ): FieldConfig | undefined {
   const form = config.forms?.find((f) => f.id === formId);
-  return form?.fields?.find((f) => f.id === fieldId);
+  return form?.body?.find((f) => f.id === fieldId);
 }
 
 /**

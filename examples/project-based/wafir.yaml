@@ -14,7 +14,7 @@ forms:
   - id: issue
     label: Report
     icon: bug
-    fields:
+    body:
       - id: title
         type: input
         attributes:

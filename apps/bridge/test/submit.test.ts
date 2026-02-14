@@ -220,7 +220,7 @@ targets:
     authRef: "123"
 forms:
   - id: issue
-    fields:
+    body:
       - id: title
         type: input
       - id: description
@@ -286,7 +286,7 @@ targets:
     authRef: "123"
 forms:
   - id: feedback
-    fields:
+    body:
       - id: title
         type: input
       - id: rating
@@ -740,7 +740,7 @@ targets:
     authRef: "456"
 forms:
   - id: issue
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -801,7 +801,7 @@ targets:
     authRef: "123"
 forms:
   - id: feedback
-    fields:
+    body:
       - id: title
         type: input
       - id: message
@@ -846,7 +846,7 @@ targets:
     authRef: "123"
 forms:
   - id: feedback
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -897,7 +897,7 @@ targets:
     authRef: "123"
 forms:
   - id: feedback
-    fields:
+    body:
       - id: title
         type: input
       - id: email
@@ -943,7 +943,7 @@ targets:
     authRef: "123"
 forms:
   - id: feedback
-    fields:
+    body:
       - id: title
         type: input
       - id: rating
@@ -989,7 +989,7 @@ targets:
     authRef: "123"
 forms:
   - id: feedback
-    fields:
+    body:
       - id: title
         type: input
       - id: category
@@ -1040,7 +1040,7 @@ targets:
     authRef: "123"
 forms:
   - id: feedback
-    fields:
+    body:
       - id: title
         type: input
       - id: email
@@ -1248,7 +1248,7 @@ targets:
     authRef: "123"
 forms:
   - id: issue
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -1309,7 +1309,7 @@ targets:
     authRef: "123"
 forms:
   - id: issue
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -1493,7 +1493,7 @@ targets:
 forms:
   - id: issue
     targets: [default]
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -1558,7 +1558,7 @@ targets:
 forms:
   - id: feedback
     targets: [default, project]
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -1633,7 +1633,7 @@ targets:
     authRef: "123"
 forms:
   - id: suggestion
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -1709,7 +1709,7 @@ targets:
 forms:
   - id: feedback
     targets: []
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -1785,7 +1785,7 @@ targets:
 forms:
   - id: feedback
     targets: [project]
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -1850,7 +1850,7 @@ targets:
 forms:
   - id: issue
     targets: [nonexistent]
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -1899,7 +1899,7 @@ targets:
     authRef: "123"
 forms:
   - id: issue
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -1952,3 +1952,6 @@ forms:
     });
   });
 });
+
+
+

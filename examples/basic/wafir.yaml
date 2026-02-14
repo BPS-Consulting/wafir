@@ -19,7 +19,7 @@ forms:
     icon: bug
     labels:
       - bug
-    fields:
+    body:
       - id: title
         type: input
         attributes:

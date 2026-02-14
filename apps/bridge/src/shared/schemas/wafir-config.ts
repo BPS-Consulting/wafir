@@ -106,11 +106,11 @@ const formSchema = {
       enum: ["thumbsup", "lightbulb", "bug"],
       description: "Form icon (displayed in tab UI)",
     },
-    fields: {
+    body: {
       type: "array",
       items: fieldSchema,
       description:
-        "Form fields for this form. If omitted, defaults are used for known form IDs.",
+        "Form body (fields) for this form. If omitted, defaults are used for known form IDs.",
     },
     targets: {
       type: "array",

@@ -35,7 +35,7 @@ export type WafirConfig = WafirConfigBase & {
 
 // Canonical form and field types from API schema
 export type FormConfigApi = NonNullable<WafirConfig["forms"]>[number];
-export type FieldConfigApi = NonNullable<FormConfigApi["fields"]>[number];
+export type FieldConfigApi = NonNullable<FormConfigApi["body"]>[number];
 
 export const checkBridgeHealth = async (
   bridgeUrl?: string,

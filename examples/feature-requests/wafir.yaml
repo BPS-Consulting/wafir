@@ -17,7 +17,7 @@ forms:
     labels:
       - enhancement
       - feature-request
-    fields:
+    body:
       - id: title
         type: input
         attributes:

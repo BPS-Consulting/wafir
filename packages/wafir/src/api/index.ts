@@ -247,8 +247,8 @@ export interface paths {
                                  * @enum {string}
                                  */
                                 icon?: "thumbsup" | "lightbulb" | "bug";
-                                /** @description Form fields for this form. If omitted, defaults are used for known form IDs. */
-                                fields?: {
+                                /** @description Form body (fields) for this form. If omitted, defaults are used for known form IDs. */
+                                body?: {
                                     /**
                                      * @description Field input type. Matches GitHub Form Schema types plus Wafir extensions.
                                      * @enum {string}

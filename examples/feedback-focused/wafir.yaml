@@ -14,7 +14,7 @@ forms:
   - id: feedback
     label: Feedback
     icon: thumbsup
-    fields:
+    body:
       - id: rating
         type: rating
         attributes:
