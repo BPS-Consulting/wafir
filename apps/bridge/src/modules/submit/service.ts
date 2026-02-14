@@ -8,10 +8,8 @@ export interface SubmitBody {
   target?: string;
   authRef?: string;
   title: string;
-  tabId?: string;
+  formId?: string;
   labels?: string[];
-  rating?: number;
-  submissionType?: "issue" | "feedback";
   formFields?: Record<string, unknown>;
   fieldOrder?: string[];
   browserInfo?: {

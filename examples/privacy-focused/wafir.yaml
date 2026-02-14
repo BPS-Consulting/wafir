@@ -15,11 +15,11 @@ telemetry:
   browserInfo: false
   consoleLog: false
 
-tabs:
+forms:
   - id: feedback
     label: Feedback
     icon: thumbsup
-    fields:
+    body:
       - id: title
         type: input
         attributes:

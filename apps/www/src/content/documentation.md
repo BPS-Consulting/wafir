@@ -152,7 +152,7 @@ Make sure that it is publically accessible.
 | `dropdown`   | Dropdown selection                        | label, description?, placeholder?, value?, options, multiple?         |
 | `checkboxes` | Multiple checkbox options                 | label, description?, options (array of objects with label, required?) |
 | `markdown`   | Read-only Markdown display                | label, description?, value (markdown, required)                       |
-| `rating`     | Likert (stars) Rating System (Wafir only) | label, description?, ratingLabels?                                    |
+| `rating`     | Star rating (displayed as stars, saved as number 1-5) | label, description?, ratingLabels?                       |
 
 ### Field Structure
 
@@ -232,6 +232,109 @@ telemetry:
 
 ---
 
+## Forms Configuration
+
+Define the structure of your feedback widget using forms in your `public/wafir.yaml` config file. Each form represents a distinct feedback type with its own fields and routing.
+
+> **Note:** Forms are displayed as tabs in the widget UI by default.
+
+### Form Properties
+
+| Property      | Type      | Description                                                                                      |
+| ------------- | --------- | ------------------------------------------------------------------------------------------------ |
+| `id`          | string    | Unique identifier for the form. Also used as the GitHub issue type when creating issues.          |
+| `label`       | string    | Display label shown in the form tab                                                                   |
+| `icon`        | string?   | Icon name (e.g., `bug`, `lightbulb`, `thumbsup`)                                                 |
+| `labels`      | string[]? | GitHub labels to auto-apply to issues created from this form                                      |
+| `templateUrl` | string?   | URL to a GitHub issue form template YAML file to use for this form's fields                       |
+| `targets`     | array?    | Array of target IDs to route submissions to                                                      |
+| `fields`      | array     | Array of field definitions for this form                                                          |
+
+> **Note:** The form `id` is automatically used as the GitHub issue type when creating issues. For example, a form with `id: Bug` will set the issue type to "Bug" in GitHub (requires issue types to be enabled in your repository/organization).
+
+### Using GitHub Issue Templates
+
+You can reference an existing GitHub issue form template by providing a `templateUrl`. The fields will be fetched from the template:
+
+```yaml
+forms:
+  - id: Bug
+    label: Report Bug
+    icon: bug
+    templateUrl: https://raw.githubusercontent.com/owner/repo/main/.github/ISSUE_TEMPLATE/bug_report.yml
+    targets: [default]
+```
+
+### Configuration Example
+
+```yaml
+forms:
+  - id: Bug
+    label: Report Bug
+    icon: bug
+    labels:
+      - bug
+      - wafir
+    targets: [default]
+    fields:
+      - id: title
+        type: input
+        attributes:
+          label: "Issue Title"
+        validations:
+          required: true
+
+  - id: Feature
+    label: Feature Request
+    icon: lightbulb
+    labels:
+      - enhancement
+      - feature-request
+    targets: [default]
+    fields:
+      - id: title
+        type: input
+        attributes:
+          label: "Feature Title"
+        validations:
+          required: true
+
+  - id: feedback
+    label: Feedback
+    icon: thumbsup
+    labels:
+      - feedback
+    targets: [project]
+    fields:
+      - id: rating
+        type: rating
+        attributes:
+          label: "How satisfied are you?"
+        validations:
+          required: true
+
+```
+
+### Single Form Mode
+
+If you only need one type of feedback, define a single form. The form selector will be hidden automatically:
+
+```yaml
+forms:
+  - id: issue
+    label: Report Issue
+    icon: bug
+    fields:
+      - id: title
+        type: input
+        attributes:
+          label: "Issue Title"
+        validations:
+          required: true
+```
+
+---
+
 ## Target Configuration
 
 The `targets` key in your `public/wafir.yaml` file allows you to define multiple destinations for user feedback, bug reports, and suggestions. Each target is an object specifying its id, type, destination, and authentication reference:
@@ -250,16 +353,15 @@ targets:
     authRef: "YOUR_INSTALLATION_ID"
 ```
 
-Tabs in your configuration reference targets:
+Forms in your configuration reference targets:
 
 ```yaml
-tabs:
+forms:
   - id: feedback
     label: Feedback
     icon: thumbsup
     isFeedback: true
-    targets: [project] # Routes this tab's feedback to 'project' target
-    currentDate: true # Includes the current date into the issue body
+    targets: [project] # Routes this form's feedback to 'project' target
     fields:
       - id: rating
         type: rating
@@ -294,7 +396,7 @@ tabs:
   - id: issue
     label: Issue
     icon: bug
-    targets: [default] # Routes this tab's feedback to 'default' target
+    targets: [default] # Routes this form's feedback to 'default' target
     fields:
       - id: title
         type: input
@@ -388,11 +490,8 @@ interface wafirWidget {
 
 #### Notes & Warnings
 
-- Calling `open()` with an invalid tab will warn and open the default.
-- Prefill of unknown or non-editable fields is a no-op with a console warning.
-- If `open()` is invoked before the widget is in the DOM, it is automatically queued until widget/config are ready.
-- If both a tab and prefill are provided, prefill is only applied to the selected tab.
-- All config, async setup, and field schema loading is handled for you.
+> **Migration Notice:**
+> The legacy `storage` key has been **removed**. All feedback routing now uses the `targets` array and form-level `targets` references. To migrate, define each destination under the `targets` key, and update your forms to reference the appropriate target via `targets: [targetId]`. See above examples for details.
 
 ---
 

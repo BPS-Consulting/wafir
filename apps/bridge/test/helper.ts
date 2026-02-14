@@ -95,10 +95,10 @@ targets:
     type: github/issues
     target: testowner/testrepo
     authRef: "123"
-tabs:
+forms:
   - id: issue
     label: "Report Issue"
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -119,10 +119,10 @@ targets:
     type: github/project
     target: testowner/1
     authRef: "123"
-tabs:
+forms:
   - id: issue
     label: "Report Issue"
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -139,14 +139,10 @@ targets:
     type: github/issues
     target: testowner/testrepo
     authRef: "123"
-feedbackProject:
-  projectNumber: 2
-  ratingField: "Rating"
-tabs:
+forms:
   - id: feedback
     label: "Feedback"
-    isFeedback: true
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -173,10 +169,10 @@ telemetry:
   screenshot: true
   browserInfo: true
   consoleLog: true
-tabs:
+forms:
   - id: issue
     label: "Report Issue"
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -188,8 +184,7 @@ tabs:
   - id: feedback
     label: "Feedback"
     icon: "thumbsup"
-    isFeedback: true
-    fields:
+    body:
       - id: rating
         type: rating
         attributes:

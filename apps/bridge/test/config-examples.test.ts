@@ -149,8 +149,8 @@ describe("Example Configurations", () => {
       expect(body.title).toBe("Feedback");
       expect(body.targets).toHaveLength(1);
       expect(body.targets[0].type).toBe("github/issues");
-      // No tabs defined - should be absent (widget uses defaults)
-      expect(body.tabs).toBeUndefined();
+      // No forms defined - should be absent (widget uses defaults)
+      expect(body.forms).toBeUndefined();
     });
   });
 
@@ -185,17 +185,17 @@ describe("Example Configurations", () => {
       expect(body.telemetry.browserInfo).toBe(true);
       expect(body.telemetry.consoleLog).toBe(true);
 
-      // Check tabs exist
-      expect(body.tabs).toBeDefined();
-      expect(Array.isArray(body.tabs)).toBe(true);
-      expect(body.tabs.length).toBeGreaterThan(0);
+      // Check forms exist
+      expect(body.forms).toBeDefined();
+      expect(Array.isArray(body.forms)).toBe(true);
+      expect(body.forms.length).toBeGreaterThan(0);
 
-      // Check at least one tab has the expected structure
-      const firstTab = body.tabs[0];
-      expect(firstTab.id).toBeDefined();
-      expect(firstTab.label).toBeDefined();
-      expect(firstTab.fields).toBeDefined();
-      expect(Array.isArray(firstTab.fields)).toBe(true);
+      // Check at least one form has the expected structure
+      const firstForm = body.forms[0];
+      expect(firstForm.id).toBeDefined();
+      expect(firstForm.label).toBeDefined();
+      expect(firstForm.body).toBeDefined();
+      expect(Array.isArray(firstForm.body)).toBe(true);
     });
   });
 
@@ -235,7 +235,7 @@ describe("Example Configurations", () => {
   });
 
   describe("feedback-focused config validation", () => {
-    it("loads feedback-focused config with feedbackProject", async () => {
+    it("loads feedback-focused config with rating field", async () => {
       const feedbackConfig = exampleConfigs.find(
         (c) => c.name === "feedback-focused",
       );
@@ -261,9 +261,14 @@ describe("Example Configurations", () => {
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
 
-      expect(body.feedbackProject).toBeDefined();
-      expect(body.feedbackProject.projectNumber).toBeDefined();
-      expect(body.feedbackProject.ratingField).toBeDefined();
+      // Verify feedback form with rating field
+      expect(body.forms).toBeDefined();
+      const feedbackForm = body.forms.find((t: any) => t.id === "feedback");
+      expect(feedbackForm).toBeDefined();
+      const ratingField = feedbackForm.body?.find(
+        (f: any) => f.type === "rating",
+      );
+      expect(ratingField).toBeDefined();
     });
   });
 
@@ -327,10 +332,10 @@ describe("Example Configurations", () => {
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
 
-      // Collect all field types from all tabs
+      // Collect all field types from all forms
       const fieldTypes = new Set<string>();
-      for (const tab of body.tabs || []) {
-        for (const field of tab.fields || []) {
+      for (const form of body.forms || []) {
+        for (const field of form.body || []) {
           fieldTypes.add(field.type);
         }
       }

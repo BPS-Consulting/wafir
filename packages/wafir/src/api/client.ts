@@ -22,7 +22,7 @@ export type WafirConfigBase =
 // Extended WafirConfig type with targets array (required for user-hosted configs)
 export type WafirConfig = WafirConfigBase & {
   targets: Array<{
-    /** Unique identifier for this target, referenced by tabs to route submissions. */
+    /** Unique identifier for this target, referenced by forms to route submissions. */
     id: string;
     /** Target type using MIME-type convention. Currently supported: github/issues, github/project. */
     type: "github/issues" | "github/project";
@@ -33,9 +33,9 @@ export type WafirConfig = WafirConfigBase & {
   }>;
 };
 
-// Canonical tab and field types from API schema
-export type TabConfigApi = NonNullable<WafirConfig["tabs"]>[number];
-export type FieldConfigApi = NonNullable<TabConfigApi["fields"]>[number];
+// Canonical form and field types from API schema
+export type FormConfigApi = NonNullable<WafirConfig["forms"]>[number];
+export type FieldConfigApi = NonNullable<FormConfigApi["body"]>[number];
 
 export const checkBridgeHealth = async (
   bridgeUrl?: string,
@@ -109,13 +109,11 @@ export interface SubmitIssueParams {
   /** Authentication reference (e.g., installation ID for GitHub) */
   authRef: string;
   title: string;
-  /** The active tab ID for field validation */
-  tabId?: string;
+  /** The form ID for field validation */
+  formId?: string;
   labels?: string[];
   screenshot?: Blob;
   bridgeUrl?: string;
-  rating?: number;
-  submissionType?: "issue" | "feedback";
   formFields?: Record<string, unknown>;
   fieldOrder?: string[];
   browserInfo?: BrowserInfo;
@@ -129,12 +127,10 @@ export const submitIssue = async (params: SubmitIssueParams) => {
     target,
     authRef,
     title,
-    tabId,
+    formId,
     labels,
     screenshot,
     bridgeUrl,
-    rating,
-    submissionType,
     formFields,
     fieldOrder,
     browserInfo,
@@ -151,20 +147,14 @@ export const submitIssue = async (params: SubmitIssueParams) => {
   formData.append("target", target);
   formData.append("authRef", authRef);
   formData.append("title", title);
-  if (tabId) {
-    formData.append("tabId", tabId);
+  if (formId) {
+    formData.append("formId", formId);
   }
   if (labels) {
     formData.append("labels", JSON.stringify(labels));
   }
   if (screenshot) {
     formData.append("screenshot", screenshot, "screenshot.png");
-  }
-  if (rating !== undefined) {
-    formData.append("rating", String(rating));
-  }
-  if (submissionType) {
-    formData.append("submissionType", submissionType);
   }
   if (formFields) {
     formData.append("formFields", JSON.stringify(formFields));

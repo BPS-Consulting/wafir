@@ -58,7 +58,7 @@ const submitRoute: FastifyPluginAsync = async (
           target: input.target,
           authRef: input.authRef,
           formFields: input.formFields || {},
-          tabId: input.tabId,
+          formId: input.formId,
           requestOrigin,
         });
 
@@ -77,12 +77,12 @@ const submitRoute: FastifyPluginAsync = async (
         const config = validationResult.config!;
 
         // Determine which targets to use for this submission
-        // 1. If a tab is specified and it has targets, use those
+        // 1. If a form is specified and it has targets, use those
         // 2. Otherwise, use all targets from config
-        const tab = config.tabs?.find((t) => t.id === input.tabId);
+        const form = config.forms?.find((f) => f.id === input.formId);
         const targetIds =
-          tab?.targets && tab.targets.length > 0
-            ? tab.targets
+          form?.targets && form.targets.length > 0
+            ? form.targets
             : config.targets.map((t) => t.id);
 
         // Get the actual target configurations
@@ -140,16 +140,16 @@ const submitRoute: FastifyPluginAsync = async (
           projectNumber = parseInt(projNum, 10);
         }
 
-        // Feedback project settings from config
-        const feedbackProjectNumber =
-          config.feedbackProject?.projectNumber || projectNumber;
-        const feedbackProjectOwner =
-          config.feedbackProject?.owner || projectOwner;
-        const ratingFieldName = config.feedbackProject?.ratingField || "Rating";
-
         // Title and labels can come from form (validated above)
         const title = input.title;
-        const labels = input.labels;
+        
+        // Merge labels: form config labels take priority, then input labels
+        const formLabels = form?.labels || [];
+        const inputLabels = input.labels || [];
+        const labels = [...new Set([...formLabels, ...inputLabels])];
+        
+        // Use form id as the issue type
+        const issueType = form?.id;
 
         // Build markdown body from validated form fields
         let finalBody = submitService.buildMarkdownFromFields(
@@ -204,8 +204,8 @@ const submitRoute: FastifyPluginAsync = async (
           title,
           body: finalBody,
           labels,
-          rating: input.rating,
-          submissionType: input.submissionType,
+          issueType,
+          formFields: input.formFields,
           log: request.log,
           owner,
           repo,
@@ -214,10 +214,6 @@ const submitRoute: FastifyPluginAsync = async (
           projectOwner,
           projectNumber,
           storageType,
-          feedbackProjectNumber,
-          feedbackProjectOwner,
-          ratingFieldName,
-          currentDate: tab?.currentDate,
         } as GithubSubmissionContext);
 
         if (!submissionResult.success) {

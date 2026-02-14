@@ -112,35 +112,7 @@ describe("GET /config", () => {
       expect(projectTarget.target).toContain("/1"); // Should contain project number
     });
 
-    it("fetches config with feedbackProject settings", async () => {
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(sampleConfigs.withFeedbackProject),
-          encoding: "base64",
-        },
-      });
-
-      mockOctokit.rest.users.getByUsername.mockResolvedValue({
-        data: { type: "User" },
-      });
-
-      const response = await app.inject({
-        method: "GET",
-        url: "/config",
-        query: {
-          installationId: "123",
-          owner: "testowner",
-          repo: "testrepo",
-        },
-      });
-
-      expect(response.statusCode).toBe(200);
-      const body = JSON.parse(response.body);
-      expect(body.feedbackProject.projectNumber).toBe(2);
-      expect(body.feedbackProject.ratingField).toBe("Rating");
-    });
-
-    it("fetches full featured config with tabs and telemetry", async () => {
+    it("fetches full featured config with forms and telemetry", async () => {
       mockOctokit.rest.repos.getContent.mockResolvedValue({
         data: {
           content: encodeYamlToBase64(sampleConfigs.full),
@@ -175,10 +147,9 @@ describe("GET /config", () => {
       expect(body.telemetry.screenshot).toBe(true);
       expect(body.telemetry.browserInfo).toBe(true);
       expect(body.telemetry.consoleLog).toBe(true);
-      expect(body.tabs).toHaveLength(2);
-      expect(body.tabs[0].id).toBe("issue");
-      expect(body.tabs[1].id).toBe("feedback");
-      expect(body.tabs[1].isFeedback).toBe(true);
+      expect(body.forms).toHaveLength(2);
+      expect(body.forms[0].id).toBe("issue");
+      expect(body.forms[1].id).toBe("feedback");
     });
 
     it("includes organization issue types when owner is an org", async () => {

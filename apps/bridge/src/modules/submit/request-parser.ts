@@ -47,12 +47,6 @@ export class RequestParserService {
                 result.labels = val.split(",").map((l) => l.trim());
               }
               break;
-            case "rating":
-              result.rating = Number(val);
-              break;
-            case "submissionType":
-              result.submissionType = val as "issue" | "feedback";
-              break;
             case "formFields":
               try {
                 result.formFields = JSON.parse(val);
@@ -84,8 +78,8 @@ export class RequestParserService {
             case "configUrl":
               result.configUrl = val;
               break;
-            case "tabId":
-              result.tabId = val;
+            case "formId":
+              result.formId = val;
               break;
           }
         }

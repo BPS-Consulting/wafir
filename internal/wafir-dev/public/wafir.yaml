@@ -1,10 +1,13 @@
 # WAFIR Configuration Example - Default
-# This example shows what the widget displays when no tabs are specified.
+# This example shows what the widget displays when no forms are specified.
 # Use this as a reference for the default behavior.
 # Host this file anywhere and point your widget to it via configUrl
 
 title: "Contact Us"
 
+# Targets define where feedback gets sent. 
+# You can have multiple targets and specify which forms send to which targets.  
+# The first target will be used by default.
 targets:
   - id: default
     type: github/issues
@@ -20,18 +23,17 @@ telemetry:
   browserInfo: true
   consoleLog: false
 
-tabs:
+forms:
   - id: feedback
     label: Feedback
     icon: thumbsup
     isFeedback: true
     targets: [project]
-    currentDate: true
-    fields:
+    body:
       - id: rating
         type: rating
         attributes:
-          label: "How satisfied are you with our website? AGAGAG"
+          label: "How satisfied are you with our website?"
         validations:
           required: true
       - id: description
@@ -41,10 +43,11 @@ tabs:
         validations:
           required: false
 
-  - id: suggestion
+  - id: feature
     label: Suggestion
     icon: lightbulb
-    fields:
+    targets: [project]
+    body:
       - id: title
         type: input
         attributes:
@@ -57,21 +60,34 @@ tabs:
           label: "Additional information:"
         validations:
           required: false
-
-  - id: issue
+      - id: value
+        type: dropdown
+        attributes:
+          label: "Business value"
+          options:
+            - label: "Low"
+              value: "Low"
+            - label: "Medium"
+              value: "Medium"
+            - label: "High"
+              value: "High"
+        validations:
+          required: false
+      - id: needed
+        type: dropdown
+        attributes:
+          label: "Needed"
+          options:
+            - label: "Later"
+              value: "Later"
+            - label: "Soon"
+              value: "Soon"
+            - label: "Now"
+              value: "Now"
+        validations:
+          required: false
+  - id: bug
     label: Issue
     icon: bug
     targets: [default]
-    fields:
-      - id: title
-        type: input
-        attributes:
-          label: "What issue did you encounter?"
-        validations:
-          required: true
-      - id: description
-        type: textarea
-        attributes:
-          label: "Additional information:"
-        validations:
-          required: true
+    templateUrl: "/subform.yaml"

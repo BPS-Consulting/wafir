@@ -4,9 +4,9 @@ Get Wafir running in your application in minutes.
 
 ## 1. Install the GitHub App
 
-First, install the Wafir GitHub App on your repository. This allows Wafir to create issues and read your configuration.
+First, install the Wafir GitHub App on your repository. This allows Wafir to add items to the issue and project lists for your repository.
 
-[Install GitHub App](https://github.com/apps/wafir)
+[Install GitHub App](https://github.com/apps/wafir-web-feedback-widget)
 
 > **Note:** After installation, note your **Installation ID** from the URL. You'll need this to configure the widget.
 
@@ -58,7 +58,7 @@ Place the `wafir.yaml` config file in your app's `public` directory (e.g. `publi
 
 ### Migration from legacy `storage` config
 
-> The legacy `storage` key configuration has been **removed**. All routing is now handled using the `targets` array and tab-level `targets` references. To migrate, define each destination under the `targets` key, and update your tabs to reference the appropriate target via `targets: [targetId]`. See `/examples/default/wafir.yaml` for updated config patterns.
+> The legacy `storage` key configuration has been **removed**. All routing is now handled using the `targets` array and form-level `targets` references. To migrate, define each destination under the `targets` key, and update your forms to reference the appropriate target via `targets: [targetId]`. See `/examples/default/wafir.yaml` for updated config patterns.
 
 **Required top-level keys:**
 
@@ -79,7 +79,7 @@ targets:
     type: github/project
     target: your-username/your-project-id
     authRef: "YOUR_INSTALLATION_ID"
-tabs:
+forms:
   - id: feedback
     label: "Feedback"
     icon: thumbsup

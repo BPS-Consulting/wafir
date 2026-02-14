@@ -37,6 +37,7 @@ const FIND_PROJECT_FIELDS_QUERY = `
             ... on ProjectV2SingleSelectField {
               id
               name
+              dataType
               options {
                 id
                 name
@@ -55,12 +56,12 @@ const FIND_PROJECT_FIELDS_QUERY = `
 `;
 
 const UPDATE_PROJECT_FIELD_MUTATION = `
-  mutation UpdateProjectField($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+  mutation UpdateProjectField($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: ProjectV2FieldValue!) {
     updateProjectV2ItemFieldValue(input: {
       projectId: $projectId
       itemId: $itemId
       fieldId: $fieldId
-      value: { singleSelectOptionId: $optionId }
+      value: $value
     }) {
       projectV2Item { id }
     }
@@ -92,9 +93,14 @@ export interface ProjectAddResult {
   itemId?: string;
 }
 
-export interface RatingFieldResult {
+export interface ProjectFieldResult {
   success: boolean;
   error?: string;
+}
+
+export interface ProjectFieldsResult {
+  successCount: number;
+  failures: Array<{ field: string; error: string }>;
 }
 
 /**
@@ -229,119 +235,241 @@ export class GitHubProjectService {
   }
 
   /**
-   * Sets the Rating field on a project item.
+   * Sets any project field on a project item.
    */
-  async setProjectRatingField(params: {
+  async setProjectField(params: {
     octokit: any;
     projectId: string;
     itemId: string;
-    ratingFieldName: string;
-    rating: number;
+    fieldName: string;
+    fieldValue: string | number;
     log: any;
-  }): Promise<RatingFieldResult> {
-    const { octokit, projectId, itemId, ratingFieldName, rating, log } = params;
+  }): Promise<ProjectFieldResult> {
+    const { octokit, projectId, itemId, fieldName, fieldValue, log } = params;
 
     try {
       const fieldsResult: any = await octokit.graphql(
         FIND_PROJECT_FIELDS_QUERY,
-        {
-          projectId,
-        },
+        { projectId },
       );
 
       const fields = fieldsResult.node?.fields?.nodes || [];
-      const ratingField = fields.find(
-        (f: any) => f?.name?.toLowerCase() === ratingFieldName.toLowerCase(),
+      const field = fields.find(
+        (f: any) => f?.name?.toLowerCase() === fieldName.toLowerCase(),
       );
 
-      if (!ratingField) {
+      if (!field) {
         return {
           success: false,
-          error: `Field "${ratingFieldName}" not found`,
+          error: `Field "${fieldName}" not found`,
         };
       }
 
-      const starEmojis = ["⭐", "⭐⭐", "⭐⭐⭐", "⭐⭐⭐⭐", "⭐⭐⭐⭐⭐"];
-      const targetEmoji = starEmojis[Math.min(Math.max(rating - 1, 0), 4)];
+      const dataType = field.dataType;
+      let value: Record<string, string | number>;
 
-      const matchingOption = ratingField.options?.find(
-        (opt: any) => opt.name === targetEmoji,
-      );
+      if (dataType === 'SINGLE_SELECT') {
+        const matchingOption = field.options?.find(
+          (opt: any) =>
+            opt.name.toLowerCase() === String(fieldValue).toLowerCase(),
+        );
 
-      if (!matchingOption) {
+        if (!matchingOption) {
+          return {
+            success: false,
+            error: `No option matching "${fieldValue}" in field "${fieldName}"`,
+          };
+        }
+
+        value = { singleSelectOptionId: matchingOption.id };
+      } else if (dataType === 'TEXT') {
+        value = { text: String(fieldValue) };
+      } else if (dataType === 'NUMBER') {
+        const numValue =
+          typeof fieldValue === 'number' ? fieldValue : parseFloat(fieldValue);
+        if (isNaN(numValue)) {
+          return {
+            success: false,
+            error: `Invalid number value "${fieldValue}" for field "${fieldName}"`,
+          };
+        }
+        value = { number: numValue };
+      } else if (dataType === 'DATE') {
+        value = { date: String(fieldValue) };
+      } else {
         return {
           success: false,
-          error: `No option matching "${targetEmoji}" in Rating field`,
+          error: `Unsupported field type "${dataType}" for field "${fieldName}"`,
         };
       }
 
       await octokit.graphql(UPDATE_PROJECT_FIELD_MUTATION, {
         projectId,
         itemId,
-        fieldId: ratingField.id,
-        optionId: matchingOption.id,
+        fieldId: field.id,
+        value,
       });
 
-      log.info({ rating, itemId }, "Set Rating field on project item");
+      log.info(
+        { fieldName, fieldValue, itemId },
+        'Set field on project item',
+      );
       return { success: true };
     } catch (e: any) {
-      log.error({ error: e.message }, "Failed to set Rating field");
+      log.error({ error: e.message }, `Failed to set field "${fieldName}"`);
       return { success: false, error: e.message };
     }
   }
 
   /**
-   * Sets a date field on a project item if a field starting with "Submitted" is found.
+   * Sets multiple project fields on a project item from form fields.
+   * Fields are matched by field ID to project field name (case-insensitive).
+   * Fields that don't match any project field are silently skipped.
    */
-  async setSubmittedDateField(params: {
+  async setProjectFields(params: {
     octokit: any;
     projectId: string;
     itemId: string;
+    formFields: Record<string, unknown>;
     log: any;
-  }): Promise<RatingFieldResult> {
-    const { octokit, projectId, itemId, log } = params;
+  }): Promise<ProjectFieldsResult> {
+    const { octokit, projectId, itemId, formFields, log } = params;
+    const result: ProjectFieldsResult = { successCount: 0, failures: [] };
+
+    // Fields to skip (these are used elsewhere, not as project fields)
+    const skipFields = new Set(['title', 'body', 'description']);
 
     try {
+      // Fetch all project fields once
       const fieldsResult: any = await octokit.graphql(
         FIND_PROJECT_FIELDS_QUERY,
-        {
-          projectId,
-        },
+        { projectId },
       );
 
-      const fields = fieldsResult.node?.fields?.nodes || [];
+      const projectFields = fieldsResult.node?.fields?.nodes || [];
 
-      // Find a field that starts with "Submitted" and is a DATE type
-      const submittedField = fields.find(
-        (f: any) =>
-          f?.name?.toLowerCase().startsWith("submitted") &&
-          f?.dataType === "DATE",
-      );
-
-      if (!submittedField) {
-        log.debug("No 'Submitted' date field found in project");
-        return { success: true }; // Not an error, just not found
+      // Create a map for case-insensitive field lookup
+      const fieldMap = new Map<string, any>();
+      for (const field of projectFields) {
+        if (field?.name) {
+          fieldMap.set(field.name.toLowerCase(), field);
+        }
       }
 
-      // Format current date as ISO date string (YYYY-MM-DD) for GitHub API
-      const now = new Date();
-      const dateValue = now.toISOString().split("T")[0];
+      // Process each form field
+      for (const [fieldId, fieldValue] of Object.entries(formFields)) {
+        // Skip special fields and empty values
+        if (skipFields.has(fieldId.toLowerCase())) {
+          continue;
+        }
+        if (fieldValue === undefined || fieldValue === null || fieldValue === '') {
+          continue;
+        }
 
-      await octokit.graphql(UPDATE_PROJECT_DATE_FIELD_MUTATION, {
-        projectId,
-        itemId,
-        fieldId: submittedField.id,
-        dateValue,
-      });
+        // Find matching project field
+        const projectField = fieldMap.get(fieldId.toLowerCase());
+        if (!projectField) {
+          log.debug({ fieldId }, 'No matching project field found, skipping');
+          continue;
+        }
 
-      log.info(
-        { fieldName: submittedField.name, itemId, dateValue },
-        "Set Submitted date field on project item",
-      );
-      return { success: true };
+        try {
+          const updateResult = await this.updateSingleField({
+            octokit,
+            projectId,
+            itemId,
+            field: projectField,
+            fieldValue,
+            log,
+          });
+
+          if (updateResult.success) {
+            result.successCount++;
+          } else if (updateResult.error) {
+            result.failures.push({ field: fieldId, error: updateResult.error });
+          }
+        } catch (e: any) {
+          result.failures.push({ field: fieldId, error: e.message });
+        }
+      }
     } catch (e: any) {
-      log.error({ error: e.message }, "Failed to set Submitted date field");
-      return { success: false, error: e.message };
+      log.error({ error: e.message }, 'Failed to fetch project fields');
+      result.failures.push({ field: '_all', error: `Failed to fetch project fields: ${e.message}` });
     }
+
+    if (result.successCount > 0) {
+      log.info(
+        { successCount: result.successCount, failureCount: result.failures.length },
+        'Set project fields on item',
+      );
+    }
+
+    return result;
+  }
+
+  /**
+   * Updates a single project field value.
+   * Internal helper for setProjectFields().
+   */
+  private async updateSingleField(params: {
+    octokit: any;
+    projectId: string;
+    itemId: string;
+    field: any;
+    fieldValue: unknown;
+    log: any;
+  }): Promise<ProjectFieldResult> {
+    const { octokit, projectId, itemId, field, fieldValue, log } = params;
+    const dataType = field.dataType;
+    let value: Record<string, string | number>;
+
+    if (dataType === 'SINGLE_SELECT') {
+      const matchingOption = field.options?.find(
+        (opt: any) =>
+          opt.name.toLowerCase() === String(fieldValue).toLowerCase(),
+      );
+
+      if (!matchingOption) {
+        return {
+          success: false,
+          error: `No option matching "${fieldValue}" in field "${field.name}"`,
+        };
+      }
+
+      value = { singleSelectOptionId: matchingOption.id };
+    } else if (dataType === 'TEXT') {
+      // Handle arrays (e.g., checkboxes) by joining with comma
+      const textValue = Array.isArray(fieldValue)
+        ? fieldValue.join(', ')
+        : String(fieldValue);
+      value = { text: textValue };
+    } else if (dataType === 'NUMBER') {
+      const numValue =
+        typeof fieldValue === 'number' ? fieldValue : parseFloat(String(fieldValue));
+      if (isNaN(numValue)) {
+        return {
+          success: false,
+          error: `Invalid number value "${fieldValue}" for field "${field.name}"`,
+        };
+      }
+      value = { number: numValue };
+    } else if (dataType === 'DATE') {
+      value = { date: String(fieldValue) };
+    } else {
+      return {
+        success: false,
+        error: `Unsupported field type "${dataType}" for field "${field.name}"`,
+      };
+    }
+
+    await octokit.graphql(UPDATE_PROJECT_FIELD_MUTATION, {
+      projectId,
+      itemId,
+      fieldId: field.id,
+      value,
+    });
+
+    log.debug({ fieldName: field.name, fieldValue, itemId }, 'Set field on project item');
+    return { success: true };
   }
 }

@@ -140,7 +140,7 @@ describe("POST /submit", () => {
           target: "testowner/testrepo",
           authRef: "123",
           title: "Test Issue",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "Test Issue",
             message: "This is a test description",
@@ -163,6 +163,7 @@ describe("POST /submit", () => {
         title: "Test Issue",
         body: expect.stringContaining("Message"),
         labels: ["wafir-feedback"],
+        type: "issue", // Form id is used as issue type
       });
 
       // Verify config was fetched
@@ -191,7 +192,7 @@ describe("POST /submit", () => {
           target: "testowner/testrepo",
           authRef: "123",
           title: "Bug Report",
-          tabId: "issue",
+          formId: "issue",
           labels: ["bug", "priority-high"],
           formFields: {
             title: "Bug Report",
@@ -217,9 +218,9 @@ targets:
     type: github/issues
     target: testowner/testrepo
     authRef: "123"
-tabs:
+forms:
   - id: issue
-    fields:
+    body:
       - id: title
         type: input
       - id: description
@@ -249,7 +250,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Ordered Fields Test",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "Ordered Fields Test",
             description: "First field",
@@ -275,7 +276,7 @@ tabs:
     });
 
     it("converts rating to star emojis in body", async () => {
-      // Config with feedback tab that has rating field
+      // Config with feedback form that has rating field
       mockFetch.mockResolvedValue(
         createMockConfigResponse(`
 targets:
@@ -283,10 +284,9 @@ targets:
     type: github/issues
     target: testowner/testrepo
     authRef: "123"
-tabs:
+forms:
   - id: feedback
-    isFeedback: true
-    fields:
+    body:
       - id: title
         type: input
       - id: rating
@@ -314,8 +314,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Feedback with Rating",
-          submissionType: "feedback",
-          tabId: "feedback",
+          formId: "feedback",
           formFields: {
             title: "Feedback with Rating",
             rating: 4,
@@ -349,7 +348,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Issue with Browser Info",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "Issue with Browser Info",
             message: "A bug",
@@ -393,7 +392,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Issue with Console Logs",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "Issue with Console Logs",
             message: "Error occurred",
@@ -439,7 +438,7 @@ tabs:
           targetType: "github/issues",
           target: "testowner/testrepo",
           authRef: "123",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "Title from Form Fields",
             message: "Some description",
@@ -472,7 +471,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Test Issue",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "Test Issue",
             message: "Test Message",
@@ -506,7 +505,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Test Issue",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "Test Issue",
           },
@@ -548,7 +547,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Test Issue",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "Test Issue",
             message: "Valid same-origin submission",
@@ -584,7 +583,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Test Issue",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "Test Issue",
             message: "No referer header",
@@ -610,7 +609,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Test Issue",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "Test Issue",
           },
@@ -636,7 +635,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Test Issue",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "Test Issue",
           },
@@ -663,7 +662,7 @@ tabs:
           target: "wrongowner/wrongrepo", // Does not match config (testowner/testrepo)
           authRef: "123",
           title: "Test Issue",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "Test Issue",
           },
@@ -690,7 +689,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "999", // Does not match config (123)
           title: "Test Issue",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "Test Issue",
           },
@@ -717,7 +716,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Test Issue",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "Test Issue",
           },
@@ -739,9 +738,9 @@ targets:
     type: github/issues
     target: real-owner/real-repo
     authRef: "456"
-tabs:
+forms:
   - id: issue
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -770,7 +769,7 @@ tabs:
           owner: "real-owner",
           repo: "real-repo",
           title: "Test Issue",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "Test Issue",
             message: "Test",
@@ -800,9 +799,9 @@ targets:
     type: github/issues
     target: testowner/testrepo
     authRef: "123"
-tabs:
+forms:
   - id: feedback
-    fields:
+    body:
       - id: title
         type: input
       - id: message
@@ -820,7 +819,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Test Issue",
-          tabId: "feedback",
+          formId: "feedback",
           formFields: {
             title: "Test Issue",
             message: "Valid field",
@@ -845,9 +844,9 @@ targets:
     type: github/issues
     target: testowner/testrepo
     authRef: "123"
-tabs:
+forms:
   - id: feedback
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -869,7 +868,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Test Issue",
-          tabId: "feedback",
+          formId: "feedback",
           formFields: {
             title: "Test Issue",
             // message is missing but required
@@ -896,9 +895,9 @@ targets:
     type: github/issues
     target: testowner/testrepo
     authRef: "123"
-tabs:
+forms:
   - id: feedback
-    fields:
+    body:
       - id: title
         type: input
       - id: email
@@ -918,7 +917,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Test Issue",
-          tabId: "feedback",
+          formId: "feedback",
           formFields: {
             title: "Test Issue",
             email: "not-an-email",
@@ -942,9 +941,9 @@ targets:
     type: github/issues
     target: testowner/testrepo
     authRef: "123"
-tabs:
+forms:
   - id: feedback
-    fields:
+    body:
       - id: title
         type: input
       - id: rating
@@ -964,7 +963,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Test Issue",
-          tabId: "feedback",
+          formId: "feedback",
           formFields: {
             title: "Test Issue",
             rating: 10, // Invalid: must be 1-5
@@ -988,9 +987,9 @@ targets:
     type: github/issues
     target: testowner/testrepo
     authRef: "123"
-tabs:
+forms:
   - id: feedback
-    fields:
+    body:
       - id: title
         type: input
       - id: category
@@ -1015,7 +1014,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Test Issue",
-          tabId: "feedback",
+          formId: "feedback",
           formFields: {
             title: "Test Issue",
             category: "InvalidOption", // Not in options
@@ -1039,9 +1038,9 @@ targets:
     type: github/issues
     target: testowner/testrepo
     authRef: "123"
-tabs:
+forms:
   - id: feedback
-    fields:
+    body:
       - id: title
         type: input
       - id: email
@@ -1077,7 +1076,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Test Issue",
-          tabId: "feedback",
+          formId: "feedback",
           formFields: {
             title: "Test Issue",
             email: "valid@example.com",
@@ -1130,7 +1129,7 @@ tabs:
         "",
         "Issue with Screenshot",
         `--${boundary}`,
-        'Content-Disposition: form-data; name="tabId"',
+        'Content-Disposition: form-data; name="formId"',
         "",
         "issue",
         `--${boundary}`,
@@ -1202,7 +1201,7 @@ tabs:
         "",
         "Issue with Failed Screenshot",
         `--${boundary}`,
-        'Content-Disposition: form-data; name="tabId"',
+        'Content-Disposition: form-data; name="formId"',
         "",
         "issue",
         `--${boundary}`,
@@ -1247,9 +1246,9 @@ targets:
     type: github/project
     target: testowner/1
     authRef: "123"
-tabs:
+forms:
   - id: issue
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -1282,7 +1281,7 @@ tabs:
           target: "testowner/1",
           authRef: "123",
           title: "Project Draft Issue",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "Project Draft Issue",
             message: "This goes to a project",
@@ -1308,9 +1307,9 @@ targets:
     type: github/project
     target: testowner/1
     authRef: "123"
-tabs:
+forms:
   - id: issue
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -1334,7 +1333,7 @@ tabs:
           target: "testowner/1",
           authRef: "123",
           title: "Project Issue",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "Project Issue",
             message: "Test",
@@ -1347,132 +1346,6 @@ tabs:
       expect(body.success).toBe(true);
       expect(body.projectAdded).toBe(false);
       expect(body.warning).toContain("Could not find project");
-    });
-  });
-
-  describe("feedback submission", () => {
-    it("adds feedback to project with rating field", async () => {
-      // Config with feedback project
-      mockFetch.mockResolvedValue(
-        createMockConfigResponse(sampleConfigs.withFeedbackProject),
-      );
-
-      // Mock finding the project (first call in the feedback handling)
-      mockOctokit.graphql.mockResolvedValueOnce({
-        organization: { projectV2: { id: "PVT_feedback123" } },
-      });
-
-      // Mock finding the project again (inside addToProject)
-      mockOctokit.graphql.mockResolvedValueOnce({
-        organization: { projectV2: { id: "PVT_feedback123" } },
-      });
-
-      // Mock adding draft to project
-      mockOctokit.graphql.mockResolvedValueOnce({
-        addProjectV2DraftIssue: {
-          projectItem: { id: "PVTI_feedback_item123" },
-        },
-      });
-
-      // Mock finding project fields
-      mockOctokit.graphql.mockResolvedValueOnce({
-        node: {
-          fields: {
-            nodes: [
-              {
-                id: "FIELD_rating",
-                name: "Rating",
-                options: [
-                  { id: "OPT_1", name: "⭐" },
-                  { id: "OPT_2", name: "⭐⭐" },
-                  { id: "OPT_3", name: "⭐⭐⭐" },
-                  { id: "OPT_4", name: "⭐⭐⭐⭐" },
-                  { id: "OPT_5", name: "⭐⭐⭐⭐⭐" },
-                ],
-              },
-            ],
-          },
-        },
-      });
-
-      // Mock updating field
-      mockOctokit.graphql.mockResolvedValueOnce({
-        updateProjectV2ItemFieldValue: {
-          projectV2Item: { id: "PVTI_feedback_item123" },
-        },
-      });
-
-      const response = await app.inject({
-        method: "POST",
-        url: "/submit",
-        payload: {
-          configUrl: TEST_CONFIG_URL,
-          installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
-          title: "User Feedback",
-          rating: 4,
-          submissionType: "feedback",
-          tabId: "feedback",
-          formFields: {
-            title: "User Feedback",
-            rating: 4,
-            message: "Love the product!",
-          },
-        },
-      });
-
-      expect(response.statusCode).toBe(201);
-      const body = JSON.parse(response.body);
-      expect(body.success).toBe(true);
-      expect(body.projectAdded).toBe(true);
-    });
-
-    it("creates issue as fallback when no feedback project configured", async () => {
-      // Minimal config without feedback project
-      mockFetch.mockResolvedValue(
-        createMockConfigResponse(sampleConfigs.minimal),
-      );
-
-      mockOctokit.rest.issues.create.mockResolvedValue({
-        data: {
-          number: 52,
-          html_url: "https://github.com/testowner/testrepo/issues/52",
-          node_id: "I_abc132",
-        },
-      });
-
-      const response = await app.inject({
-        method: "POST",
-        url: "/submit",
-        payload: {
-          configUrl: TEST_CONFIG_URL,
-          installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
-          title: "Feedback without Project",
-          submissionType: "feedback",
-          tabId: "issue",
-          formFields: {
-            title: "Feedback without Project",
-            message: "Good stuff",
-          },
-        },
-      });
-
-      expect(response.statusCode).toBe(201);
-      const body = JSON.parse(response.body);
-      expect(body.success).toBe(true);
-      expect(body.issueNumber).toBe(52);
-
-      // Should use "feedback" label
-      expect(mockOctokit.rest.issues.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          labels: ["feedback"],
-        }),
-      );
     });
   });
 
@@ -1506,7 +1379,7 @@ tabs:
           targetType: "github/issues",
           target: "testowner/testrepo",
           authRef: "123",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             message: "No title provided",
           },
@@ -1533,7 +1406,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "This will fail",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "This will fail",
             message: "Test",
@@ -1583,7 +1456,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Issue for Both",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "Issue for Both",
             message: "Goes to issue and project",
@@ -1603,9 +1476,9 @@ tabs:
     });
   });
 
-  describe("tab-specific target routing", () => {
-    it("routes submission to only targets specified in tab.targets array", async () => {
-      // Config with multiple targets, but tab only uses one
+  describe("form-specific target routing", () => {
+    it("routes submission to only targets specified in form.targets array", async () => {
+      // Config with multiple targets, but form only uses one
       mockFetch.mockResolvedValue(
         createMockConfigResponse(`
 targets:
@@ -1617,10 +1490,10 @@ targets:
     type: github/project
     target: testowner/1
     authRef: "123"
-tabs:
+forms:
   - id: issue
     targets: [default]
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -1649,7 +1522,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Issue Only",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "Issue Only",
             message: "Should only go to issues, not project",
@@ -1669,8 +1542,8 @@ tabs:
       expect(mockOctokit.graphql).not.toHaveBeenCalled();
     });
 
-    it("routes submission to multiple targets when tab.targets includes multiple IDs", async () => {
-      // Config with tab specifying both targets
+    it("routes submission to multiple targets when form.targets includes multiple IDs", async () => {
+      // Config with form specifying both targets
       mockFetch.mockResolvedValue(
         createMockConfigResponse(`
 targets:
@@ -1682,10 +1555,10 @@ targets:
     type: github/project
     target: testowner/1
     authRef: "123"
-tabs:
+forms:
   - id: feedback
     targets: [default, project]
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -1726,7 +1599,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Both Targets",
-          tabId: "feedback",
+          formId: "feedback",
           formFields: {
             title: "Both Targets",
             message: "Should go to both issues and project",
@@ -1745,8 +1618,8 @@ tabs:
       expect(mockOctokit.graphql).toHaveBeenCalled();
     });
 
-    it("routes to all targets when tab.targets is omitted", async () => {
-      // Config with multiple targets, tab has no targets specified
+    it("routes to all targets when form.targets is omitted", async () => {
+      // Config with multiple targets, form has no targets specified
       mockFetch.mockResolvedValue(
         createMockConfigResponse(`
 targets:
@@ -1758,9 +1631,9 @@ targets:
     type: github/project
     target: testowner/1
     authRef: "123"
-tabs:
+forms:
   - id: suggestion
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -1801,7 +1674,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Default to All",
-          tabId: "suggestion",
+          formId: "suggestion",
           formFields: {
             title: "Default to All",
             message: "Should go to all targets by default",
@@ -1820,8 +1693,8 @@ tabs:
       expect(mockOctokit.graphql).toHaveBeenCalled();
     });
 
-    it("routes to all targets when tab.targets is empty array", async () => {
-      // Config with tab specifying empty targets array
+    it("routes to all targets when form.targets is empty array", async () => {
+      // Config with form specifying empty targets array
       mockFetch.mockResolvedValue(
         createMockConfigResponse(`
 targets:
@@ -1833,10 +1706,10 @@ targets:
     type: github/project
     target: testowner/1
     authRef: "123"
-tabs:
+forms:
   - id: feedback
     targets: []
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -1877,7 +1750,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Empty Targets",
-          tabId: "feedback",
+          formId: "feedback",
           formFields: {
             title: "Empty Targets",
             message: "Empty array means all targets",
@@ -1896,8 +1769,8 @@ tabs:
       expect(mockOctokit.graphql).toHaveBeenCalled();
     });
 
-    it("routes to only project when tab.targets specifies only project", async () => {
-      // Config with tab specifying only project target
+    it("routes to only project when form.targets specifies only project", async () => {
+      // Config with form specifying only project target
       mockFetch.mockResolvedValue(
         createMockConfigResponse(`
 targets:
@@ -1909,10 +1782,10 @@ targets:
     type: github/project
     target: testowner/1
     authRef: "123"
-tabs:
+forms:
   - id: feedback
     targets: [project]
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -1945,7 +1818,7 @@ tabs:
           target: "testowner/1",
           authRef: "123",
           title: "Project Only",
-          tabId: "feedback",
+          formId: "feedback",
           formFields: {
             title: "Project Only",
             message: "Should only go to project, not issues",
@@ -1965,8 +1838,8 @@ tabs:
       expect(mockOctokit.graphql).toHaveBeenCalled();
     });
 
-    it("rejects submission when tab.targets references unknown target ID", async () => {
-      // Config with tab referencing non-existent target
+    it("rejects submission when form.targets references unknown target ID", async () => {
+      // Config with form referencing non-existent target
       mockFetch.mockResolvedValue(
         createMockConfigResponse(`
 targets:
@@ -1974,10 +1847,10 @@ targets:
     type: github/issues
     target: testowner/testrepo
     authRef: "123"
-tabs:
+forms:
   - id: issue
     targets: [nonexistent]
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -1998,7 +1871,7 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Invalid Target",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "Invalid Target",
             message: "Test",
@@ -2024,9 +1897,9 @@ targets:
     type: github/project
     target: testuser/1
     authRef: "123"
-tabs:
+forms:
   - id: issue
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -2065,7 +1938,7 @@ tabs:
           target: "testuser/1",
           authRef: "123",
           title: "User Project Issue",
-          tabId: "issue",
+          formId: "issue",
           formFields: {
             title: "User Project Issue",
             message: "Test",
@@ -2378,3 +2251,6 @@ tabs:
     });
   });
 });
+
+
+

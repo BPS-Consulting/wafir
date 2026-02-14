@@ -1,5 +1,5 @@
 # WAFIR Configuration Example - Default
-# This example shows what the widget displays when no tabs are specified.
+# This example shows what the widget displays when no forms are specified.
 # Use this as a reference for the default behavior.
 # Host this file anywhere and point your widget to it via configUrl
 
@@ -20,13 +20,14 @@ telemetry:
   browserInfo: true
   consoleLog: false
 
-tabs:
+forms:
   - id: feedback
     label: Feedback
     icon: thumbsup
-    isFeedback: true
+    labels:
+      - feedback
     targets: [project] # This tab will send feedback to the project target only
-    fields:
+    body:
       - id: rating
         type: rating
         attributes:
@@ -43,7 +44,9 @@ tabs:
   - id: suggestion # this tab will send feedback to the both targets since it doesn't specify targets
     label: Suggestion
     icon: lightbulb
-    fields:
+    labels:
+      - enhancement
+    body:
       - id: title
         type: input
         attributes:
@@ -60,8 +63,10 @@ tabs:
   - id: issue
     label: Issue
     icon: bug
+    labels:
+      - bug
     targets: [default] # This tab will send feedback to the default target only
-    fields:
+    body:
       - id: title
         type: input
         attributes:

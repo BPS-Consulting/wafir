@@ -1,6 +1,6 @@
 import type {
   FieldConfigApi as FieldConfig,
-  TabConfigApi as TabConfig,
+  FormConfigApi as FormConfig,
   WafirConfig,
 } from "./api/client";
 
@@ -82,36 +82,33 @@ export const DEFAULT_ISSUE_FIELDS: FieldConfig[] = [
   },
 ];
 
-export const DEFAULT_TABS: TabConfig[] = [
+export const DEFAULT_FORMS: FormConfig[] = [
   {
     id: "feedback",
     label: "Feedback",
     icon: "thumbsup",
-    isFeedback: true,
-    fields: DEFAULT_FEEDBACK_FIELDS,
+    body: DEFAULT_FEEDBACK_FIELDS,
   },
   {
     id: "suggestion",
     label: "Suggestion",
     icon: "lightbulb",
-    isFeedback: false,
-    fields: DEFAULT_SUGGESTION_FIELDS,
+    body: DEFAULT_SUGGESTION_FIELDS,
   },
   {
     id: "issue",
     label: "Issue",
     icon: "bug",
-    isFeedback: false,
-    fields: DEFAULT_ISSUE_FIELDS,
+    body: DEFAULT_ISSUE_FIELDS,
   },
 ];
 
 /**
- * Ensures all fields and tabs have required subobjects (attributes, validations, fields as array)
+ * Ensures all fields and forms have required subobjects (attributes, validations, fields as array)
  */
 
-export function getDefaultFields(tabId: string): FieldConfig[] {
-  switch (tabId) {
+export function getDefaultFields(formId: string): FieldConfig[] {
+  switch (formId) {
     case "feedback":
       return DEFAULT_FEEDBACK_FIELDS;
     case "suggestion":
@@ -123,8 +120,8 @@ export function getDefaultFields(tabId: string): FieldConfig[] {
   }
 }
 
-export function getDefaultTabs(): TabConfig[] {
-  return DEFAULT_TABS;
+export function getDefaultForms(): FormConfig[] {
+  return DEFAULT_FORMS;
 }
 
 export function getDefaultConfig(): WafirConfig {
@@ -143,6 +140,6 @@ export function getDefaultConfig(): WafirConfig {
       browserInfo: true,
       consoleLog: false,
     },
-    tabs: DEFAULT_TABS,
+    forms: DEFAULT_FORMS,
   };
 }
