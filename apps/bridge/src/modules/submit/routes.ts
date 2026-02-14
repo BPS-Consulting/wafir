@@ -169,11 +169,6 @@ const submitRoute: FastifyPluginAsync = async (
           input.consoleLogs,
         );
 
-        // Append current date if enabled on the tab
-        if (tab?.currentDate) {
-          finalBody = submitService.appendCurrentDate(finalBody, true);
-        }
-
         // Initialize Clients using config values
         const appOctokit = await fastify.getGitHubClient(installationId);
         const userToken = await fastify.tokenStore.getUserToken(installationId);
