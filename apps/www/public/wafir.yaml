@@ -1,21 +1,17 @@
-# WAFIR Configuration Example - Default
-# This example shows what the widget displays when no tabs are specified.
-# Use this as a reference for the default behavior.
+# WAFIR Configuration - wafir.dev Website
+# This configuration uses the new targets format for routing feedback
 
 title: "Contact Us"
-installationId: 105081464
 
-storage:
-  type: issue # Options: issue, project, both
-  owner: BPS-Consulting
-  repo: wafir
-  projectNumber: 9
-
-# Optional: Dedicated project for feedback with rating field
-# feedbackProject:
-#   projectNumber: 1          # Your feedback project number
-#   owner: org-name           # Project owner (defaults to repo owner)
-#   ratingField: "Rating"     # Name of the Rating field in your project
+targets:
+  - id: issues
+    type: github/issues
+    target: BPS-Consulting/wafir
+    authRef: "105081464"
+  - id: project
+    type: github/project
+    target: BPS-Consulting/9
+    authRef: "105081464"
 
 telemetry:
   screenshot: true
@@ -27,6 +23,7 @@ tabs:
     label: Feedback
     icon: thumbsup
     isFeedback: true
+    targets: [project]
     fields:
       - id: rating
         type: rating
@@ -44,6 +41,7 @@ tabs:
   - id: suggestion
     label: Suggestion
     icon: lightbulb
+    targets: [issues, project]
     fields:
       - id: title
         type: input
@@ -61,6 +59,7 @@ tabs:
   - id: issue
     label: Issue
     icon: bug
+    targets: [issues]
     fields:
       - id: title
         type: input
