@@ -285,7 +285,6 @@ targets:
     authRef: "123"
 tabs:
   - id: feedback
-    isFeedback: true
     fields:
       - id: title
         type: input
@@ -314,7 +313,6 @@ tabs:
           target: "testowner/testrepo",
           authRef: "123",
           title: "Feedback with Rating",
-          submissionType: "feedback",
           tabId: "feedback",
           formFields: {
             title: "Feedback with Rating",
@@ -1347,132 +1345,6 @@ tabs:
       expect(body.success).toBe(true);
       expect(body.projectAdded).toBe(false);
       expect(body.warning).toContain("Could not find project");
-    });
-  });
-
-  describe("feedback submission", () => {
-    it("adds feedback to project with rating field", async () => {
-      // Config with feedback project
-      mockFetch.mockResolvedValue(
-        createMockConfigResponse(sampleConfigs.withFeedbackProject),
-      );
-
-      // Mock finding the project (first call in the feedback handling)
-      mockOctokit.graphql.mockResolvedValueOnce({
-        organization: { projectV2: { id: "PVT_feedback123" } },
-      });
-
-      // Mock finding the project again (inside addToProject)
-      mockOctokit.graphql.mockResolvedValueOnce({
-        organization: { projectV2: { id: "PVT_feedback123" } },
-      });
-
-      // Mock adding draft to project
-      mockOctokit.graphql.mockResolvedValueOnce({
-        addProjectV2DraftIssue: {
-          projectItem: { id: "PVTI_feedback_item123" },
-        },
-      });
-
-      // Mock finding project fields
-      mockOctokit.graphql.mockResolvedValueOnce({
-        node: {
-          fields: {
-            nodes: [
-              {
-                id: "FIELD_rating",
-                name: "Rating",
-                options: [
-                  { id: "OPT_1", name: "⭐" },
-                  { id: "OPT_2", name: "⭐⭐" },
-                  { id: "OPT_3", name: "⭐⭐⭐" },
-                  { id: "OPT_4", name: "⭐⭐⭐⭐" },
-                  { id: "OPT_5", name: "⭐⭐⭐⭐⭐" },
-                ],
-              },
-            ],
-          },
-        },
-      });
-
-      // Mock updating field
-      mockOctokit.graphql.mockResolvedValueOnce({
-        updateProjectV2ItemFieldValue: {
-          projectV2Item: { id: "PVTI_feedback_item123" },
-        },
-      });
-
-      const response = await app.inject({
-        method: "POST",
-        url: "/submit",
-        payload: {
-          configUrl: TEST_CONFIG_URL,
-          installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
-          title: "User Feedback",
-          rating: 4,
-          submissionType: "feedback",
-          tabId: "feedback",
-          formFields: {
-            title: "User Feedback",
-            rating: 4,
-            message: "Love the product!",
-          },
-        },
-      });
-
-      expect(response.statusCode).toBe(201);
-      const body = JSON.parse(response.body);
-      expect(body.success).toBe(true);
-      expect(body.projectAdded).toBe(true);
-    });
-
-    it("creates issue as fallback when no feedback project configured", async () => {
-      // Minimal config without feedback project
-      mockFetch.mockResolvedValue(
-        createMockConfigResponse(sampleConfigs.minimal),
-      );
-
-      mockOctokit.rest.issues.create.mockResolvedValue({
-        data: {
-          number: 52,
-          html_url: "https://github.com/testowner/testrepo/issues/52",
-          node_id: "I_abc132",
-        },
-      });
-
-      const response = await app.inject({
-        method: "POST",
-        url: "/submit",
-        payload: {
-          configUrl: TEST_CONFIG_URL,
-          installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
-          title: "Feedback without Project",
-          submissionType: "feedback",
-          tabId: "issue",
-          formFields: {
-            title: "Feedback without Project",
-            message: "Good stuff",
-          },
-        },
-      });
-
-      expect(response.statusCode).toBe(201);
-      const body = JSON.parse(response.body);
-      expect(body.success).toBe(true);
-      expect(body.issueNumber).toBe(52);
-
-      // Should use "feedback" label
-      expect(mockOctokit.rest.issues.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          labels: ["feedback"],
-        }),
-      );
     });
   });
 

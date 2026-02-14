@@ -24,7 +24,6 @@ tabs:
   - id: feedback
     label: Feedback
     icon: thumbsup
-    isFeedback: true
     targets: [project] # This tab will send feedback to the project target only
     fields:
       - id: rating

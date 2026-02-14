@@ -19,7 +19,6 @@ tabs:
   - id: feedback
     label: "Product Feedback"
     icon: "star"
-    isFeedback: true
     fields:
       - id: intro
         type: markdown
@@ -79,7 +78,6 @@ tabs:
   - id: bug
     label: "Bug Report"
     icon: "bug"
-    isFeedback: false
     fields:
       - id: bug_intro
         type: markdown
@@ -140,7 +138,6 @@ tabs:
   - id: suggestion
     label: "Suggest a Feature"
     icon: "lightbulb"
-    isFeedback: false
     fields:
       - id: idea_intro
         type: markdown
@@ -185,7 +182,6 @@ tabs:
   - id: docs
     label: "Docs Issue"
     icon: "book"
-    isFeedback: false
     fields:
       - id: docs_intro
         type: markdown
@@ -229,7 +225,6 @@ tabs:
   - id: privacy
     label: "Privacy Question"
     icon: "lock"
-    isFeedback: false
     fields:
       - id: privacy_intro
         type: markdown

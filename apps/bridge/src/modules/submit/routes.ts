@@ -140,12 +140,6 @@ const submitRoute: FastifyPluginAsync = async (
           projectNumber = parseInt(projNum, 10);
         }
 
-        // Feedback project settings from config
-        const feedbackProjectNumber =
-          config.feedbackProject?.projectNumber || projectNumber;
-        const feedbackProjectOwner =
-          config.feedbackProject?.owner || projectOwner;
-
         // Title and labels can come from form (validated above)
         const title = input.title;
         const labels = input.labels;
@@ -198,7 +192,6 @@ const submitRoute: FastifyPluginAsync = async (
           title,
           body: finalBody,
           labels,
-          submissionType: input.submissionType,
           formFields: input.formFields,
           log: request.log,
           owner,
@@ -208,8 +201,6 @@ const submitRoute: FastifyPluginAsync = async (
           projectOwner,
           projectNumber,
           storageType,
-          feedbackProjectNumber,
-          feedbackProjectOwner,
         } as GithubSubmissionContext);
 
         if (!submissionResult.success) {

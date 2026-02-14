@@ -24,7 +24,6 @@ const DEFAULT_CONFIG: WafirConfig = {
       id: "feedback",
       label: "Feedback",
       icon: "thumbsup",
-      isFeedback: true,
       fields: [
         {
           id: "rating",
@@ -127,7 +126,6 @@ interface TabConfig {
   id: string;
   label?: string;
   icon?: string;
-  isFeedback?: boolean;
   fields?: FieldConfig[];
   targets?: string[];
 }
@@ -154,11 +152,6 @@ export interface WafirConfig {
     consoleLog?: boolean;
   };
   tabs?: TabConfig[];
-  feedbackProject?: {
-    projectNumber?: number;
-    owner?: string;
-    ratingField?: string;
-  };
 }
 
 /**

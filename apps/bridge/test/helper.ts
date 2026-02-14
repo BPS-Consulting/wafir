@@ -139,13 +139,9 @@ targets:
     type: github/issues
     target: testowner/testrepo
     authRef: "123"
-feedbackProject:
-  projectNumber: 2
-  ratingField: "Rating"
 tabs:
   - id: feedback
     label: "Feedback"
-    isFeedback: true
     fields:
       - id: title
         type: input
@@ -188,7 +184,6 @@ tabs:
   - id: feedback
     label: "Feedback"
     icon: "thumbsup"
-    isFeedback: true
     fields:
       - id: rating
         type: rating

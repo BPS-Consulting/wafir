@@ -10,8 +10,6 @@ export interface SubmitBody {
   title: string;
   tabId?: string;
   labels?: string[];
-  rating?: number;
-  submissionType?: "issue" | "feedback";
   formFields?: Record<string, unknown>;
   fieldOrder?: string[];
   browserInfo?: {

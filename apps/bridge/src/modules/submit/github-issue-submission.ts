@@ -17,8 +17,6 @@ export interface GithubSubmissionContext extends SubmissionContext {
   projectOwner?: string;
   projectNumber?: number;
   storageType: "issue" | "project" | "both";
-  feedbackProjectNumber?: number;
-  feedbackProjectOwner?: string;
 }
 
 /**
@@ -102,13 +100,10 @@ export class GithubIssueSubmission extends SubmissionBase {
   private async performSubmission(
     context: GithubSubmissionContext,
   ): Promise<SubmissionResult> {
-    const isFeedback = context.submissionType === "feedback";
     const shouldCreateIssue =
-      !isFeedback &&
-      (context.storageType === "issue" || context.storageType === "both");
+      context.storageType === "issue" || context.storageType === "both";
     const shouldAddToProject =
       context.projectNumber !== undefined &&
-      !isFeedback &&
       (context.storageType === "project" || context.storageType === "both");
 
     let issueData: {
@@ -137,7 +132,7 @@ export class GithubIssueSubmission extends SubmissionBase {
       context.log?.info({ issueNumber: issueData.number }, "Issue created");
     }
 
-    // Add to project
+    // Add to project (as draft if project-only, or link existing issue if both)
     if (shouldAddToProject && context.projectNumber !== undefined) {
       const targetNodeId =
         context.storageType === "both" ? issueData.nodeId : undefined;
@@ -179,68 +174,6 @@ export class GithubIssueSubmission extends SubmissionBase {
           });
         }
       }
-    }
-
-    // Handle feedback submissions
-    if (isFeedback && context.feedbackProjectNumber) {
-      const { nodeId: feedbackProjId, shouldUseUserToken } =
-        await this.projectService.findProjectNodeId(
-          context.appOctokit,
-          context.userOctokit,
-          context.feedbackProjectOwner!,
-          context.feedbackProjectNumber,
-          context.log,
-        );
-
-      if (feedbackProjId) {
-        projectResult = await this.projectService.addToProject({
-          appOctokit: context.appOctokit,
-          userOctokit: context.userOctokit,
-          projectOwner: context.feedbackProjectOwner!,
-          projectNumber: context.feedbackProjectNumber,
-          title: context.title,
-          body: context.body,
-          log: context.log,
-        });
-
-        // Set project fields from form data (includes rating as a NUMBER field)
-        if (projectResult.added && projectResult.itemId && context.formFields) {
-          const client =
-            shouldUseUserToken && context.userOctokit
-              ? context.userOctokit
-              : context.appOctokit;
-
-          await this.projectService.setProjectFields({
-            octokit: client,
-            projectId: feedbackProjId,
-            itemId: projectResult.itemId,
-            formFields: context.formFields,
-            log: context.log,
-          });
-        }
-      } else {
-        projectResult.error = "Could not find feedback project";
-      }
-    }
-
-    // Fallback: create issue for feedback if no project configured
-    if (isFeedback && !context.feedbackProjectNumber) {
-      const issue = await context.appOctokit.rest.issues.create({
-        owner: context.owner,
-        repo: context.repo,
-        title: context.title,
-        body: context.body,
-        labels: context.labels || ["wafir-feedback"],
-      });
-      issueData = {
-        number: issue.data.number,
-        url: issue.data.html_url,
-        nodeId: issue.data.node_id,
-      };
-      context.log?.info(
-        { issueNumber: issueData.number },
-        "Feedback issue created (no project configured)",
-      );
     }
 
     return {

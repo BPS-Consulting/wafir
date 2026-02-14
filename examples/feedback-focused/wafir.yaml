@@ -10,16 +10,10 @@ targets:
     target: your-username/your-repo
     authRef: "YOUR_INSTALLATION_ID" # Replace with your installation ID
 
-# Dedicated project for feedback with rating field
-feedbackProject:
-  projectNumber: 1
-  ratingField: "Rating"
-
 tabs:
   - id: feedback
     label: Feedback
     icon: thumbsup
-    isFeedback: true
     fields:
       - id: rating
         type: rating

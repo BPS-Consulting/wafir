@@ -98,7 +98,6 @@ tabs:
   - id: feedback
     label: "Feedback"
     icon: thumbsup # Options: thumbsup, lightbulb, bug
-    isFeedback: true # Uses rating field for project integration
     fields:
       - id: title
         type: input

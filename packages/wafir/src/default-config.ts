@@ -87,21 +87,18 @@ export const DEFAULT_TABS: TabConfig[] = [
     id: "feedback",
     label: "Feedback",
     icon: "thumbsup",
-    isFeedback: true,
     fields: DEFAULT_FEEDBACK_FIELDS,
   },
   {
     id: "suggestion",
     label: "Suggestion",
     icon: "lightbulb",
-    isFeedback: false,
     fields: DEFAULT_SUGGESTION_FIELDS,
   },
   {
     id: "issue",
     label: "Issue",
     icon: "bug",
-    isFeedback: false,
     fields: DEFAULT_ISSUE_FIELDS,
   },
 ];

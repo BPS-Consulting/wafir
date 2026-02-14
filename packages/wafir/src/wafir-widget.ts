@@ -266,7 +266,6 @@ export class WafirWidget extends LitElement {
         id: tab.id,
         label: tab.label || this._capitalize(tab.id),
         icon: tab.icon,
-        isFeedback: tab.isFeedback ?? false,
         fields:
           tab.fields && tab.fields.length > 0
             ? tab.fields
@@ -389,11 +388,6 @@ export class WafirWidget extends LitElement {
         ? dataURLtoBlob(screenshotDataUrl)
         : undefined;
 
-      const isFeedbackTab = activeTab?.isFeedback ?? false;
-      const submissionType: "issue" | "feedback" = isFeedbackTab
-        ? "feedback"
-        : "issue";
-
       // Filter out markdown fields before submission
       const activeFields = this._getActiveFormConfig();
       const submitFields = activeFields.filter((f) => f.type !== "markdown");
@@ -424,7 +418,6 @@ export class WafirWidget extends LitElement {
         labels,
         screenshot: screenshotBlob,
         bridgeUrl: this.bridgeUrl || undefined,
-        submissionType,
         formFields: filteredFormData,
         fieldOrder,
         browserInfo: this._telemetry.browserInfo

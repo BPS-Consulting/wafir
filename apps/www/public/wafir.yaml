@@ -3,19 +3,15 @@
 # Use this as a reference for the default behavior.
 
 title: "Contact Us"
-installationId: 105081464
-
-storage:
-  type: issue # Options: issue, project, both
-  owner: BPS-Consulting
-  repo: wafir
-  projectNumber: 9
-
-# Optional: Dedicated project for feedback with rating field
-# feedbackProject:
-#   projectNumber: 1          # Your feedback project number
-#   owner: org-name           # Project owner (defaults to repo owner)
-#   ratingField: "Rating"     # Name of the Rating field in your project
+targets:
+  - id: default
+    type: github/issues
+    target: BPS-Consulting/wafir
+    authRef: "105081464"
+  - id: project
+    type: github/project
+    target: BPS-Consulting/9
+    authRef: "105081464"
 
 telemetry:
   screenshot: true
@@ -25,13 +21,14 @@ telemetry:
 tabs:
   - id: feedback
     label: Feedback
-    icon: thumbsup
+    icon: star
     isFeedback: true
+    targets: [project]
     fields:
       - id: rating
         type: rating
         attributes:
-          label: "How satisfied are you with our website? (if you see this, then the config fetching works!)"
+          label: "How satisfied are you with Wafir?
         validations:
           required: true
       - id: description
@@ -41,9 +38,10 @@ tabs:
         validations:
           required: false
 
-  - id: suggestion
+  - id: feature
     label: Suggestion
     icon: lightbulb
+    targets: [project]
     fields:
       - id: title
         type: input
@@ -57,8 +55,21 @@ tabs:
           label: "Additional information:"
         validations:
           required: false
+     - id: priority
+        type: dropdown
+        attributes:
+          label: "Priority Level"
+          options:
+            - label: "Low"
+              value: "Low"
+            - label: "Medium"
+              value: "Medium"
+            - label: "High"
+              value: "High"
+        validations:
+          required: false
 
-  - id: issue
+  - id: bug
     label: Issue
     icon: bug
     fields:
@@ -72,5 +83,17 @@ tabs:
         type: textarea
         attributes:
           label: "Additional information:"
+        placeholder: "Please include steps to reproduce and expected vs actual behavior
         validations:
           required: true
+      - id: assignees
+        type: assignees
+        attributes:
+          label: "Assign to a team member (optional)"
+          options:
+            - label: "David"
+              value: "DavidIsaacBPS"
+            - label: "Alvin"
+              value: "alkmei"
+        validations:
+          required: false

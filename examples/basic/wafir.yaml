@@ -3,6 +3,9 @@
 
 title: "Report a Bug"
 
+# Targets define where feedback gets sent. 
+# You can have multiple targets and specify which tabs send to which targets.  
+# The first target will be used by default.
 targets:
   - id: default
     type: github/issues

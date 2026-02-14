@@ -235,7 +235,7 @@ describe("Example Configurations", () => {
   });
 
   describe("feedback-focused config validation", () => {
-    it("loads feedback-focused config with feedbackProject", async () => {
+    it("loads feedback-focused config with rating field", async () => {
       const feedbackConfig = exampleConfigs.find(
         (c) => c.name === "feedback-focused",
       );
@@ -261,9 +261,14 @@ describe("Example Configurations", () => {
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
 
-      expect(body.feedbackProject).toBeDefined();
-      expect(body.feedbackProject.projectNumber).toBeDefined();
-      expect(body.feedbackProject.ratingField).toBeDefined();
+      // Verify feedback tab with rating field
+      expect(body.tabs).toBeDefined();
+      const feedbackTab = body.tabs.find((t: any) => t.id === "feedback");
+      expect(feedbackTab).toBeDefined();
+      const ratingField = feedbackTab.fields?.find(
+        (f: any) => f.type === "rating",
+      );
+      expect(ratingField).toBeDefined();
     });
   });
 

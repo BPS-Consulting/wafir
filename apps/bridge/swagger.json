@@ -243,11 +243,6 @@
                             "enum": ["thumbsup", "lightbulb", "bug"],
                             "description": "Tab icon"
                           },
-                          "isFeedback": {
-                            "type": "boolean",
-                            "default": false,
-                            "description": "If true, rating from this tab populates project Rating field"
-                          },
                           "fields": {
                             "type": "array",
                             "items": {

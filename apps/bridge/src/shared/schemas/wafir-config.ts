@@ -106,12 +106,6 @@ const tabSchema = {
       enum: ["thumbsup", "lightbulb", "bug"],
       description: "Tab icon",
     },
-    isFeedback: {
-      type: "boolean",
-      default: false,
-      description:
-        "If true, rating from this tab populates project Rating field",
-    },
     fields: {
       type: "array",
       items: fieldSchema,
@@ -208,26 +202,6 @@ export const wafirConfigSchema = {
           id: { type: "number" },
           name: { type: "string" },
           color: { type: "string" },
-        },
-      },
-    },
-    feedbackProject: {
-      type: "object",
-      description:
-        "Dedicated project for feedback submissions with star ratings",
-      properties: {
-        projectNumber: {
-          type: "number",
-          description: "GitHub Project number for feedback",
-        },
-        owner: {
-          type: "string",
-          description: "Project owner (defaults to repo owner)",
-        },
-        ratingField: {
-          type: "string",
-          default: "Rating",
-          description: "Name of the Rating field in the project",
         },
       },
     },
