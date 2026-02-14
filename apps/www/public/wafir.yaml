@@ -1,8 +1,9 @@
-# WAFIR Configuration Example - Default
-# This example shows what the widget displays when no forms are specified.
+# WAFIR Configuration - Wafir GitHub Page
+# Configuration for the Wafir documentation website
 # Use this as a reference for the default behavior.
 
 title: "Contact Us"
+
 targets:
   - id: default
     type: github/issues
@@ -21,14 +22,15 @@ telemetry:
 forms:
   - id: feedback
     label: Feedback
-    icon: star
-    isFeedback: true
+    icon: thumbsup
+    labels:
+      - feedback
     targets: [project]
     body:
       - id: rating
         type: rating
         attributes:
-          label: "How satisfied are you with Wafir?
+          label: "How satisfied are you with Wafir?"
         validations:
           required: true
       - id: description
@@ -38,9 +40,11 @@ forms:
         validations:
           required: false
 
-  - id: feature
+  - id: suggestion
     label: Suggestion
     icon: lightbulb
+    labels:
+      - enhancement
     targets: [project]
     body:
       - id: title
@@ -55,35 +59,13 @@ forms:
           label: "Additional information:"
         validations:
           required: false
-      - id: value
-        type: dropdown
-        attributes:
-          label: "Business value"
-          options:
-            - label: "Low"
-              value: "Low"
-            - label: "Medium"
-              value: "Medium"
-            - label: "High"
-              value: "High"
-        validations:
-          required: false
-      - id: needed
-        type: dropdown
-        attributes:
-          label: "Needed"
-          options:
-            - label: "Later"
-              value: "Later"
-            - label: "Soon"
-              value: "Soon"
-            - label: "Now"
-              value: "Now"
-        validations:
-          required: false
-  - id: bug
+
+  - id: issue
     label: Issue
     icon: bug
+    labels:
+      - bug
+    targets: [default]
     body:
       - id: title
         type: input
@@ -95,17 +77,6 @@ forms:
         type: textarea
         attributes:
           label: "Additional information:"
-        placeholder: "Please include steps to reproduce and expected vs actual behavior
+          placeholder: "Please include steps to reproduce and expected vs actual behavior"
         validations:
           required: true
-      - id: assignees
-        type: assignees
-        attributes:
-          label: "Assign to a team member (optional)"
-          options:
-            - label: "David"
-              value: "DavidIsaacBPS"
-            - label: "Alvin"
-              value: "alkmei"
-        validations:
-          required: false
