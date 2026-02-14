@@ -56,10 +56,6 @@ Or
 
 Place the `wafir.yaml` config file in your app's `public` directory (e.g. `public/wafir.yaml`). This file is loaded by the Wafir widget at runtime.
 
-### Migration from legacy `storage` config
-
-> The legacy `storage` key configuration has been **removed**. All routing is now handled using the `targets` array and form-level `targets` references. To migrate, define each destination under the `targets` key, and update your forms to reference the appropriate target via `targets: [targetId]`. See `/examples/default/wafir.yaml` for updated config patterns.
-
 **Required top-level keys:**
 
 - `installationId`: The numeric GitHub App installation ID

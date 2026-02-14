@@ -514,11 +514,6 @@ interface wafirWidget {
 - `tab` (optional): String tab identifier to activate on open.
 - `prefill` (optional): Object mapping field IDs (from YAML) to initial values (applied if field exists and is user-editable).
 
-#### Notes & Warnings
-
-> **Migration Notice:**
-> The legacy `storage` key has been **removed**. All feedback routing now uses the `targets` array and form-level `targets` references. To migrate, define each destination under the `targets` key, and update your forms to reference the appropriate target via `targets: [targetId]`. See above examples for details.
-
 ---
 
 ## Configuration Examples
