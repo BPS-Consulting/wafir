@@ -19,7 +19,6 @@ export interface GithubSubmissionContext extends SubmissionContext {
   storageType: "issue" | "project" | "both";
   feedbackProjectNumber?: number;
   feedbackProjectOwner?: string;
-  ratingFieldName?: string;
 }
 
 /**

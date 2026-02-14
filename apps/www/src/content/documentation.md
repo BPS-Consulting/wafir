@@ -152,7 +152,7 @@ Make sure that it is publically accessible.
 | `dropdown`   | Dropdown selection                        | label, description?, placeholder?, value?, options, multiple?         |
 | `checkboxes` | Multiple checkbox options                 | label, description?, options (array of objects with label, required?) |
 | `markdown`   | Read-only Markdown display                | label, description?, value (markdown, required)                       |
-| `rating`     | Likert (stars) Rating System (Wafir only) | label, description?, ratingLabels?                                    |
+| `rating`     | Star rating (displayed as stars, saved as number 1-5) | label, description?, ratingLabels?                       |
 
 ### Field Structure
 
@@ -232,35 +232,69 @@ telemetry:
 
 ---
 
-## Mode Configuration
+## Tabs Configuration
 
-Choose what type of input the widget collects in your `public/wafir.yaml` config file.
+Define the structure of your feedback widget using tabs in your `public/wafir.yaml` config file. Each tab represents a distinct feedback type with its own fields and routing.  NOTE: the tab `id` is used as the GitHub issue `Type` field value.
 
-### Widget Modes
+### Tab Properties
 
-| Mode       | Description                                                          |
-| ---------- | -------------------------------------------------------------------- |
-| `issue`    | Bug reporting form with title, description, and type (default)       |
-| `feedback` | Star rating with optional comments for user satisfaction             |
-| `both`     | Tabbed interface allowing users to choose between issue and feedback |
+| Property     | Type     | Description                                              |
+| ------------ | -------- | -------------------------------------------------------- |
+| `id`         | string   | Unique identifier for the tab                            |
+| `label`      | string   | Display label shown in the tab                           |
+| `icon`       | string?  | Icon name (e.g., `bug`, `lightbulb`, `thumbsup`)         |
+| `isFeedback` | boolean? | Set to `true` for feedback/rating tabs                   |
+| `targets`    | array?   | Array of target IDs to route submissions to              |
+| `fields`     | array    | Array of field definitions for this tab                  |
 
-### Configuration
-
-```yaml
-mode: issue # Options: issue, feedback, both
-```
-
-### Feedback Mode Example
+### Configuration Example
 
 ```yaml
-mode: feedback
+tabs:
+  - id: issue
+    label: Report Issue
+    icon: bug
+    targets: [default]
+    fields:
+      - id: title
+        type: input
+        attributes:
+          label: "Issue Title"
+        validations:
+          required: true
 
-feedback:
-  title: "How are we doing?"
-  labels: ["feedback", "user-satisfaction"]
+  - id: feedback
+    label: Feedback
+    icon: thumbsup
+    isFeedback: true
+    targets: [project]
+    fields:
+      - id: rating
+        type: rating
+        attributes:
+          label: "How satisfied are you?"
+        validations:
+          required: true
+
 ```
 
-When `mode: feedback` is set, users see a 5-star rating component followed by optional comment fields.
+### Single Tab Mode
+
+If you only need one type of feedback, define a single tab. The tab selector will be hidden automatically:
+
+```yaml
+tabs:
+  - id: issue
+    label: Report Issue
+    icon: bug
+    fields:
+      - id: title
+        type: input
+        attributes:
+          label: "Issue Title"
+        validations:
+          required: true
+```
 
 ---
 

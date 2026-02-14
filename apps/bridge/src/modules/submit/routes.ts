@@ -145,7 +145,6 @@ const submitRoute: FastifyPluginAsync = async (
           config.feedbackProject?.projectNumber || projectNumber;
         const feedbackProjectOwner =
           config.feedbackProject?.owner || projectOwner;
-        const ratingFieldName = config.feedbackProject?.ratingField || "Rating";
 
         // Title and labels can come from form (validated above)
         const title = input.title;
@@ -199,7 +198,6 @@ const submitRoute: FastifyPluginAsync = async (
           title,
           body: finalBody,
           labels,
-          rating: input.rating,
           submissionType: input.submissionType,
           formFields: input.formFields,
           log: request.log,
@@ -212,7 +210,6 @@ const submitRoute: FastifyPluginAsync = async (
           storageType,
           feedbackProjectNumber,
           feedbackProjectOwner,
-          ratingFieldName,
         } as GithubSubmissionContext);
 
         if (!submissionResult.success) {

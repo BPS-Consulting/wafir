@@ -21,7 +21,6 @@ export interface SubmissionContext {
   title: string;
   body: string;
   labels?: string[];
-  rating?: number;
   submissionType?: "issue" | "feedback";
   formFields?: Record<string, unknown>;
   log: any;

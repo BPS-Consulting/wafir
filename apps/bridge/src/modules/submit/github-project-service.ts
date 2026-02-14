@@ -80,11 +80,6 @@ export interface ProjectAddResult {
   itemId?: string;
 }
 
-export interface RatingFieldResult {
-  success: boolean;
-  error?: string;
-}
-
 export interface ProjectFieldResult {
   success: boolean;
   error?: string;
@@ -463,66 +458,5 @@ export class GitHubProjectService {
 
     log.debug({ fieldName: field.name, fieldValue, itemId }, 'Set field on project item');
     return { success: true };
-  }
-
-  /**
-   * Sets the Rating field on a project item.
-   * @deprecated Use setProjectFields() instead - rating is now stored as a NUMBER field.
-   */
-  async setProjectRatingField(params: {
-    octokit: any;
-    projectId: string;
-    itemId: string;
-    ratingFieldName: string;
-    rating: number;
-    log: any;
-  }): Promise<RatingFieldResult> {
-    const { octokit, projectId, itemId, ratingFieldName, rating, log } = params;
-
-    try {
-      const fieldsResult: any = await octokit.graphql(
-        FIND_PROJECT_FIELDS_QUERY,
-        { projectId },
-      );
-
-      const fields = fieldsResult.node?.fields?.nodes || [];
-      const ratingField = fields.find(
-        (f: any) => f?.name?.toLowerCase() === ratingFieldName.toLowerCase(),
-      );
-
-      if (!ratingField) {
-        return {
-          success: false,
-          error: `Field "${ratingFieldName}" not found`,
-        };
-      }
-
-      const starEmojis = ['⭐', '⭐⭐', '⭐⭐⭐', '⭐⭐⭐⭐', '⭐⭐⭐⭐⭐'];
-      const targetEmoji = starEmojis[Math.min(Math.max(rating - 1, 0), 4)];
-
-      const matchingOption = ratingField.options?.find(
-        (opt: any) => opt.name === targetEmoji,
-      );
-
-      if (!matchingOption) {
-        return {
-          success: false,
-          error: `No option matching "${targetEmoji}" in Rating field`,
-        };
-      }
-
-      await octokit.graphql(UPDATE_PROJECT_FIELD_MUTATION, {
-        projectId,
-        itemId,
-        fieldId: ratingField.id,
-        value: { singleSelectOptionId: matchingOption.id },
-      });
-
-      log.info({ rating, itemId }, 'Set Rating field on project item');
-      return { success: true };
-    } catch (e: any) {
-      log.error({ error: e.message }, 'Failed to set Rating field');
-      return { success: false, error: e.message };
-    }
   }
 }

@@ -114,7 +114,6 @@ export interface SubmitIssueParams {
   labels?: string[];
   screenshot?: Blob;
   bridgeUrl?: string;
-  rating?: number;
   submissionType?: "issue" | "feedback";
   formFields?: Record<string, unknown>;
   fieldOrder?: string[];
@@ -133,7 +132,6 @@ export const submitIssue = async (params: SubmitIssueParams) => {
     labels,
     screenshot,
     bridgeUrl,
-    rating,
     submissionType,
     formFields,
     fieldOrder,
@@ -159,9 +157,6 @@ export const submitIssue = async (params: SubmitIssueParams) => {
   }
   if (screenshot) {
     formData.append("screenshot", screenshot, "screenshot.png");
-  }
-  if (rating !== undefined) {
-    formData.append("rating", String(rating));
   }
   if (submissionType) {
     formData.append("submissionType", submissionType);

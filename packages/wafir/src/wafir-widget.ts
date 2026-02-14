@@ -393,9 +393,6 @@ export class WafirWidget extends LitElement {
       const submissionType: "issue" | "feedback" = isFeedbackTab
         ? "feedback"
         : "issue";
-      const rating = isFeedbackTab
-        ? Number(formData.rating) || undefined
-        : undefined;
 
       // Filter out markdown fields before submission
       const activeFields = this._getActiveFormConfig();
@@ -427,7 +424,6 @@ export class WafirWidget extends LitElement {
         labels,
         screenshot: screenshotBlob,
         bridgeUrl: this.bridgeUrl || undefined,
-        rating,
         submissionType,
         formFields: filteredFormData,
         fieldOrder,
