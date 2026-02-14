@@ -128,6 +128,8 @@ interface TabConfig {
   icon?: string;
   fields?: FieldConfig[];
   targets?: string[];
+  labels?: string[];
+  templateUrl?: string;
 }
 
 /**
@@ -170,6 +172,124 @@ export interface ValidationResult {
   valid: boolean;
   errors: ValidationError[];
   config?: WafirConfig;
+}
+
+/**
+ * Represents a GitHub Issue Form template structure.
+ * Wafir fields use the same schema as GitHub Issue Forms.
+ * @see https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-githubs-form-schema
+ */
+interface GitHubIssueFormTemplate {
+  name?: string;
+  description?: string;
+  title?: string;
+  labels?: string[];
+  assignees?: string[];
+  body?: FieldConfig[]; // Same schema as Wafir fields
+}
+
+/**
+ * Fetches a GitHub issue form template from a URL.
+ * Since Wafir uses the same field schema as GitHub Issue Forms,
+ * the template body can be used directly as fields.
+ *
+ * @param templateUrl - URL to the GitHub issue form template YAML file (can be relative)
+ * @param baseUrl - Base URL to resolve relative templateUrl against
+ * @returns Template fields and labels, or undefined if fetch fails
+ */
+async function fetchGitHubIssueTemplate(
+  templateUrl: string,
+  baseUrl?: string,
+): Promise<{ fields: FieldConfig[]; labels?: string[] } | undefined> {
+  try {
+    // Resolve relative URLs against the base config URL
+    let resolvedUrl = templateUrl;
+    if (baseUrl && !templateUrl.startsWith("http://") && !templateUrl.startsWith("https://")) {
+      // For relative URLs, resolve against the base URL's directory
+      const base = new URL(baseUrl);
+      resolvedUrl = new URL(templateUrl, base).toString();
+    }
+
+    const response = await fetch(resolvedUrl, {
+      method: "GET",
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!response.ok) {
+      console.warn(
+        `Failed to fetch template from ${resolvedUrl}: HTTP ${response.status}`,
+      );
+      return undefined;
+    }
+
+    const text = await response.text();
+    const template = yaml.load(text) as GitHubIssueFormTemplate;
+
+    if (!template || !template.body || !Array.isArray(template.body)) {
+      console.warn(`Invalid template format from ${resolvedUrl}: missing body`);
+      return undefined;
+    }
+
+    // GitHub Issue Form body uses the same schema as Wafir fields
+    return {
+      fields: template.body,
+      labels: template.labels,
+    };
+  } catch (error) {
+    console.warn(`Error fetching template from ${templateUrl}:`, error);
+    return undefined;
+  }
+}
+
+/**
+ * Resolves a template URL, handling both absolute and relative URLs.
+ * @param templateUrl - The template URL (can be relative)
+ * @param baseUrl - The base URL to resolve against
+ * @returns The resolved absolute URL
+ */
+export function resolveTemplateUrl(templateUrl: string, baseUrl?: string): string {
+  if (!baseUrl || templateUrl.startsWith("http://") || templateUrl.startsWith("https://")) {
+    return templateUrl;
+  }
+  const base = new URL(baseUrl);
+  return new URL(templateUrl, base).toString();
+}
+
+/**
+ * Processes tabs that have templateUrl, fetching and merging template fields.
+ * @param tabs - Array of tab configurations
+ * @param baseUrl - Base URL to resolve relative template URLs against
+ * @returns Tabs with template fields merged in
+ */
+async function processTabTemplates(
+  tabs: TabConfig[] | undefined,
+  baseUrl?: string,
+): Promise<TabConfig[] | undefined> {
+  if (!tabs || !Array.isArray(tabs)) {
+    return tabs;
+  }
+
+  const processedTabs = await Promise.all(
+    tabs.map(async (tab) => {
+      // If tab has templateUrl and no fields defined, fetch from template
+      if (tab.templateUrl && (!tab.fields || tab.fields.length === 0)) {
+        const templateData = await fetchGitHubIssueTemplate(tab.templateUrl, baseUrl);
+        if (templateData) {
+          return {
+            ...tab,
+            fields: templateData.fields,
+            // Merge template labels with tab labels (tab labels take priority)
+            labels: tab.labels?.length
+              ? tab.labels
+              : templateData.labels || tab.labels,
+          };
+        }
+      }
+      return tab;
+    }),
+  );
+
+  return processedTabs;
 }
 
 /**
@@ -295,6 +415,11 @@ export async function fetchConfig(configUrl?: string): Promise<WafirConfig> {
         }
       }
     }
+  }
+
+  // Process tabs with templateUrl - fetch and merge template fields
+  if (cfg.tabs && Array.isArray(cfg.tabs)) {
+    cfg.tabs = await processTabTemplates(cfg.tabs as TabConfig[], configUrl);
   }
 
   return config as WafirConfig;

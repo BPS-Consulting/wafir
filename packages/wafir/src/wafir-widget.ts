@@ -39,6 +39,19 @@ const TAB_ICONS: Record<string, string> = {
   bug: bugIcon,
 };
 
+/**
+ * Represents a GitHub Issue Form template structure.
+ * Wafir uses the same field schema as GitHub Issue Forms.
+ */
+interface GitHubIssueFormTemplate {
+  name?: string;
+  description?: string;
+  title?: string;
+  labels?: string[];
+  assignees?: string[];
+  body?: FieldConfig[];
+}
+
 @customElement("wafir-widget")
 export class WafirWidget extends LitElement {
   @property({ type: String, attribute: "button-text" })
@@ -162,6 +175,100 @@ export class WafirWidget extends LitElement {
     }
   }
 
+  /**
+   * Fetches a GitHub issue form template from a URL and extracts fields.
+   * @param templateUrl - URL to the template (can be relative)
+   * @param baseUrl - Base URL to resolve relative URLs against
+   * @returns Template fields and labels, or undefined if fetch fails
+   */
+  private async _fetchTemplate(
+    templateUrl: string,
+    baseUrl?: string,
+  ): Promise<{ fields: FieldConfig[]; labels?: string[] } | undefined> {
+    try {
+      // Resolve relative URLs against the base config URL
+      let resolvedUrl = templateUrl;
+      if (
+        baseUrl &&
+        !templateUrl.startsWith("http://") &&
+        !templateUrl.startsWith("https://")
+      ) {
+        const base = new URL(baseUrl);
+        resolvedUrl = new URL(templateUrl, base).toString();
+      } else if (
+        !templateUrl.startsWith("http://") &&
+        !templateUrl.startsWith("https://")
+      ) {
+        // Resolve against current origin
+        resolvedUrl = new URL(templateUrl, window.location.origin).toString();
+      }
+
+      const response = await fetch(resolvedUrl, {
+        method: "GET",
+        signal: AbortSignal.timeout(10000),
+      });
+
+      if (!response.ok) {
+        console.warn(
+          `Wafir: Failed to fetch template from ${resolvedUrl}: HTTP ${response.status}`,
+        );
+        return undefined;
+      }
+
+      const text = await response.text();
+      const yaml = await import("js-yaml");
+      const template = yaml.load(text) as GitHubIssueFormTemplate;
+
+      if (!template || !template.body || !Array.isArray(template.body)) {
+        console.warn(
+          `Wafir: Invalid template format from ${resolvedUrl}: missing body`,
+        );
+        return undefined;
+      }
+
+      return {
+        fields: template.body,
+        labels: template.labels,
+      };
+    } catch (error) {
+      console.warn(`Wafir: Error fetching template from ${templateUrl}:`, error);
+      return undefined;
+    }
+  }
+
+  /**
+   * Processes tabs that have templateUrl, fetching and merging template fields.
+   * @param tabs - Array of tab configurations
+   * @param baseUrl - Base URL to resolve relative template URLs against
+   * @returns Tabs with template fields merged in
+   */
+  private async _processTabTemplates(
+    tabs: TabConfig[],
+    baseUrl?: string,
+  ): Promise<TabConfig[]> {
+    const processedTabs = await Promise.all(
+      tabs.map(async (tab) => {
+        // If tab has templateUrl and no fields defined, fetch from template
+        if (tab.templateUrl && (!tab.fields || tab.fields.length === 0)) {
+          const templateData = await this._fetchTemplate(tab.templateUrl, baseUrl);
+          if (templateData) {
+            return {
+              ...tab,
+              fields: templateData.fields,
+              // Merge template labels with tab labels (tab labels take priority)
+              labels: tab.labels?.length
+                ? tab.labels
+                : templateData.labels || tab.labels,
+            };
+          }
+        }
+        return tab;
+      }),
+    );
+
+    return processedTabs;
+  }
+
   private _resolveConfigUrl(configUrl: string): string {
     // If the URL starts with http:// or https://, use it as-is
     if (configUrl.startsWith("http://") || configUrl.startsWith("https://")) {
@@ -197,7 +304,7 @@ export class WafirWidget extends LitElement {
           : defaultConfig.targets,
       };
 
-      this._applyConfig(this._config);
+      await this._applyConfig(this._config);
       return;
     }
 
@@ -242,27 +349,30 @@ export class WafirWidget extends LitElement {
           config,
         );
         this._config = getDefaultConfig();
-        this._applyConfig(this._config);
+        await this._applyConfig(this._config);
         return;
       }
 
       this._config = config;
-      this._applyConfig(config);
+      await this._applyConfig(config, resolvedUrl);
     } catch (error) {
       console.error("Wafir: Failed to fetch remote config, using defaults", {
         error,
         configUrl: this.configUrl,
       });
       this._config = getDefaultConfig();
-      this._applyConfig(this._config);
+      await this._applyConfig(this._config);
     } finally {
       this.isConfigLoading = false;
     }
   }
 
-  private _applyConfig(config: WafirConfig) {
+  private async _applyConfig(config: WafirConfig, configUrl?: string) {
     if (config.tabs && Array.isArray(config.tabs)) {
-      this._tabs = config.tabs.map((tab: TabConfig) => ({
+      // Process tabs that have templateUrl to fetch their fields
+      const processedTabs = await this._processTabTemplates(config.tabs, configUrl);
+
+      this._tabs = processedTabs.map((tab: TabConfig) => ({
         id: tab.id,
         label: tab.label || this._capitalize(tab.id),
         icon: tab.icon,

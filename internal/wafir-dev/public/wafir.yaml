@@ -90,16 +90,4 @@ tabs:
     label: Issue
     icon: bug
     targets: [default]
-    fields:
-      - id: title
-        type: input
-        attributes:
-          label: "What issue did you encounter?"
-        validations:
-          required: true
-      - id: description
-        type: textarea
-        attributes:
-          label: "Additional information:"
-        validations:
-          required: true
+    templateUrl: "/subform.yaml"

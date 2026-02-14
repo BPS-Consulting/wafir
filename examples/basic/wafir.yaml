@@ -17,6 +17,8 @@ tabs:
   - id: issue
     label: Issue
     icon: bug
+    labels:
+      - bug
     fields:
       - id: title
         type: input

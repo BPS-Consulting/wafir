@@ -234,26 +234,45 @@ telemetry:
 
 ## Tabs Configuration
 
-Define the structure of your feedback widget using tabs in your `public/wafir.yaml` config file. Each tab represents a distinct feedback type with its own fields and routing.  NOTE: the tab `id` is used as the GitHub issue `Type` field value.
+Define the structure of your feedback widget using tabs in your `public/wafir.yaml` config file. Each tab represents a distinct feedback type with its own fields and routing.
 
 ### Tab Properties
 
-| Property     | Type     | Description                                              |
-| ------------ | -------- | -------------------------------------------------------- |
-| `id`         | string   | Unique identifier for the tab                            |
-| `label`      | string   | Display label shown in the tab                           |
-| `icon`       | string?  | Icon name (e.g., `bug`, `lightbulb`, `thumbsup`)         |
-| `isFeedback` | boolean? | Set to `true` for feedback/rating tabs                   |
-| `targets`    | array?   | Array of target IDs to route submissions to              |
-| `fields`     | array    | Array of field definitions for this tab                  |
+| Property      | Type      | Description                                                                                      |
+| ------------- | --------- | ------------------------------------------------------------------------------------------------ |
+| `id`          | string    | Unique identifier for the tab. Also used as the GitHub issue type when creating issues.          |
+| `label`       | string    | Display label shown in the tab                                                                   |
+| `icon`        | string?   | Icon name (e.g., `bug`, `lightbulb`, `thumbsup`)                                                 |
+| `labels`      | string[]? | GitHub labels to auto-apply to issues created from this tab                                      |
+| `templateUrl` | string?   | URL to a GitHub issue form template YAML file to use for this tab's fields                       |
+| `targets`     | array?    | Array of target IDs to route submissions to                                                      |
+| `fields`      | array     | Array of field definitions for this tab                                                          |
+
+> **Note:** The tab `id` is automatically used as the GitHub issue type when creating issues. For example, a tab with `id: Bug` will set the issue type to "Bug" in GitHub (requires issue types to be enabled in your repository/organization).
+
+### Using GitHub Issue Templates
+
+You can reference an existing GitHub issue form template by providing a `templateUrl`. The fields will be fetched from the template:
+
+```yaml
+tabs:
+  - id: Bug
+    label: Report Bug
+    icon: bug
+    templateUrl: https://raw.githubusercontent.com/owner/repo/main/.github/ISSUE_TEMPLATE/bug_report.yml
+    targets: [default]
+```
 
 ### Configuration Example
 
 ```yaml
 tabs:
-  - id: issue
-    label: Report Issue
+  - id: Bug
+    label: Report Bug
     icon: bug
+    labels:
+      - bug
+      - wafir
     targets: [default]
     fields:
       - id: title
@@ -263,10 +282,26 @@ tabs:
         validations:
           required: true
 
+  - id: Feature
+    label: Feature Request
+    icon: lightbulb
+    labels:
+      - enhancement
+      - feature-request
+    targets: [default]
+    fields:
+      - id: title
+        type: input
+        attributes:
+          label: "Feature Title"
+        validations:
+          required: true
+
   - id: feedback
     label: Feedback
     icon: thumbsup
-    isFeedback: true
+    labels:
+      - feedback
     targets: [project]
     fields:
       - id: rating

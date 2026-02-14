@@ -285,6 +285,13 @@ export interface paths {
                                 }[];
                                 /** @description IDs of target(s) for this tab. If omitted or empty, all targets will be used. Each ID must reference a valid target from the top-level targets array. */
                                 targets?: string[];
+                                /** @description Labels automatically added to issues created from this tab. Similar to GitHub issue form templates. */
+                                labels?: string[];
+                                /**
+                                 * Format: uri
+                                 * @description URL to a GitHub issue form template YAML file. When provided, the form fields will be fetched from this template.
+                                 */
+                                templateUrl?: string;
                             }[];
                             /** @description Available issue types from the organization (auto-populated) */
                             issueTypes?: {

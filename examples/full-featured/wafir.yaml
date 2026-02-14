@@ -19,6 +19,9 @@ tabs:
   - id: feedback
     label: "Product Feedback"
     icon: "star"
+    labels:
+      - feedback
+      - user-submitted
     fields:
       - id: intro
         type: markdown
@@ -78,6 +81,9 @@ tabs:
   - id: bug
     label: "Bug Report"
     icon: "bug"
+    labels:
+      - bug
+      - wafir-submitted
     fields:
       - id: bug_intro
         type: markdown
@@ -138,6 +144,9 @@ tabs:
   - id: suggestion
     label: "Suggest a Feature"
     icon: "lightbulb"
+    labels:
+      - enhancement
+      - feature-request
     fields:
       - id: idea_intro
         type: markdown

@@ -163,6 +163,7 @@ describe("POST /submit", () => {
         title: "Test Issue",
         body: expect.stringContaining("Message"),
         labels: ["wafir-feedback"],
+        type: "issue", // Tab id is used as issue type
       });
 
       // Verify config was fetched

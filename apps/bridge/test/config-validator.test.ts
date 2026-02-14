@@ -7,6 +7,8 @@ import {
   validateSameOrigin,
   validateFormFields,
   WafirConfig,
+  fetchConfig,
+  resolveTemplateUrl,
 } from "../src/shared/utils/config-validator.js";
 
 describe("validateSameOrigin", () => {
@@ -409,5 +411,353 @@ describe("validateFormFields", () => {
     expect(result.valid).toBe(false);
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0].code).toBe("MISSING_TAB_ID");
+  });
+});
+
+describe("fetchConfig with templateUrl", () => {
+  const mockFetch = vi.fn();
+  const originalFetch = global.fetch;
+
+  beforeEach(() => {
+    global.fetch = mockFetch;
+    mockFetch.mockReset();
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  const validConfigYaml = `
+targets:
+  - id: default
+    type: github/issues
+    target: owner/repo
+    authRef: "123"
+tabs:
+  - id: bug
+    label: Bug Report
+    templateUrl: https://raw.githubusercontent.com/owner/repo/main/.github/ISSUE_TEMPLATE/bug_report.yml
+`;
+
+  const validTemplateYaml = `
+name: Bug Report
+description: File a bug report
+labels:
+  - bug
+  - needs-triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: input
+    id: contact
+    attributes:
+      label: Contact Details
+      description: How can we get in touch with you?
+      placeholder: ex. email@example.com
+    validations:
+      required: false
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Also tell us, what did you expect to happen?
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+  - type: dropdown
+    id: version
+    attributes:
+      label: Version
+      options:
+        - "1.0.0"
+        - "1.0.1"
+        - "1.0.2"
+    validations:
+      required: true
+`;
+
+  it("fetches and transforms GitHub issue template fields", async () => {
+    // First call: fetch config
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      headers: new Headers({ "content-type": "application/yaml" }),
+      text: () => Promise.resolve(validConfigYaml),
+    });
+
+    // Second call: fetch template
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      headers: new Headers({ "content-type": "application/yaml" }),
+      text: () => Promise.resolve(validTemplateYaml),
+    });
+
+    const config = await fetchConfig("https://example.com/wafir.yaml");
+
+    expect(config.tabs).toBeDefined();
+    expect(config.tabs).toHaveLength(1);
+
+    const bugTab = config.tabs![0];
+    expect(bugTab.id).toBe("bug");
+    expect(bugTab.fields).toBeDefined();
+    expect(bugTab.fields!.length).toBe(4);
+
+    // Verify template labels were applied
+    expect(bugTab.labels).toEqual(["bug", "needs-triage"]);
+
+    // Verify field transformations
+    const markdownField = bugTab.fields![0];
+    expect(markdownField.type).toBe("markdown");
+    expect((markdownField.attributes as any).value).toContain("bug report");
+
+    const inputField = bugTab.fields![1];
+    expect(inputField.type).toBe("input");
+    expect(inputField.id).toBe("contact");
+    expect(inputField.attributes?.label).toBe("Contact Details");
+    expect((inputField.attributes as any).description).toBe(
+      "How can we get in touch with you?",
+    );
+    expect(inputField.validations?.required).toBe(false);
+
+    const textareaField = bugTab.fields![2];
+    expect(textareaField.type).toBe("textarea");
+    expect(textareaField.id).toBe("what-happened");
+    expect(textareaField.validations?.required).toBe(true);
+
+    const dropdownField = bugTab.fields![3];
+    expect(dropdownField.type).toBe("dropdown");
+    expect(dropdownField.attributes?.options).toEqual([
+      "1.0.0",
+      "1.0.1",
+      "1.0.2",
+    ]);
+  });
+
+  it("preserves existing tab labels over template labels", async () => {
+    const configWithLabels = `
+targets:
+  - id: default
+    type: github/issues
+    target: owner/repo
+    authRef: "123"
+tabs:
+  - id: bug
+    label: Bug Report
+    labels:
+      - my-custom-label
+    templateUrl: https://raw.githubusercontent.com/owner/repo/main/.github/ISSUE_TEMPLATE/bug_report.yml
+`;
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      headers: new Headers({ "content-type": "application/yaml" }),
+      text: () => Promise.resolve(configWithLabels),
+    });
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      headers: new Headers({ "content-type": "application/yaml" }),
+      text: () => Promise.resolve(validTemplateYaml),
+    });
+
+    const config = await fetchConfig("https://example.com/wafir.yaml");
+
+    // Tab's own labels should take priority
+    expect(config.tabs![0].labels).toEqual(["my-custom-label"]);
+  });
+
+  it("gracefully handles template fetch failure", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      headers: new Headers({ "content-type": "application/yaml" }),
+      text: () => Promise.resolve(validConfigYaml),
+    });
+
+    // Template fetch fails
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+    });
+
+    const config = await fetchConfig("https://example.com/wafir.yaml");
+
+    // Config should still be valid, just without template fields
+    expect(config.tabs).toBeDefined();
+    expect(config.tabs![0].fields).toBeUndefined();
+  });
+
+  it("does not fetch template if tab already has fields", async () => {
+    const configWithFields = `
+targets:
+  - id: default
+    type: github/issues
+    target: owner/repo
+    authRef: "123"
+tabs:
+  - id: bug
+    label: Bug Report
+    templateUrl: https://raw.githubusercontent.com/owner/repo/main/.github/ISSUE_TEMPLATE/bug_report.yml
+    fields:
+      - id: title
+        type: input
+        attributes:
+          label: Title
+`;
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      headers: new Headers({ "content-type": "application/yaml" }),
+      text: () => Promise.resolve(configWithFields),
+    });
+
+    const config = await fetchConfig("https://example.com/wafir.yaml");
+
+    // Only one fetch call (config), not template
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(config.tabs![0].fields).toHaveLength(1);
+    expect(config.tabs![0].fields![0].id).toBe("title");
+  });
+
+  it("resolves relative template URLs against config URL", async () => {
+    const configWithRelativeTemplate = `
+targets:
+  - id: default
+    type: github/issues
+    target: owner/repo
+    authRef: "123"
+tabs:
+  - id: bug
+    label: Bug Report
+    templateUrl: templates/bug.yaml
+`;
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      headers: new Headers({ "content-type": "application/yaml" }),
+      text: () => Promise.resolve(configWithRelativeTemplate),
+    });
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      headers: new Headers({ "content-type": "application/yaml" }),
+      text: () => Promise.resolve(validTemplateYaml),
+    });
+
+    const config = await fetchConfig("https://example.com/config/wafir.yaml");
+
+    // Should have fetched the template
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    
+    // Second call should be the resolved URL
+    expect(mockFetch.mock.calls[1][0]).toBe(
+      "https://example.com/config/templates/bug.yaml"
+    );
+
+    expect(config.tabs![0].fields).toBeDefined();
+    expect(config.tabs![0].fields!.length).toBe(4);
+  });
+
+  it("resolves sibling file template URL", async () => {
+    const configWithSiblingTemplate = `
+targets:
+  - id: default
+    type: github/issues
+    target: owner/repo
+    authRef: "123"
+tabs:
+  - id: bug
+    label: Bug Report
+    templateUrl: bug-template.yaml
+`;
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      headers: new Headers({ "content-type": "application/yaml" }),
+      text: () => Promise.resolve(configWithSiblingTemplate),
+    });
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      headers: new Headers({ "content-type": "application/yaml" }),
+      text: () => Promise.resolve(validTemplateYaml),
+    });
+
+    const config = await fetchConfig("https://example.com/public/wafir.yaml");
+
+    // Second call should resolve to sibling file
+    expect(mockFetch.mock.calls[1][0]).toBe(
+      "https://example.com/public/bug-template.yaml"
+    );
+  });
+
+  it("keeps absolute template URLs unchanged", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      headers: new Headers({ "content-type": "application/yaml" }),
+      text: () => Promise.resolve(validConfigYaml),
+    });
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      headers: new Headers({ "content-type": "application/yaml" }),
+      text: () => Promise.resolve(validTemplateYaml),
+    });
+
+    await fetchConfig("https://example.com/wafir.yaml");
+
+    // Absolute URL should be used as-is
+    expect(mockFetch.mock.calls[1][0]).toBe(
+      "https://raw.githubusercontent.com/owner/repo/main/.github/ISSUE_TEMPLATE/bug_report.yml"
+    );
+  });
+});
+
+describe("resolveTemplateUrl", () => {
+  it("returns absolute URLs unchanged", () => {
+    const url = resolveTemplateUrl(
+      "https://raw.githubusercontent.com/owner/repo/main/template.yaml",
+      "https://example.com/wafir.yaml"
+    );
+    expect(url).toBe(
+      "https://raw.githubusercontent.com/owner/repo/main/template.yaml"
+    );
+  });
+
+  it("resolves relative URLs against base URL", () => {
+    const url = resolveTemplateUrl(
+      "templates/bug.yaml",
+      "https://example.com/config/wafir.yaml"
+    );
+    expect(url).toBe("https://example.com/config/templates/bug.yaml");
+  });
+
+  it("resolves sibling file URLs", () => {
+    const url = resolveTemplateUrl(
+      "subform.yaml",
+      "https://example.com/public/wafir.yaml"
+    );
+    expect(url).toBe("https://example.com/public/subform.yaml");
+  });
+
+  it("resolves parent directory URLs", () => {
+    const url = resolveTemplateUrl(
+      "../templates/bug.yaml",
+      "https://example.com/config/v1/wafir.yaml"
+    );
+    expect(url).toBe("https://example.com/config/templates/bug.yaml");
+  });
+
+  it("returns template URL as-is when no base URL provided", () => {
+    const url = resolveTemplateUrl("subform.yaml");
+    expect(url).toBe("subform.yaml");
+  });
+
+  it("handles http URLs as absolute", () => {
+    const url = resolveTemplateUrl(
+      "http://other-server.com/template.yaml",
+      "https://example.com/wafir.yaml"
+    );
+    expect(url).toBe("http://other-server.com/template.yaml");
   });
 });

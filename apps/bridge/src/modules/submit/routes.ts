@@ -142,7 +142,14 @@ const submitRoute: FastifyPluginAsync = async (
 
         // Title and labels can come from form (validated above)
         const title = input.title;
-        const labels = input.labels;
+        
+        // Merge labels: tab config labels take priority, then input labels
+        const tabLabels = tab?.labels || [];
+        const inputLabels = input.labels || [];
+        const labels = [...new Set([...tabLabels, ...inputLabels])];
+        
+        // Use tab id as the issue type
+        const issueType = tab?.id;
 
         // Build markdown body from validated form fields
         let finalBody = submitService.buildMarkdownFromFields(
@@ -192,6 +199,7 @@ const submitRoute: FastifyPluginAsync = async (
           title,
           body: finalBody,
           labels,
+          issueType,
           formFields: input.formFields,
           log: request.log,
           owner,

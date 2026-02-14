@@ -24,6 +24,8 @@ tabs:
   - id: feedback
     label: Feedback
     icon: thumbsup
+    labels:
+      - feedback
     targets: [project] # This tab will send feedback to the project target only
     fields:
       - id: rating
@@ -42,6 +44,8 @@ tabs:
   - id: suggestion # this tab will send feedback to the both targets since it doesn't specify targets
     label: Suggestion
     icon: lightbulb
+    labels:
+      - enhancement
     fields:
       - id: title
         type: input
@@ -59,6 +63,8 @@ tabs:
   - id: issue
     label: Issue
     icon: bug
+    labels:
+      - bug
     targets: [default] # This tab will send feedback to the default target only
     fields:
       - id: title
