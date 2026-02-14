@@ -19,25 +19,38 @@ import {
 } from "./store.js";
 import { StoreController } from "@nanostores/lit";
 import type {
-  TabConfigApi as TabConfig,
+  FormConfigApi as FormConfig,
   FieldConfigApi as FieldConfig,
   WafirConfig,
 } from "./api/client.js";
 import { dataURLtoBlob } from "./utils/file.js";
 import { getBrowserInfo, consoleInterceptor } from "./utils/telemetry.js";
 import {
-  getDefaultTabs,
+  getDefaultForms,
   getDefaultFields,
   getDefaultConfig,
 } from "./default-config.js";
 
 type WidgetPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 
-const TAB_ICONS: Record<string, string> = {
+const FORM_ICONS: Record<string, string> = {
   thumbsup: thumbsupIcon,
   lightbulb: lightbulbIcon,
   bug: bugIcon,
 };
+
+/**
+ * Represents a GitHub Issue Form template structure.
+ * Wafir uses the same field schema as GitHub Issue Forms.
+ */
+interface GitHubIssueFormTemplate {
+  name?: string;
+  description?: string;
+  title?: string;
+  labels?: string[];
+  assignees?: string[];
+  body?: FieldConfig[];
+}
 
 @customElement("wafir-widget")
 export class WafirWidget extends LitElement {
@@ -54,7 +67,7 @@ export class WafirWidget extends LitElement {
   tooltipText = "Open Issue Widget";
 
   @property({ type: Array })
-  tabs: TabConfig[] = [];
+  forms: FormConfig[] = [];
 
   @property({ type: String, attribute: "target-type" })
   targetType = "";
@@ -85,10 +98,10 @@ export class WafirWidget extends LitElement {
   private _hasCustomTrigger = false;
 
   @state()
-  private _tabs: TabConfig[] = getDefaultTabs();
+  private _forms: FormConfig[] = getDefaultForms();
 
   @state()
-  private _activeTabId: string = "feedback";
+  private _activeFormId: string = "feedback";
 
   @state()
   private _telemetry = {
@@ -102,24 +115,24 @@ export class WafirWidget extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._checkCustomTrigger();
-    this._mergeInlineTabs();
+    this._mergeInlineForms();
   }
 
   private _checkCustomTrigger() {
     this._hasCustomTrigger = this.querySelector('[slot="trigger"]') !== null;
   }
 
-  private _mergeInlineTabs() {
-    if (this.tabs && this.tabs.length > 0) {
-      this._tabs = this.tabs.map((tab) => ({
-        ...tab,
-        fields:
-          tab.fields && tab.fields.length > 0
-            ? tab.fields
-            : getDefaultFields(tab.id),
+  private _mergeInlineForms() {
+    if (this.forms && this.forms.length > 0) {
+      this._forms = this.forms.map((form) => ({
+        ...form,
+        body:
+          form.body && form.body.length > 0
+            ? form.body
+            : getDefaultFields(form.id),
       }));
-      if (this._tabs.length > 0) {
-        this._activeTabId = this._tabs[0].id;
+      if (this._forms.length > 0) {
+        this._activeFormId = this._forms[0].id;
       }
     }
   }
@@ -162,6 +175,100 @@ export class WafirWidget extends LitElement {
     }
   }
 
+  /**
+   * Fetches a GitHub issue form template from a URL and extracts fields.
+   * @param templateUrl - URL to the template (can be relative)
+   * @param baseUrl - Base URL to resolve relative URLs against
+   * @returns Template fields and labels, or undefined if fetch fails
+   */
+  private async _fetchTemplate(
+    templateUrl: string,
+    baseUrl?: string,
+  ): Promise<{ body: FieldConfig[]; labels?: string[] } | undefined> {
+    try {
+      // Resolve relative URLs against the base config URL
+      let resolvedUrl = templateUrl;
+      if (
+        baseUrl &&
+        !templateUrl.startsWith("http://") &&
+        !templateUrl.startsWith("https://")
+      ) {
+        const base = new URL(baseUrl);
+        resolvedUrl = new URL(templateUrl, base).toString();
+      } else if (
+        !templateUrl.startsWith("http://") &&
+        !templateUrl.startsWith("https://")
+      ) {
+        // Resolve against current origin
+        resolvedUrl = new URL(templateUrl, window.location.origin).toString();
+      }
+
+      const response = await fetch(resolvedUrl, {
+        method: "GET",
+        signal: AbortSignal.timeout(10000),
+      });
+
+      if (!response.ok) {
+        console.warn(
+          `Wafir: Failed to fetch template from ${resolvedUrl}: HTTP ${response.status}`,
+        );
+        return undefined;
+      }
+
+      const text = await response.text();
+      const yaml = await import("js-yaml");
+      const template = yaml.load(text) as GitHubIssueFormTemplate;
+
+      if (!template || !template.body || !Array.isArray(template.body)) {
+        console.warn(
+          `Wafir: Invalid template format from ${resolvedUrl}: missing body`,
+        );
+        return undefined;
+      }
+
+      return {
+        body: template.body,
+        labels: template.labels,
+      };
+    } catch (error) {
+      console.warn(`Wafir: Error fetching template from ${templateUrl}:`, error);
+      return undefined;
+    }
+  }
+
+  /**
+   * Processes forms that have templateUrl, fetching and merging template fields.
+   * @param forms - Array of form configurations
+   * @param baseUrl - Base URL to resolve relative template URLs against
+   * @returns Forms with template fields merged in
+   */
+  private async _processFormTemplates(
+    forms: FormConfig[],
+    baseUrl?: string,
+  ): Promise<FormConfig[]> {
+    const processedForms = await Promise.all(
+      forms.map(async (form) => {
+        // If form has templateUrl and no body defined, fetch from template
+        if (form.templateUrl && (!form.body || form.body.length === 0)) {
+          const templateData = await this._fetchTemplate(form.templateUrl, baseUrl);
+          if (templateData) {
+            return {
+              ...form,
+              body: templateData.body,
+              // Merge template labels with form labels (form labels take priority)
+              labels: form.labels?.length
+                ? form.labels
+                : templateData.labels || form.labels,
+            };
+          }
+        }
+        return form;
+      }),
+    );
+
+    return processedForms;
+  }
+
   private _resolveConfigUrl(configUrl: string): string {
     // If the URL starts with http:// or https://, use it as-is
     if (configUrl.startsWith("http://") || configUrl.startsWith("https://")) {
@@ -197,7 +304,7 @@ export class WafirWidget extends LitElement {
           : defaultConfig.targets,
       };
 
-      this._applyConfig(this._config);
+      await this._applyConfig(this._config);
       return;
     }
 
@@ -242,40 +349,43 @@ export class WafirWidget extends LitElement {
           config,
         );
         this._config = getDefaultConfig();
-        this._applyConfig(this._config);
+        await this._applyConfig(this._config);
         return;
       }
 
       this._config = config;
-      this._applyConfig(config);
+      await this._applyConfig(config, resolvedUrl);
     } catch (error) {
       console.error("Wafir: Failed to fetch remote config, using defaults", {
         error,
         configUrl: this.configUrl,
       });
       this._config = getDefaultConfig();
-      this._applyConfig(this._config);
+      await this._applyConfig(this._config);
     } finally {
       this.isConfigLoading = false;
     }
   }
 
-  private _applyConfig(config: WafirConfig) {
-    if (config.tabs && Array.isArray(config.tabs)) {
-      this._tabs = config.tabs.map((tab: TabConfig) => ({
-        id: tab.id,
-        label: tab.label || this._capitalize(tab.id),
-        icon: tab.icon,
-        fields:
-          tab.fields && tab.fields.length > 0
-            ? tab.fields
-            : getDefaultFields(tab.id),
+  private async _applyConfig(config: WafirConfig, configUrl?: string) {
+    if (config.forms && Array.isArray(config.forms)) {
+      // Process forms that have templateUrl to fetch their fields
+      const processedForms = await this._processFormTemplates(config.forms, configUrl);
+
+      this._forms = processedForms.map((form: FormConfig) => ({
+        id: form.id,
+        label: form.label || this._capitalize(form.id),
+        icon: form.icon,
+        body:
+          form.body && form.body.length > 0
+            ? form.body
+            : getDefaultFields(form.id),
       }));
-      if (this._tabs.length > 0) {
-        this._activeTabId = this._tabs[0].id;
+      if (this._forms.length > 0) {
+        this._activeFormId = this._forms[0].id;
       }
     } else {
-      console.warn("Wafir: No tabs in config or tabs is not an array");
+      console.warn("Wafir: No forms in config or forms is not an array");
     }
 
     if (config.title) {
@@ -300,18 +410,18 @@ export class WafirWidget extends LitElement {
     resetState();
   }
 
-  private _getActiveTab(): TabConfig | undefined {
-    return this._tabs.find((t) => t.id === this._activeTabId);
+  private _getActiveForm(): FormConfig | undefined {
+    return this._forms.find((f) => f.id === this._activeFormId);
   }
 
   private _getActiveFormConfig(): FieldConfig[] {
-    const tab = this._getActiveTab();
-    const fields = tab?.fields || [];
+    const form = this._getActiveForm();
+    const fields = form?.body || [];
     return fields;
   }
 
-  private _switchTab(tabId: string) {
-    this._activeTabId = tabId;
+  private _switchForm(formId: string) {
+    this._activeFormId = formId;
   }
 
   @property({ type: String, attribute: "config-url" })
@@ -325,7 +435,7 @@ export class WafirWidget extends LitElement {
 
   private async _handleSubmit(event: CustomEvent) {
     const formData = event.detail.formData as Record<string, unknown>;
-    const activeTab = this._getActiveTab();
+    const activeForm = this._getActiveForm();
 
     if (
       !this._config ||
@@ -339,15 +449,15 @@ export class WafirWidget extends LitElement {
 
     const { targets } = this._config;
 
-    // Find the target for the active tab
-    // If tab has targets specified, use the first one for validation
-    // If tab has no targets specified, backend will route to all targets
-    const activeTabTargets = activeTab?.targets;
+    // Find the target for the active form
+    // If form has targets specified, use the first one for validation
+    // If form has no targets specified, backend will route to all targets
+    const activeFormTargets = activeForm?.targets;
     let targetConfig = targets[0]; // Default to first target
 
-    if (activeTabTargets && activeTabTargets.length > 0) {
-      // Use the first target specified for this tab
-      const targetId = activeTabTargets[0];
+    if (activeFormTargets && activeFormTargets.length > 0) {
+      // Use the first target specified for this form
+      const targetId = activeFormTargets[0];
       const foundTarget = targets.find(
         (t: { id: string }) => t.id === targetId,
       );
@@ -355,7 +465,7 @@ export class WafirWidget extends LitElement {
         targetConfig = foundTarget;
       } else {
         console.error(
-          `Wafir: Tab "${activeTab.id}" references unknown target "${targetId}". Available targets: ${targets.map((t) => t.id).join(", ")}`,
+          `Wafir: Form "${activeForm.id}" references unknown target "${targetId}". Available targets: ${targets.map((t) => t.id).join(", ")}`,
         );
         alert("Widget configuration error: Invalid target reference");
         return;
@@ -378,8 +488,8 @@ export class WafirWidget extends LitElement {
 
     try {
       const title =
-        (formData.title as string) || activeTab?.label || "Submission";
-      const labels: string[] = [this._activeTabId];
+        (formData.title as string) || activeForm?.label || "Submission";
+      const labels: string[] = [this._activeFormId];
 
       const { submitIssue } = await import("./api/client.js");
 
@@ -406,15 +516,15 @@ export class WafirWidget extends LitElement {
         : "";
 
       // Note: We send one target for validation, but the backend will determine
-      // which targets to actually submit to based on the tab's targets array in the config.
-      // If the tab has no targets specified, the backend will route to all configured targets.
+      // which targets to actually submit to based on the form's targets array in the config.
+      // If the form has no targets specified, the backend will route to all configured targets.
       await submitIssue({
         configUrl: resolvedConfigUrl,
         targetType: targetConfig.type,
         target: targetConfig.target,
         authRef: targetConfig.authRef,
         title,
-        tabId: this._activeTabId,
+        formId: this._activeFormId,
         labels,
         screenshot: screenshotBlob,
         bridgeUrl: this.bridgeUrl || undefined,
@@ -435,9 +545,9 @@ export class WafirWidget extends LitElement {
     }
   }
 
-  private _renderTabIcon(iconName: string | undefined) {
+  private _renderFormIcon(iconName: string | undefined) {
     if (!iconName) return "";
-    return unsafeHTML(TAB_ICONS[iconName] || "");
+    return unsafeHTML(FORM_ICONS[iconName] || "");
   }
 
   render() {
@@ -508,15 +618,15 @@ export class WafirWidget extends LitElement {
 
                 <div class="mode-tabs">
                   ${(() => {
-                    return this._tabs.map(
-                      (tab) => html`
+                    return this._forms.map(
+                      (form) => html`
                         <button
-                          class="mode-tab ${this._activeTabId === tab.id
+                          class="mode-tab ${this._activeFormId === form.id
                             ? "active"
                             : ""}"
-                          @click="${() => this._switchTab(tab.id)}"
+                          @click="${() => this._switchForm(form.id)}"
                         >
-                          ${this._renderTabIcon(tab.icon)} ${tab.label}
+                          ${this._renderFormIcon(form.icon)} ${form.label}
                         </button>
                       `,
                     );
@@ -524,7 +634,7 @@ export class WafirWidget extends LitElement {
                 </div>
                 <wafir-form
                   .fields="${this._getActiveFormConfig()}"
-                  .formLabel="${this._getActiveTab()?.label || ""}"
+                  .formLabel="${this._getActiveForm()?.label || ""}"
                   .showBrowserInfo="${this._telemetry.browserInfo}"
                   .showConsoleLog="${this._telemetry.consoleLog}"
                   .showScreenshot="${this._telemetry.screenshot}"

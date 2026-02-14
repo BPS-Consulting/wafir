@@ -1,5 +1,5 @@
 # WAFIR Configuration Example - Default
-# This example shows what the widget displays when no tabs are specified.
+# This example shows what the widget displays when no forms are specified.
 # Use this as a reference for the default behavior.
 
 title: "Contact Us"
@@ -18,13 +18,13 @@ telemetry:
   browserInfo: true
   consoleLog: false
 
-tabs:
+forms:
   - id: feedback
     label: Feedback
     icon: star
     isFeedback: true
     targets: [project]
-    fields:
+    body:
       - id: rating
         type: rating
         attributes:
@@ -42,7 +42,7 @@ tabs:
     label: Suggestion
     icon: lightbulb
     targets: [project]
-    fields:
+    body:
       - id: title
         type: input
         attributes:
@@ -84,7 +84,7 @@ tabs:
   - id: bug
     label: Issue
     icon: bug
-    fields:
+    body:
       - id: title
         type: input
         attributes:

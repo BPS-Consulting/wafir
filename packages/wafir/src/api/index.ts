@@ -206,7 +206,7 @@ export interface paths {
                             title: string;
                             /** @description Target destinations for form submissions. Each target defines where and how submissions are stored. */
                             targets: {
-                                /** @description Unique identifier for this target, referenced by tabs to route submissions. */
+                                /** @description Unique identifier for this target, referenced by forms to route submissions. */
                                 id: string;
                                 /**
                                  * @description Target type using MIME-type convention. Currently supported: github/issues, github/project.
@@ -236,19 +236,19 @@ export interface paths {
                                  */
                                 consoleLog: boolean;
                             };
-                            /** @description Widget tabs configuration. Defaults to feedback, suggestion, issue if omitted. */
-                            tabs?: {
-                                /** @description Unique tab identifier */
+                            /** @description Widget forms configuration. Forms are displayed as tabs in the UI. Defaults to feedback, suggestion, issue if omitted. */
+                            forms?: {
+                                /** @description Unique form identifier */
                                 id: string;
                                 /** @description Display label (defaults to capitalized id) */
                                 label?: string;
                                 /**
-                                 * @description Tab icon
+                                 * @description Form icon (displayed in tab UI)
                                  * @enum {string}
                                  */
                                 icon?: "thumbsup" | "lightbulb" | "bug";
-                                /** @description Form fields for this tab. If omitted, defaults are used for known tab IDs. */
-                                fields?: {
+                                /** @description Form body (fields) for this form. If omitted, defaults are used for known form IDs. */
+                                body?: {
                                     /**
                                      * @description Field input type. Matches GitHub Form Schema types plus Wafir extensions.
                                      * @enum {string}
@@ -283,8 +283,15 @@ export interface paths {
                                         required?: boolean;
                                     };
                                 }[];
-                                /** @description IDs of target(s) for this tab. If omitted or empty, all targets will be used. Each ID must reference a valid target from the top-level targets array. */
+                                /** @description IDs of target(s) for this form. If omitted or empty, all targets will be used. Each ID must reference a valid target from the top-level targets array. */
                                 targets?: string[];
+                                /** @description Labels automatically added to issues created from this tab. Similar to GitHub issue form templates. */
+                                labels?: string[];
+                                /**
+                                 * Format: uri
+                                 * @description URL to a GitHub issue form template YAML file. When provided, the form fields will be fetched from this template.
+                                 */
+                                templateUrl?: string;
                             }[];
                             /** @description Available issue types from the organization (auto-populated) */
                             issueTypes?: {

@@ -15,11 +15,14 @@ telemetry:
   browserInfo: true
   consoleLog: true
 
-tabs:
+forms:
   - id: feedback
     label: "Product Feedback"
     icon: "star"
-    fields:
+    labels:
+      - feedback
+      - user-submitted
+    body:
       - id: intro
         type: markdown
         attributes:
@@ -78,7 +81,10 @@ tabs:
   - id: bug
     label: "Bug Report"
     icon: "bug"
-    fields:
+    labels:
+      - bug
+      - wafir-submitted
+    body:
       - id: bug_intro
         type: markdown
         attributes:
@@ -138,7 +144,10 @@ tabs:
   - id: suggestion
     label: "Suggest a Feature"
     icon: "lightbulb"
-    fields:
+    labels:
+      - enhancement
+      - feature-request
+    body:
       - id: idea_intro
         type: markdown
         attributes:
@@ -182,7 +191,7 @@ tabs:
   - id: docs
     label: "Docs Issue"
     icon: "book"
-    fields:
+    body:
       - id: docs_intro
         type: markdown
         attributes:
@@ -225,7 +234,7 @@ tabs:
   - id: privacy
     label: "Privacy Question"
     icon: "lock"
-    fields:
+    body:
       - id: privacy_intro
         type: markdown
         attributes:

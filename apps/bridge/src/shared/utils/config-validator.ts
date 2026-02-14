@@ -19,12 +19,12 @@ const DEFAULT_CONFIG: WafirConfig = {
     browserInfo: true,
     consoleLog: false,
   },
-  tabs: [
+  forms: [
     {
       id: "feedback",
       label: "Feedback",
       icon: "thumbsup",
-      fields: [
+      body: [
         {
           id: "rating",
           type: "rating",
@@ -51,7 +51,7 @@ const DEFAULT_CONFIG: WafirConfig = {
       id: "suggestion",
       label: "Suggestion",
       icon: "lightbulb",
-      fields: [
+      body: [
         {
           id: "title",
           type: "input",
@@ -78,7 +78,7 @@ const DEFAULT_CONFIG: WafirConfig = {
       id: "issue",
       label: "Issue",
       icon: "bug",
-      fields: [
+      body: [
         {
           id: "title",
           type: "input",
@@ -120,14 +120,17 @@ interface FieldConfig {
 }
 
 /**
- * Represents a tab configuration from the wafir config.
+ * Represents a form configuration from the wafir config.
+ * Forms are displayed as tabs in the widget UI.
  */
-interface TabConfig {
+interface FormConfig {
   id: string;
   label?: string;
   icon?: string;
-  fields?: FieldConfig[];
+  body?: FieldConfig[];
   targets?: string[];
+  labels?: string[];
+  templateUrl?: string;
 }
 
 /**
@@ -151,7 +154,7 @@ export interface WafirConfig {
     browserInfo?: boolean;
     consoleLog?: boolean;
   };
-  tabs?: TabConfig[];
+  forms?: FormConfig[];
 }
 
 /**
@@ -170,6 +173,124 @@ export interface ValidationResult {
   valid: boolean;
   errors: ValidationError[];
   config?: WafirConfig;
+}
+
+/**
+ * Represents a GitHub Issue Form template structure.
+ * Wafir fields use the same schema as GitHub Issue Forms.
+ * @see https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-githubs-form-schema
+ */
+interface GitHubIssueFormTemplate {
+  name?: string;
+  description?: string;
+  title?: string;
+  labels?: string[];
+  assignees?: string[];
+  body?: FieldConfig[]; // Same schema as Wafir fields
+}
+
+/**
+ * Fetches a GitHub issue form template from a URL.
+ * Since Wafir uses the same field schema as GitHub Issue Forms,
+ * the template body can be used directly as fields.
+ *
+ * @param templateUrl - URL to the GitHub issue form template YAML file (can be relative)
+ * @param baseUrl - Base URL to resolve relative templateUrl against
+ * @returns Template fields and labels, or undefined if fetch fails
+ */
+async function fetchGitHubIssueTemplate(
+  templateUrl: string,
+  baseUrl?: string,
+): Promise<{ fields: FieldConfig[]; labels?: string[] } | undefined> {
+  try {
+    // Resolve relative URLs against the base config URL
+    let resolvedUrl = templateUrl;
+    if (baseUrl && !templateUrl.startsWith("http://") && !templateUrl.startsWith("https://")) {
+      // For relative URLs, resolve against the base URL's directory
+      const base = new URL(baseUrl);
+      resolvedUrl = new URL(templateUrl, base).toString();
+    }
+
+    const response = await fetch(resolvedUrl, {
+      method: "GET",
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!response.ok) {
+      console.warn(
+        `Failed to fetch template from ${resolvedUrl}: HTTP ${response.status}`,
+      );
+      return undefined;
+    }
+
+    const text = await response.text();
+    const template = yaml.load(text) as GitHubIssueFormTemplate;
+
+    if (!template || !template.body || !Array.isArray(template.body)) {
+      console.warn(`Invalid template format from ${resolvedUrl}: missing body`);
+      return undefined;
+    }
+
+    // GitHub Issue Form body uses the same schema as Wafir fields
+    return {
+      fields: template.body,
+      labels: template.labels,
+    };
+  } catch (error) {
+    console.warn(`Error fetching template from ${templateUrl}:`, error);
+    return undefined;
+  }
+}
+
+/**
+ * Resolves a template URL, handling both absolute and relative URLs.
+ * @param templateUrl - The template URL (can be relative)
+ * @param baseUrl - The base URL to resolve against
+ * @returns The resolved absolute URL
+ */
+export function resolveTemplateUrl(templateUrl: string, baseUrl?: string): string {
+  if (!baseUrl || templateUrl.startsWith("http://") || templateUrl.startsWith("https://")) {
+    return templateUrl;
+  }
+  const base = new URL(baseUrl);
+  return new URL(templateUrl, base).toString();
+}
+
+/**
+ * Processes forms that have templateUrl, fetching and merging template fields.
+ * @param forms - Array of form configurations
+ * @param baseUrl - Base URL to resolve relative template URLs against
+ * @returns Forms with template fields merged in
+ */
+async function processFormTemplates(
+  forms: FormConfig[] | undefined,
+  baseUrl?: string,
+): Promise<FormConfig[] | undefined> {
+  if (!forms || !Array.isArray(forms)) {
+    return forms;
+  }
+
+  const processedForms = await Promise.all(
+    forms.map(async (form) => {
+      // If form has templateUrl and no body defined, fetch from template
+      if (form.templateUrl && (!form.body || form.body.length === 0)) {
+        const templateData = await fetchGitHubIssueTemplate(form.templateUrl, baseUrl);
+        if (templateData) {
+          return {
+            ...form,
+            body: templateData.fields,
+            // Merge template labels with form labels (form labels take priority)
+            labels: form.labels?.length
+              ? form.labels
+              : templateData.labels || form.labels,
+          };
+        }
+      }
+      return form;
+    }),
+  );
+
+  return processedForms;
 }
 
 /**
@@ -272,29 +393,34 @@ export async function fetchConfig(configUrl?: string): Promise<WafirConfig> {
     targetIds.add(target.id);
   }
 
-  // Validate tab targets reference valid target IDs
-  if (cfg.tabs && Array.isArray(cfg.tabs)) {
-    const tabs = cfg.tabs as unknown[];
-    for (let i = 0; i < tabs.length; i++) {
-      const tab = tabs[i];
-      if (tab && typeof tab === "object") {
-        const t = tab as Record<string, unknown>;
-        if (t.targets && Array.isArray(t.targets)) {
-          for (const targetId of t.targets as unknown[]) {
+  // Validate form targets reference valid target IDs
+  if (cfg.forms && Array.isArray(cfg.forms)) {
+    const forms = cfg.forms as unknown[];
+    for (let i = 0; i < forms.length; i++) {
+      const form = forms[i];
+      if (form && typeof form === "object") {
+        const f = form as Record<string, unknown>;
+        if (f.targets && Array.isArray(f.targets)) {
+          for (const targetId of f.targets as unknown[]) {
             if (typeof targetId !== "string") {
               throw new Error(
-                `Invalid config: tabs[${i}].targets must contain only strings`,
+                `Invalid config: forms[${i}].targets must contain only strings`,
               );
             }
             if (!targetIds.has(targetId)) {
               throw new Error(
-                `Invalid config: tabs[${i}].targets references unknown target ID "${targetId}"`,
+                `Invalid config: forms[${i}].targets references unknown target ID "${targetId}"`,
               );
             }
           }
         }
       }
     }
+  }
+
+  // Process forms with templateUrl - fetch and merge template fields
+  if (cfg.forms && Array.isArray(cfg.forms)) {
+    cfg.forms = await processFormTemplates(cfg.forms as FormConfig[], configUrl);
   }
 
   return config as WafirConfig;
@@ -337,24 +463,24 @@ export function validateTargetMatch(
 }
 
 /**
- * Gets the allowed field IDs for a specific tab from the config.
- * Only returns fields explicitly defined in the tab configuration.
- * If no tab is found or no fields are defined, returns an empty set.
+ * Gets the allowed field IDs for a specific form from the config.
+ * Only returns fields explicitly defined in the form configuration.
+ * If no form is found or no fields are defined, returns an empty set.
  */
-function getAllowedFieldIds(config: WafirConfig, tabId?: string): Set<string> {
+function getAllowedFieldIds(config: WafirConfig, formId?: string): Set<string> {
   const allowedFields = new Set<string>();
 
-  // If no tabId provided, cannot determine allowed fields
-  if (!tabId) {
+  // If no formId provided, cannot determine allowed fields
+  if (!formId) {
     return allowedFields;
   }
 
-  // Find the tab in config
-  const tab = config.tabs?.find((t) => t.id === tabId);
+  // Find the form in config
+  const form = config.forms?.find((f) => f.id === formId);
 
-  // Only use fields explicitly defined in the tab configuration
-  if (tab?.fields && tab.fields.length > 0) {
-    for (const field of tab.fields) {
+  // Only use fields explicitly defined in the form configuration
+  if (form?.body && form.body.length > 0) {
+    for (const field of form.body) {
       if (field.id) {
         allowedFields.add(field.id);
       }
@@ -365,22 +491,22 @@ function getAllowedFieldIds(config: WafirConfig, tabId?: string): Set<string> {
 }
 
 /**
- * Gets required field IDs for a specific tab from the config.
- * Only returns fields marked as required in the tab configuration.
+ * Gets required field IDs for a specific form from the config.
+ * Only returns fields marked as required in the form configuration.
  */
-function getRequiredFieldIds(config: WafirConfig, tabId?: string): Set<string> {
+function getRequiredFieldIds(config: WafirConfig, formId?: string): Set<string> {
   const requiredFields = new Set<string>();
 
-  // If no tabId provided, cannot determine required fields
-  if (!tabId) {
+  // If no formId provided, cannot determine required fields
+  if (!formId) {
     return requiredFields;
   }
 
-  const tab = config.tabs?.find((t) => t.id === tabId);
+  const form = config.forms?.find((f) => f.id === formId);
 
-  // Only use fields explicitly marked as required in the tab configuration
-  if (tab?.fields) {
-    for (const field of tab.fields) {
+  // Only use fields explicitly marked as required in the form configuration
+  if (form?.body) {
+    for (const field of form.body) {
       if (field.id && field.validations?.required) {
         requiredFields.add(field.id);
       }
@@ -395,11 +521,11 @@ function getRequiredFieldIds(config: WafirConfig, tabId?: string): Set<string> {
  */
 function getFieldConfig(
   config: WafirConfig,
-  tabId: string | undefined,
+  formId: string | undefined,
   fieldId: string,
 ): FieldConfig | undefined {
-  const tab = config.tabs?.find((t) => t.id === tabId);
-  return tab?.fields?.find((f) => f.id === fieldId);
+  const form = config.forms?.find((f) => f.id === formId);
+  return form?.body?.find((f) => f.id === fieldId);
 }
 
 /**
@@ -530,15 +656,15 @@ function validateFieldValue(
 export function validateFormFields(
   formFields: Record<string, unknown>,
   config: WafirConfig,
-  tabId?: string,
+  formId?: string,
 ): ValidationResult {
   const errors: ValidationError[] = [];
 
-  // Validate that tabId is provided
-  if (!tabId) {
+  // Validate that formId is provided
+  if (!formId) {
     errors.push({
-      code: "MISSING_TAB_ID",
-      message: "Tab ID is required for validation",
+      code: "MISSING_FORM_ID",
+      message: "Form ID is required for validation",
     });
     return {
       valid: false,
@@ -547,13 +673,13 @@ export function validateFormFields(
     };
   }
 
-  // Validate that the tab exists in config
-  const tab = config.tabs?.find((t) => t.id === tabId);
-  if (!tab) {
+  // Validate that the form exists in config
+  const form = config.forms?.find((f) => f.id === formId);
+  if (!form) {
     errors.push({
-      code: "UNKNOWN_TAB",
-      message: `Tab "${tabId}" not found in config`,
-      field: "tabId",
+      code: "UNKNOWN_FORM",
+      message: `Form "${formId}" not found in config`,
+      field: "formId",
     });
     return {
       valid: false,
@@ -562,15 +688,15 @@ export function validateFormFields(
     };
   }
 
-  const allowedFields = getAllowedFieldIds(config, tabId);
-  const requiredFields = getRequiredFieldIds(config, tabId);
+  const allowedFields = getAllowedFieldIds(config, formId);
+  const requiredFields = getRequiredFieldIds(config, formId);
 
   // Check for extra fields not in config
   for (const fieldId of Object.keys(formFields)) {
     if (!allowedFields.has(fieldId)) {
       errors.push({
         code: "UNKNOWN_FIELD",
-        message: `Field "${fieldId}" is not allowed for tab "${tabId || "default"}"`,
+        message: `Field "${fieldId}" is not allowed for form "${formId || "default"}"`,
         field: fieldId,
       });
     }
@@ -593,7 +719,7 @@ export function validateFormFields(
     // Skip validation for unknown fields (already caught above)
     if (!allowedFields.has(fieldId)) continue;
 
-    const fieldConfig = getFieldConfig(config, tabId, fieldId);
+    const fieldConfig = getFieldConfig(config, formId, fieldId);
     const fieldError = validateFieldValue(fieldId, value, fieldConfig);
     if (fieldError) {
       errors.push(fieldError);
@@ -664,7 +790,7 @@ export async function validateSubmission(params: {
   target?: string;
   authRef?: string;
   formFields: Record<string, unknown>;
-  tabId?: string;
+  formId?: string;
   requestOrigin?: string;
 }): Promise<ValidationResult & { matchedTarget?: TargetConfig }> {
   const {
@@ -673,7 +799,7 @@ export async function validateSubmission(params: {
     target,
     authRef,
     formFields,
-    tabId,
+    formId,
     requestOrigin,
   } = params;
 
@@ -734,7 +860,7 @@ export async function validateSubmission(params: {
   }
 
   // Validate form fields
-  const formFieldsResult = validateFormFields(formFields, config, tabId);
+  const formFieldsResult = validateFormFields(formFields, config, formId);
   if (!formFieldsResult.valid) {
     return formFieldsResult;
   }

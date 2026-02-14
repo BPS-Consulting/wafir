@@ -21,6 +21,7 @@ export interface SubmissionContext {
   title: string;
   body: string;
   labels?: string[];
+  issueType?: string;
   formFields?: Record<string, unknown>;
   log: any;
 }

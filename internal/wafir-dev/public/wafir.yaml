@@ -1,12 +1,12 @@
 # WAFIR Configuration Example - Default
-# This example shows what the widget displays when no tabs are specified.
+# This example shows what the widget displays when no forms are specified.
 # Use this as a reference for the default behavior.
 # Host this file anywhere and point your widget to it via configUrl
 
 title: "Contact Us"
 
 # Targets define where feedback gets sent. 
-# You can have multiple targets and specify which tabs send to which targets.  
+# You can have multiple targets and specify which forms send to which targets.  
 # The first target will be used by default.
 targets:
   - id: default
@@ -23,13 +23,13 @@ telemetry:
   browserInfo: true
   consoleLog: false
 
-tabs:
+forms:
   - id: feedback
     label: Feedback
     icon: thumbsup
     isFeedback: true
     targets: [project]
-    fields:
+    body:
       - id: rating
         type: rating
         attributes:
@@ -47,7 +47,7 @@ tabs:
     label: Suggestion
     icon: lightbulb
     targets: [project]
-    fields:
+    body:
       - id: title
         type: input
         attributes:
@@ -90,16 +90,4 @@ tabs:
     label: Issue
     icon: bug
     targets: [default]
-    fields:
-      - id: title
-        type: input
-        attributes:
-          label: "What issue did you encounter?"
-        validations:
-          required: true
-      - id: description
-        type: textarea
-        attributes:
-          label: "Additional information:"
-        validations:
-          required: true
+    templateUrl: "/subform.yaml"

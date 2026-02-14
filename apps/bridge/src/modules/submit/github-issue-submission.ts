@@ -117,13 +117,31 @@ export class GithubIssueSubmission extends SubmissionBase {
 
     // Create GitHub Issue
     if (shouldCreateIssue) {
-      const issue = await context.appOctokit.rest.issues.create({
+      const createParams: {
+        owner: string;
+        repo: string;
+        title: string;
+        body: string;
+        labels: string[];
+        type?: string;
+      } = {
         owner: context.owner,
         repo: context.repo,
         title: context.title,
         body: context.body,
-        labels: context.labels || ["wafir-feedback"],
-      });
+        // Use provided labels, or default to ["wafir-feedback"] if no labels specified
+        labels:
+          context.labels && context.labels.length > 0
+            ? context.labels
+            : ["wafir-feedback"],
+      };
+
+      // Add issue type if specified (requires repository to have issue types enabled)
+      if (context.issueType) {
+        createParams.type = context.issueType;
+      }
+
+      const issue = await context.appOctokit.rest.issues.create(createParams);
       issueData = {
         number: issue.data.number,
         url: issue.data.html_url,
