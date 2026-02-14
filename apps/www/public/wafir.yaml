@@ -77,5 +77,6 @@ forms:
         type: textarea
         attributes:
           label: "Additional information:"
+          placeholder: "Please include steps to reproduce and expected vs actual behavior"
         validations:
           required: true
