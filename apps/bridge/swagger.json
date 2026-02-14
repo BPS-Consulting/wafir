@@ -12,7 +12,9 @@
     "/auth/github": {
       "get": {
         "summary": "Initiate GitHub OAuth",
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "description": "Redirects to GitHub OAuth for user authorization",
         "parameters": [
           {
@@ -42,7 +44,9 @@
     "/auth/github/callback": {
       "get": {
         "summary": "GitHub OAuth Callback",
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "description": "Handles OAuth callback from GitHub",
         "parameters": [
           {
@@ -72,7 +76,9 @@
     "/auth/status/{installationId}": {
       "get": {
         "summary": "Check Auth Status",
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "description": "Check if user token exists for installation",
         "parameters": [
           {
@@ -109,7 +115,9 @@
     "/auth/{installationId}": {
       "delete": {
         "summary": "Disconnect Auth",
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "description": "Remove stored user token for installation",
         "parameters": [
           {
@@ -131,7 +139,9 @@
     "/config/": {
       "get": {
         "summary": "Get WAFIR Configuration (Deprecated)",
-        "tags": ["WAFIR"],
+        "tags": [
+          "WAFIR"
+        ],
         "description": "DEPRECATED: The widget now fetches config directly from a user-hosted URL. This endpoint is kept for backward compatibility but will be removed in a future version. Fetches and parses .github/wafir.yaml from the target repository.",
         "parameters": [
           {
@@ -167,7 +177,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["targets"],
+                  "required": [
+                    "targets"
+                  ],
                   "properties": {
                     "title": {
                       "type": "string",
@@ -180,15 +192,23 @@
                       "description": "Target destinations for form submissions. Each target defines where and how submissions are stored.",
                       "items": {
                         "type": "object",
-                        "required": ["id", "type", "target", "authRef"],
+                        "required": [
+                          "id",
+                          "type",
+                          "target",
+                          "authRef"
+                        ],
                         "properties": {
                           "id": {
                             "type": "string",
-                            "description": "Unique identifier for this target, referenced by tabs to route submissions."
+                            "description": "Unique identifier for this target, referenced by forms to route submissions."
                           },
                           "type": {
                             "type": "string",
-                            "enum": ["github/issues", "github/project"],
+                            "enum": [
+                              "github/issues",
+                              "github/project"
+                            ],
                             "description": "Target type using MIME-type convention. Currently supported: github/issues, github/project."
                           },
                           "target": {
@@ -224,15 +244,17 @@
                         }
                       }
                     },
-                    "tabs": {
+                    "forms": {
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "required": ["id"],
+                        "required": [
+                          "id"
+                        ],
                         "properties": {
                           "id": {
                             "type": "string",
-                            "description": "Unique tab identifier"
+                            "description": "Unique form identifier"
                           },
                           "label": {
                             "type": "string",
@@ -240,14 +262,20 @@
                           },
                           "icon": {
                             "type": "string",
-                            "enum": ["thumbsup", "lightbulb", "bug"],
-                            "description": "Tab icon"
+                            "enum": [
+                              "thumbsup",
+                              "lightbulb",
+                              "bug"
+                            ],
+                            "description": "Form icon (displayed in tab UI)"
                           },
                           "fields": {
                             "type": "array",
                             "items": {
                               "type": "object",
-                              "required": ["type"],
+                              "required": [
+                                "type"
+                              ],
                               "properties": {
                                 "type": {
                                   "type": "string",
@@ -307,7 +335,9 @@
                                           "type": "array",
                                           "items": {
                                             "type": "object",
-                                            "required": ["label"],
+                                            "required": [
+                                              "label"
+                                            ],
                                             "properties": {
                                               "label": {
                                                 "type": "string"
@@ -340,21 +370,21 @@
                                 }
                               }
                             },
-                            "description": "Form fields for this tab. If omitted, defaults are used for known tab IDs."
+                            "description": "Form fields for this form. If omitted, defaults are used for known form IDs."
                           },
                           "targets": {
                             "type": "array",
                             "items": {
                               "type": "string"
                             },
-                            "description": "IDs of target(s) for this tab. If omitted or empty, all targets will be used. Each ID must reference a valid target from the top-level targets array."
+                            "description": "IDs of target(s) for this form. If omitted or empty, all targets will be used. Each ID must reference a valid target from the top-level targets array."
                           },
                           "labels": {
                             "type": "array",
                             "items": {
                               "type": "string"
                             },
-                            "description": "Labels automatically added to issues created from this tab. Similar to GitHub issue form templates."
+                            "description": "Labels automatically added to issues created from this form. Similar to GitHub issue form templates."
                           },
                           "templateUrl": {
                             "type": "string",
@@ -363,7 +393,7 @@
                           }
                         }
                       },
-                      "description": "Widget tabs configuration. Defaults to feedback, suggestion, issue if omitted."
+                      "description": "Widget forms configuration. Forms are displayed as tabs in the UI. Defaults to feedback, suggestion, issue if omitted."
                     },
                     "issueTypes": {
                       "type": "array",
@@ -380,25 +410,6 @@
                           "color": {
                             "type": "string"
                           }
-                        }
-                      }
-                    },
-                    "feedbackProject": {
-                      "type": "object",
-                      "description": "Dedicated project for feedback submissions with star ratings",
-                      "properties": {
-                        "projectNumber": {
-                          "type": "number",
-                          "description": "GitHub Project number for feedback"
-                        },
-                        "owner": {
-                          "type": "string",
-                          "description": "Project owner (defaults to repo owner)"
-                        },
-                        "ratingField": {
-                          "type": "string",
-                          "default": "Rating",
-                          "description": "Name of the Rating field in the project"
                         }
                       }
                     }
@@ -432,7 +443,9 @@
     "/health/": {
       "get": {
         "summary": "Health Check",
-        "tags": ["Health"],
+        "tags": [
+          "Health"
+        ],
         "description": "Returns the health status of the bridge service",
         "responses": {
           "200": {
@@ -459,7 +472,9 @@
     "/submit/": {
       "post": {
         "summary": "Submit Feedback/Issue",
-        "tags": ["WAFIR"],
+        "tags": [
+          "WAFIR"
+        ],
         "description": "Creates a GitHub issue or project draft from form fields. Supports multipart/form-data.",
         "responses": {
           "200": {

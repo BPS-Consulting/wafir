@@ -232,30 +232,32 @@ telemetry:
 
 ---
 
-## Tabs Configuration
+## Forms Configuration
 
-Define the structure of your feedback widget using tabs in your `public/wafir.yaml` config file. Each tab represents a distinct feedback type with its own fields and routing.
+Define the structure of your feedback widget using forms in your `public/wafir.yaml` config file. Each form represents a distinct feedback type with its own fields and routing.
 
-### Tab Properties
+> **Note:** Forms are displayed as tabs in the widget UI by default.
+
+### Form Properties
 
 | Property      | Type      | Description                                                                                      |
 | ------------- | --------- | ------------------------------------------------------------------------------------------------ |
-| `id`          | string    | Unique identifier for the tab. Also used as the GitHub issue type when creating issues.          |
-| `label`       | string    | Display label shown in the tab                                                                   |
+| `id`          | string    | Unique identifier for the form. Also used as the GitHub issue type when creating issues.          |
+| `label`       | string    | Display label shown in the form tab                                                                   |
 | `icon`        | string?   | Icon name (e.g., `bug`, `lightbulb`, `thumbsup`)                                                 |
-| `labels`      | string[]? | GitHub labels to auto-apply to issues created from this tab                                      |
-| `templateUrl` | string?   | URL to a GitHub issue form template YAML file to use for this tab's fields                       |
+| `labels`      | string[]? | GitHub labels to auto-apply to issues created from this form                                      |
+| `templateUrl` | string?   | URL to a GitHub issue form template YAML file to use for this form's fields                       |
 | `targets`     | array?    | Array of target IDs to route submissions to                                                      |
-| `fields`      | array     | Array of field definitions for this tab                                                          |
+| `fields`      | array     | Array of field definitions for this form                                                          |
 
-> **Note:** The tab `id` is automatically used as the GitHub issue type when creating issues. For example, a tab with `id: Bug` will set the issue type to "Bug" in GitHub (requires issue types to be enabled in your repository/organization).
+> **Note:** The form `id` is automatically used as the GitHub issue type when creating issues. For example, a form with `id: Bug` will set the issue type to "Bug" in GitHub (requires issue types to be enabled in your repository/organization).
 
 ### Using GitHub Issue Templates
 
 You can reference an existing GitHub issue form template by providing a `templateUrl`. The fields will be fetched from the template:
 
 ```yaml
-tabs:
+forms:
   - id: Bug
     label: Report Bug
     icon: bug
@@ -266,7 +268,7 @@ tabs:
 ### Configuration Example
 
 ```yaml
-tabs:
+forms:
   - id: Bug
     label: Report Bug
     icon: bug
@@ -313,12 +315,12 @@ tabs:
 
 ```
 
-### Single Tab Mode
+### Single Form Mode
 
-If you only need one type of feedback, define a single tab. The tab selector will be hidden automatically:
+If you only need one type of feedback, define a single form. The form selector will be hidden automatically:
 
 ```yaml
-tabs:
+forms:
   - id: issue
     label: Report Issue
     icon: bug
@@ -351,15 +353,15 @@ targets:
     authRef: "YOUR_INSTALLATION_ID"
 ```
 
-Tabs in your configuration reference targets:
+Forms in your configuration reference targets:
 
 ```yaml
-tabs:
+forms:
   - id: feedback
     label: Feedback
     icon: thumbsup
     isFeedback: true
-    targets: [project] # Routes this tab's feedback to 'project' target
+    targets: [project] # Routes this form's feedback to 'project' target
     fields:
       - id: rating
         type: rating
@@ -394,7 +396,7 @@ tabs:
   - id: issue
     label: Issue
     icon: bug
-    targets: [default] # Routes this tab's feedback to 'default' target
+    targets: [default] # Routes this form's feedback to 'default' target
     fields:
       - id: title
         type: input
@@ -415,7 +417,7 @@ tabs:
 ### Migration from the legacy `storage` configuration
 
 > **Migration Notice:**
-> The legacy `storage` key has been **removed**. All feedback routing now uses the `targets` array and tab-level `targets` references. To migrate, define each destination under the `targets` key, and update your tabs to reference the appropriate target via `targets: [targetId]`. See above examples for details.
+> The legacy `storage` key has been **removed**. All feedback routing now uses the `targets` array and form-level `targets` references. To migrate, define each destination under the `targets` key, and update your forms to reference the appropriate target via `targets: [targetId]`. See above examples for details.
 
 ---
 

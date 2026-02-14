@@ -127,7 +127,7 @@ describe("validateFormFields", () => {
   it("accepts valid form fields matching config", () => {
     const config: WafirConfig = {
       ...minimalConfig,
-      tabs: [
+      forms: [
         {
           id: "feedback",
           fields: [
@@ -152,7 +152,7 @@ describe("validateFormFields", () => {
   it("rejects extra fields not in config", () => {
     const config: WafirConfig = {
       ...minimalConfig,
-      tabs: [
+      forms: [
         {
           id: "feedback",
           fields: [
@@ -180,7 +180,7 @@ describe("validateFormFields", () => {
   it("rejects missing required fields", () => {
     const config: WafirConfig = {
       ...minimalConfig,
-      tabs: [
+      forms: [
         {
           id: "feedback",
           fields: [
@@ -215,7 +215,7 @@ describe("validateFormFields", () => {
   it("validates email format", () => {
     const config: WafirConfig = {
       ...minimalConfig,
-      tabs: [
+      forms: [
         {
           id: "feedback",
           fields: [
@@ -242,7 +242,7 @@ describe("validateFormFields", () => {
   it("validates rating values", () => {
     const config: WafirConfig = {
       ...minimalConfig,
-      tabs: [
+      forms: [
         {
           id: "feedback",
           fields: [
@@ -269,7 +269,7 @@ describe("validateFormFields", () => {
   it("validates dropdown options", () => {
     const config: WafirConfig = {
       ...minimalConfig,
-      tabs: [
+      forms: [
         {
           id: "feedback",
           fields: [
@@ -302,7 +302,7 @@ describe("validateFormFields", () => {
   it("accepts feedback form with rating and description but no title", () => {
     const config: WafirConfig = {
       ...minimalConfig,
-      tabs: [
+      forms: [
         {
           id: "feedback",
           fields: [
@@ -335,7 +335,7 @@ describe("validateFormFields", () => {
   it("rejects feedback form when title is submitted but not in config", () => {
     const config: WafirConfig = {
       ...minimalConfig,
-      tabs: [
+      forms: [
         {
           id: "feedback",
           fields: [
@@ -368,10 +368,10 @@ describe("validateFormFields", () => {
     expect(result.errors[0].field).toBe("title");
   });
 
-  it("rejects form submission with unknown tab ID", () => {
+  it("rejects form submission with unknown form ID", () => {
     const config: WafirConfig = {
       ...minimalConfig,
-      tabs: [
+      forms: [
         {
           id: "feedback",
           fields: [{ id: "rating", type: "rating" }],
@@ -383,18 +383,18 @@ describe("validateFormFields", () => {
       rating: 5,
     };
 
-    const result = validateFormFields(formFields, config, "nonexistent-tab");
+    const result = validateFormFields(formFields, config, "nonexistent-form");
 
     expect(result.valid).toBe(false);
     expect(result.errors).toHaveLength(1);
-    expect(result.errors[0].code).toBe("UNKNOWN_TAB");
-    expect(result.errors[0].field).toBe("tabId");
+    expect(result.errors[0].code).toBe("UNKNOWN_FORM");
+    expect(result.errors[0].field).toBe("formId");
   });
 
-  it("rejects form submission without tab ID", () => {
+  it("rejects form submission without form ID", () => {
     const config: WafirConfig = {
       ...minimalConfig,
-      tabs: [
+      forms: [
         {
           id: "feedback",
           fields: [{ id: "rating", type: "rating" }],
@@ -410,7 +410,7 @@ describe("validateFormFields", () => {
 
     expect(result.valid).toBe(false);
     expect(result.errors).toHaveLength(1);
-    expect(result.errors[0].code).toBe("MISSING_TAB_ID");
+    expect(result.errors[0].code).toBe("MISSING_FORM_ID");
   });
 });
 
@@ -433,7 +433,7 @@ targets:
     type: github/issues
     target: owner/repo
     authRef: "123"
-tabs:
+forms:
   - id: bug
     label: Bug Report
     templateUrl: https://raw.githubusercontent.com/owner/repo/main/.github/ISSUE_TEMPLATE/bug_report.yml
@@ -495,23 +495,23 @@ body:
 
     const config = await fetchConfig("https://example.com/wafir.yaml");
 
-    expect(config.tabs).toBeDefined();
-    expect(config.tabs).toHaveLength(1);
+    expect(config.forms).toBeDefined();
+    expect(config.forms).toHaveLength(1);
 
-    const bugTab = config.tabs![0];
-    expect(bugTab.id).toBe("bug");
-    expect(bugTab.fields).toBeDefined();
-    expect(bugTab.fields!.length).toBe(4);
+    const bugForm = config.forms![0];
+    expect(bugForm.id).toBe("bug");
+    expect(bugForm.fields).toBeDefined();
+    expect(bugForm.fields!.length).toBe(4);
 
     // Verify template labels were applied
-    expect(bugTab.labels).toEqual(["bug", "needs-triage"]);
+    expect(bugForm.labels).toEqual(["bug", "needs-triage"]);
 
     // Verify field transformations
-    const markdownField = bugTab.fields![0];
+    const markdownField = bugForm.fields![0];
     expect(markdownField.type).toBe("markdown");
     expect((markdownField.attributes as any).value).toContain("bug report");
 
-    const inputField = bugTab.fields![1];
+    const inputField = bugForm.fields![1];
     expect(inputField.type).toBe("input");
     expect(inputField.id).toBe("contact");
     expect(inputField.attributes?.label).toBe("Contact Details");
@@ -520,12 +520,12 @@ body:
     );
     expect(inputField.validations?.required).toBe(false);
 
-    const textareaField = bugTab.fields![2];
+    const textareaField = bugForm.fields![2];
     expect(textareaField.type).toBe("textarea");
     expect(textareaField.id).toBe("what-happened");
     expect(textareaField.validations?.required).toBe(true);
 
-    const dropdownField = bugTab.fields![3];
+    const dropdownField = bugForm.fields![3];
     expect(dropdownField.type).toBe("dropdown");
     expect(dropdownField.attributes?.options).toEqual([
       "1.0.0",
@@ -534,14 +534,14 @@ body:
     ]);
   });
 
-  it("preserves existing tab labels over template labels", async () => {
+  it("preserves existing form labels over template labels", async () => {
     const configWithLabels = `
 targets:
   - id: default
     type: github/issues
     target: owner/repo
     authRef: "123"
-tabs:
+forms:
   - id: bug
     label: Bug Report
     labels:
@@ -563,8 +563,8 @@ tabs:
 
     const config = await fetchConfig("https://example.com/wafir.yaml");
 
-    // Tab's own labels should take priority
-    expect(config.tabs![0].labels).toEqual(["my-custom-label"]);
+    // Form's own labels should take priority
+    expect(config.forms![0].labels).toEqual(["my-custom-label"]);
   });
 
   it("gracefully handles template fetch failure", async () => {
@@ -583,18 +583,18 @@ tabs:
     const config = await fetchConfig("https://example.com/wafir.yaml");
 
     // Config should still be valid, just without template fields
-    expect(config.tabs).toBeDefined();
-    expect(config.tabs![0].fields).toBeUndefined();
+    expect(config.forms).toBeDefined();
+    expect(config.forms![0].fields).toBeUndefined();
   });
 
-  it("does not fetch template if tab already has fields", async () => {
+  it("does not fetch template if form already has fields", async () => {
     const configWithFields = `
 targets:
   - id: default
     type: github/issues
     target: owner/repo
     authRef: "123"
-tabs:
+forms:
   - id: bug
     label: Bug Report
     templateUrl: https://raw.githubusercontent.com/owner/repo/main/.github/ISSUE_TEMPLATE/bug_report.yml
@@ -615,8 +615,8 @@ tabs:
 
     // Only one fetch call (config), not template
     expect(mockFetch).toHaveBeenCalledTimes(1);
-    expect(config.tabs![0].fields).toHaveLength(1);
-    expect(config.tabs![0].fields![0].id).toBe("title");
+    expect(config.forms![0].fields).toHaveLength(1);
+    expect(config.forms![0].fields![0].id).toBe("title");
   });
 
   it("resolves relative template URLs against config URL", async () => {
@@ -626,7 +626,7 @@ targets:
     type: github/issues
     target: owner/repo
     authRef: "123"
-tabs:
+forms:
   - id: bug
     label: Bug Report
     templateUrl: templates/bug.yaml
@@ -654,8 +654,8 @@ tabs:
       "https://example.com/config/templates/bug.yaml"
     );
 
-    expect(config.tabs![0].fields).toBeDefined();
-    expect(config.tabs![0].fields!.length).toBe(4);
+    expect(config.forms![0].fields).toBeDefined();
+    expect(config.forms![0].fields!.length).toBe(4);
   });
 
   it("resolves sibling file template URL", async () => {
@@ -665,7 +665,7 @@ targets:
     type: github/issues
     target: owner/repo
     authRef: "123"
-tabs:
+forms:
   - id: bug
     label: Bug Report
     templateUrl: bug-template.yaml

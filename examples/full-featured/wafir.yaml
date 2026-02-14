@@ -15,7 +15,7 @@ telemetry:
   browserInfo: true
   consoleLog: true
 
-tabs:
+forms:
   - id: feedback
     label: "Product Feedback"
     icon: "star"

@@ -83,7 +83,7 @@ The Wafir widget now routes feedback with a flexible `targets:` config block—a
 
 **Migration from legacy `storage` config:**
 
-> The legacy `storage` key configuration has been **removed**. All routing is now handled using the `targets` array and tab-level `targets` references. To migrate, define each destination under the `targets` key, and update your tabs to reference the appropriate target via `targets: [targetId]`.
+> The legacy `storage` key configuration has been **removed**. All routing is now handled using the `targets` array and form-level `targets` references. To migrate, define each destination under the `targets` key, and update your forms to reference the appropriate target via `targets: [targetId]`.
 
 ### Example (see `/examples/default/wafir.yaml` for full template)
 
@@ -98,7 +98,7 @@ targets:
     type: github/project
     target: your-username/your-project-id
     authRef: "YOUR_INSTALLATION_ID"
-tabs:
+forms:
   - id: feedback
     label: Feedback
     icon: thumbsup

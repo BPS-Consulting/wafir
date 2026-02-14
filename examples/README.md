@@ -37,7 +37,7 @@ import { WafirWidget } from "@wafir/react";
 
 ### Migration from legacy `storage` config
 
-> The legacy `storage` key configuration has been **removed**. All routing is now handled using the `targets` array and tab-level `targets` references. To migrate, define each destination under the `targets` key and update your tabs to reference the appropriate target via `targets: [targetId]`. See `/default/wafir.yaml` for updated config patterns.
+> The legacy `storage` key configuration has been **removed**. All routing is now handled using the `targets` array and form-level `targets` references. To migrate, define each destination under the `targets` key and update your forms to reference the appropriate target via `targets: [targetId]`. See `/default/wafir.yaml` for updated config patterns.
 
 ### Required Fields
 
@@ -56,10 +56,10 @@ targets:
     authRef: "YOUR_INSTALLATION_ID"
 ```
 
-### Example Tab Routing
+### Example Form Routing
 
 ```yaml
-tabs:
+forms:
   - id: feedback
     label: "Feedback"
     icon: thumbsup
@@ -94,7 +94,7 @@ telemetry:
 Field types: `input`, `textarea`, `email`, `dropdown`, `checkboxes`, `rating`, `markdown`
 
 ```yaml
-tabs:
+forms:
   - id: feedback
     label: "Feedback"
     icon: thumbsup # Options: thumbsup, lightbulb, bug

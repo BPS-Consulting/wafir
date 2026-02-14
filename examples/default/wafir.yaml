@@ -1,5 +1,5 @@
 # WAFIR Configuration Example - Default
-# This example shows what the widget displays when no tabs are specified.
+# This example shows what the widget displays when no forms are specified.
 # Use this as a reference for the default behavior.
 # Host this file anywhere and point your widget to it via configUrl
 
@@ -20,7 +20,7 @@ telemetry:
   browserInfo: true
   consoleLog: false
 
-tabs:
+forms:
   - id: feedback
     label: Feedback
     icon: thumbsup

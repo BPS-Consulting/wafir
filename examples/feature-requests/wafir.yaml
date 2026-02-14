@@ -10,7 +10,7 @@ targets:
     target: your-username/your-repo
     authRef: "YOUR_INSTALLATION_ID" # Replace with your installation ID
 
-tabs:
+forms:
   - id: suggestion
     label: Suggest
     icon: lightbulb

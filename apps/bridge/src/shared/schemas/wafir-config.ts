@@ -92,11 +92,11 @@ const fieldSchema = {
   },
 };
 
-const tabSchema = {
+const formSchema = {
   type: "object",
   required: ["id"],
   properties: {
-    id: { type: "string", description: "Unique tab identifier" },
+    id: { type: "string", description: "Unique form identifier" },
     label: {
       type: "string",
       description: "Display label (defaults to capitalized id)",
@@ -104,25 +104,25 @@ const tabSchema = {
     icon: {
       type: "string",
       enum: ["thumbsup", "lightbulb", "bug"],
-      description: "Tab icon",
+      description: "Form icon (displayed in tab UI)",
     },
     fields: {
       type: "array",
       items: fieldSchema,
       description:
-        "Form fields for this tab. If omitted, defaults are used for known tab IDs.",
+        "Form fields for this form. If omitted, defaults are used for known form IDs.",
     },
     targets: {
       type: "array",
       items: { type: "string" },
       description:
-        "IDs of target(s) for this tab. If omitted or empty, all targets will be used. Each ID must reference a valid target from the top-level targets array.",
+        "IDs of target(s) for this form. If omitted or empty, all targets will be used. Each ID must reference a valid target from the top-level targets array.",
     },
     labels: {
       type: "array",
       items: { type: "string" },
       description:
-        "Labels automatically added to issues created from this tab. Similar to GitHub issue form templates.",
+        "Labels automatically added to issues created from this form. Similar to GitHub issue form templates.",
     },
     templateUrl: {
       type: "string",
@@ -155,7 +155,7 @@ export const wafirConfigSchema = {
           id: {
             type: "string",
             description:
-              "Unique identifier for this target, referenced by tabs to route submissions.",
+              "Unique identifier for this target, referenced by forms to route submissions.",
           },
           type: {
             type: "string",
@@ -198,11 +198,11 @@ export const wafirConfigSchema = {
         },
       },
     },
-    tabs: {
+    forms: {
       type: "array",
-      items: tabSchema,
+      items: formSchema,
       description:
-        "Widget tabs configuration. Defaults to feedback, suggestion, issue if omitted.",
+        "Widget forms configuration. Forms are displayed as tabs in the UI. Defaults to feedback, suggestion, issue if omitted.",
     },
     issueTypes: {
       type: "array",

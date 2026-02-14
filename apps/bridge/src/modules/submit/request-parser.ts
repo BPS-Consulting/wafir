@@ -78,8 +78,8 @@ export class RequestParserService {
             case "configUrl":
               result.configUrl = val;
               break;
-            case "tabId":
-              result.tabId = val;
+            case "formId":
+              result.formId = val;
               break;
           }
         }
