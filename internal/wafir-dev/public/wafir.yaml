@@ -60,10 +60,10 @@ tabs:
           label: "Additional information:"
         validations:
           required: false
-      - id: priority
+      - id: value
         type: dropdown
         attributes:
-          label: "Priority Level"
+          label: "Business value"
           options:
             - label: "Low"
               value: "Low"
@@ -71,6 +71,19 @@ tabs:
               value: "Medium"
             - label: "High"
               value: "High"
+        validations:
+          required: false
+      - id: needed
+        type: dropdown
+        attributes:
+          label: "Needed"
+          options:
+            - label: "Later"
+              value: "Later"
+            - label: "Soon"
+              value: "Soon"
+            - label: "Now"
+              value: "Now"
         validations:
           required: false
   - id: bug
