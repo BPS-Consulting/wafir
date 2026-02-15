@@ -14,18 +14,6 @@ export interface SubmitBody {
   fieldOrder?: string[];
   /** Map of field IDs to their display labels */
   fieldLabels?: Record<string, string>;
-  browserInfo?: {
-    url?: string;
-    userAgent?: string;
-    viewportWidth?: number;
-    viewportHeight?: number;
-    language?: string;
-  };
-  consoleLogs?: Array<{
-    type: string;
-    message: string;
-    timestamp: string;
-  }>;
 }
 
 // Keys to exclude from the markdown body (used for other purposes)
@@ -96,48 +84,6 @@ export class SubmitService {
   }
 
   /**
-   * Appends browser info as markdown if provided.
-   */
-  appendBrowserInfo(
-    body: string,
-    browserInfo?: SubmitBody["browserInfo"],
-  ): string {
-    if (!browserInfo) return body;
-
-    const infoLines: string[] = [];
-    if (browserInfo.url) infoLines.push(`| URL | ${browserInfo.url} |`);
-    if (browserInfo.userAgent)
-      infoLines.push(`| User Agent | \`${browserInfo.userAgent}\` |`);
-    if (browserInfo.viewportWidth && browserInfo.viewportHeight)
-      infoLines.push(
-        `| Viewport | ${browserInfo.viewportWidth}x${browserInfo.viewportHeight} |`,
-      );
-    if (browserInfo.language)
-      infoLines.push(`| Language | ${browserInfo.language} |`);
-
-    if (infoLines.length === 0) return body;
-
-    const browserSection = `\n\n---\n\n**Browser Info**\n| Field | Value |\n| :--- | :--- |\n${infoLines.join("\n")}`;
-    return body + browserSection;
-  }
-
-  /**
-   * Appends console logs as markdown if provided.
-   */
-  appendConsoleLogs(
-    body: string,
-    consoleLogs?: SubmitBody["consoleLogs"],
-  ): string {
-    if (!consoleLogs || consoleLogs.length === 0) return body;
-
-    const logsText = consoleLogs
-      .map((log) => `[${log.type.toUpperCase()}] ${log.message}`)
-      .join("\n");
-
-    return body + `\n\n---\n\n**Console Logs**\n\`\`\`\n${logsText}\n\`\`\``;
-  }
-
-  /**
    * Uploads screenshot to S3 and returns the markdown formatted image string.
    */
   async uploadScreenshot(
@@ -161,6 +107,6 @@ export class SubmitService {
     );
 
     const publicUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${fileKey}`;
-    return `\n\n![Screenshot](${publicUrl})`;
+    return `\n\n**Screenshot**\n![Screenshot](${publicUrl})`;
   }
 }

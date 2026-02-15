@@ -68,20 +68,6 @@ export class RequestParserService {
                 result.fieldLabels = {};
               }
               break;
-            case "browserInfo":
-              try {
-                result.browserInfo = JSON.parse(val);
-              } catch {
-                result.browserInfo = undefined;
-              }
-              break;
-            case "consoleLogs":
-              try {
-                result.consoleLogs = JSON.parse(val);
-              } catch {
-                result.consoleLogs = [];
-              }
-              break;
             case "configUrl":
               result.configUrl = val;
               break;

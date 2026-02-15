@@ -16,8 +16,6 @@ import {
   setTabFormData,
   setBrowserInfo,
   setConsoleLogs,
-  browserInfo,
-  consoleLogs,
 } from "./store.js";
 import { StoreController } from "@nanostores/lit";
 import type {
@@ -104,13 +102,6 @@ export class WafirWidget extends LitElement {
 
   @state()
   private _activeFormId: string = "feedback";
-
-  @state()
-  private _telemetry = {
-    screenshot: true,
-    browserInfo: true,
-    consoleLog: false,
-  };
 
   // Requested tab from programmatic open() call, to be applied after config loads
   private _requestedTabId: string | null = null;
@@ -487,14 +478,6 @@ export class WafirWidget extends LitElement {
     if (config.title) {
       this.modalTitle = config.title;
     }
-
-    if (config.telemetry) {
-      this._telemetry = {
-        screenshot: config.telemetry.screenshot ?? true,
-        browserInfo: config.telemetry.browserInfo ?? true,
-        consoleLog: config.telemetry.consoleLog ?? false,
-      };
-    }
   }
 
   private _capitalize(str: string): string {
@@ -620,12 +603,6 @@ export class WafirWidget extends LitElement {
         ? this._resolveConfigUrl(this.configUrl)
         : "";
 
-      // Check if form uses new autofill fields (opt-in telemetry)
-      // If so, telemetry data is included in formFields, not as separate params
-      const hasAutofillFields = activeFields.some(
-        (f) => f.type === "textarea" && (f.attributes as any)?.autofill
-      );
-
       // Note: We send one target for validation, but the backend will determine
       // which targets to actually submit to based on the form's targets array in the config.
       // If the form has no targets specified, the backend will route to all configured targets.
@@ -642,16 +619,6 @@ export class WafirWidget extends LitElement {
         formFields: filteredFormData,
         fieldOrder,
         fieldLabels,
-        // Only send legacy telemetry params if no autofill fields are defined
-        // (for backward compatibility with old configs)
-        browserInfo:
-          !hasAutofillFields && this._telemetry.browserInfo
-            ? (browserInfo.get() ?? undefined)
-            : undefined,
-        consoleLogs:
-          !hasAutofillFields && this._telemetry.consoleLog
-            ? consoleLogs.get()
-            : undefined,
       });
 
       alert("Thank you for your input!");
@@ -670,15 +637,16 @@ export class WafirWidget extends LitElement {
   }
 
   render() {
-    if (this._isCapturingController.value) {
-      return html``;
-    }
+    // During capture, hide with CSS instead of not rendering
+    // This preserves component state (like autofill checkbox state)
+    const isCapturing = this._isCapturingController.value;
 
     if (this._isSelectingController.value) {
       return html`<wafir-highlighter></wafir-highlighter>`;
     }
 
     return html`
+      <div style="${isCapturing ? 'display: none;' : ''}">
       ${this._hasCustomTrigger
         ? html`<div
             class="trigger-container ${this.position}"
@@ -755,9 +723,6 @@ export class WafirWidget extends LitElement {
                   .tabId="${this._activeFormId}"
                   .fields="${this._getActiveFormConfig()}"
                   .formLabel="${this._getActiveForm()?.label || ""}"
-                  .showBrowserInfo="${this._telemetry.browserInfo}"
-                  .showConsoleLog="${this._telemetry.consoleLog}"
-                  .showScreenshot="${this._telemetry.screenshot}"
                   @form-submit="${this._handleSubmit}"
                 ></wafir-form>
                 ${this.isConfigLoading
@@ -781,6 +746,7 @@ export class WafirWidget extends LitElement {
         : ""}
 
       <wafir-highlighter></wafir-highlighter>
+      </div>
     `;
   }
 }

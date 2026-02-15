@@ -80,13 +80,31 @@ forms:
           required: true
 ```
 
-### Automatic Data Collection
+### Opt-In Telemetry Fields
+
+Users control what data they share via autofill checkboxes:
 
 ```yaml
-telemetry:
-  screenshot: true # Enable screenshot capture
-  browserInfo: true # Collect URL, user agent, viewport
-  consoleLog: false # Capture console messages
+forms:
+  - id: bug
+    label: Report Bug
+    body:
+      # ... other fields ...
+      - id: browser-info
+        type: textarea
+        attributes:
+          label: "Browser Info"
+          autofill: browserInfo  # Shows checkbox to include
+      - id: screenshot
+        type: textarea
+        attributes:
+          label: "Screenshot"
+          autofill: screenshot   # Shows capture button
+      - id: console-logs
+        type: textarea
+        attributes:
+          label: "Console Logs"
+          autofill: consoleLog   # Shows checkbox to include
 ```
 
 ### Form Fields
@@ -119,7 +137,7 @@ forms:
 ## Tips
 
 - Use **meaningful field names** - they appear in the GitHub issue body
-- Enable **screenshots** for visual bugs
-- Enable **browserInfo** for debugging browser-specific issues
+- Add **screenshot autofill** fields for visual bugs
+- Add **browserInfo autofill** fields for debugging browser-specific issues
 - Keep forms **short** - users are more likely to submit brief forms
 - Host your config on a **CDN** for best performance

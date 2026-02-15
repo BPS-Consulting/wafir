@@ -165,10 +165,6 @@ targets:
     type: github/project
     target: testowner/1
     authRef: "123"
-telemetry:
-  screenshot: true
-  browserInfo: true
-  consoleLog: true
 forms:
   - id: issue
     label: "Report Issue"

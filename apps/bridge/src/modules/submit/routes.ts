@@ -158,18 +158,6 @@ const submitRoute: FastifyPluginAsync = async (
           input.fieldLabels,
         );
 
-        // Append browser info if provided
-        finalBody = submitService.appendBrowserInfo(
-          finalBody,
-          input.browserInfo,
-        );
-
-        // Append console logs if provided
-        finalBody = submitService.appendConsoleLogs(
-          finalBody,
-          input.consoleLogs,
-        );
-
         // Initialize Clients using config values
         const appOctokit = await fastify.getGitHubClient(installationId);
         const userToken = await fastify.tokenStore.getUserToken(installationId);

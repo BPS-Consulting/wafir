@@ -85,20 +85,6 @@ export const getWafirConfig = async (
   return data;
 };
 
-export interface BrowserInfo {
-  url?: string;
-  userAgent?: string;
-  viewportWidth?: number;
-  viewportHeight?: number;
-  language?: string;
-}
-
-export interface ConsoleLogEntry {
-  type: string;
-  message: string;
-  timestamp: string;
-}
-
 export interface SubmitIssueParams {
   /** URL to the authoritative config file - required for server-side validation */
   configUrl: string;
@@ -118,8 +104,6 @@ export interface SubmitIssueParams {
   fieldOrder?: string[];
   /** Map of field IDs to their display labels */
   fieldLabels?: Record<string, string>;
-  browserInfo?: BrowserInfo;
-  consoleLogs?: ConsoleLogEntry[];
 }
 
 export const submitIssue = async (params: SubmitIssueParams) => {
@@ -136,8 +120,6 @@ export const submitIssue = async (params: SubmitIssueParams) => {
     formFields,
     fieldOrder,
     fieldLabels,
-    browserInfo,
-    consoleLogs,
   } = params;
 
   if (bridgeUrl) {
@@ -167,12 +149,6 @@ export const submitIssue = async (params: SubmitIssueParams) => {
   }
   if (fieldLabels) {
     formData.append("fieldLabels", JSON.stringify(fieldLabels));
-  }
-  if (browserInfo) {
-    formData.append("browserInfo", JSON.stringify(browserInfo));
-  }
-  if (consoleLogs) {
-    formData.append("consoleLogs", JSON.stringify(consoleLogs));
   }
 
   const response = await getClient().POST("/submit/", {

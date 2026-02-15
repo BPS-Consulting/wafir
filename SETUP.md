@@ -56,22 +56,40 @@ pnpm install
 Create `.github/wafir.yaml` in your test repository:
 
 ```yaml
-issue:
-  labels:
-    - bug
-    - needs-triage
-  screenshot: true
-  browserInfo: true
-  consoleLog: true
-
-fields:
-  - name: priority
-    label: "Priority"
-    type: select
-    options:
-      - "Low"
-      - "Medium"
-      - "High"
+forms:
+  - id: bug
+    label: Report Bug
+    icon: bug
+    labels:
+      - bug
+      - needs-triage
+    body:
+      - id: title
+        type: input
+        attributes:
+          label: Issue Title
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: Description
+        validations:
+          required: true
+      - id: priority
+        type: dropdown
+        attributes:
+          label: Priority
+          options:
+            - Low
+            - Medium
+            - High
+      # Opt-in telemetry fields
+      - id: browser-info
+        type: textarea
+        attributes:
+          label: Browser Info
+          autofill: browserInfo
 ```
 
 See [examples/](./examples) for more configuration templates.

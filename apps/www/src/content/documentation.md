@@ -188,18 +188,6 @@ forms:
           required: false
 ```
 
-### Legacy Telemetry Configuration (Deprecated)
-
-The top-level `telemetry` configuration section is deprecated but still supported for backward compatibility. We recommend migrating to autofill fields for better user privacy control.
-
-```yaml
-# DEPRECATED - Use autofill fields instead
-telemetry:
-  screenshot: true
-  browserInfo: true
-  consoleLog: true
-```
-
 ---
 
 ## Forms Configuration

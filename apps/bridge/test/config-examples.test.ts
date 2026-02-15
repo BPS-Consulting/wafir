@@ -305,11 +305,9 @@ describe("Example Configurations", () => {
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
 
-      // Privacy-focused should have telemetry disabled
-      expect(body.telemetry).toBeDefined();
-      expect(body.telemetry.screenshot).toBe(false);
-      expect(body.telemetry.browserInfo).toBe(false);
-      expect(body.telemetry.consoleLog).toBe(false);
+      // Privacy-focused config has no telemetry section (uses opt-in autofill fields instead)
+      // This means no automatic telemetry collection
+      expect(body.telemetry).toBeUndefined();
     });
   });
 

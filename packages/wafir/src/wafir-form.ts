@@ -41,15 +41,6 @@ export class WafirForm extends LitElement {
   }
 
   @property({ type: Boolean })
-  showBrowserInfo = false;
-
-  @property({ type: Boolean })
-  showConsoleLog = false;
-
-  @property({ type: Boolean })
-  showScreenshot = true;
-
-  @property({ type: Boolean })
   loading = false;
 
   @property({ type: Boolean })
@@ -112,11 +103,16 @@ export class WafirForm extends LitElement {
         if (logs && logs.length > 0) {
           value = this._formatConsoleLogs([...logs]);
         }
+      } else if (autofillType === "screenshot") {
+        // Automatically take a screenshot when checkbox is checked
+        takeFullPageScreenshot();
       }
-      // screenshot is handled separately since it uses the captured image
       setTabFormData(this.tabId, { ...currentData, [fieldId]: value });
     } else {
-      // Clear the field
+      // Clear the field and screenshot if applicable
+      if (autofillType === "screenshot") {
+        setCapturedImage(null);
+      }
       setTabFormData(this.tabId, { ...currentData, [fieldId]: "" });
     }
     this.requestUpdate();
@@ -184,33 +180,9 @@ export class WafirForm extends LitElement {
               </div>
             `
           : html`
-              <button
-                type="button"
-                class="capture-button"
-                @click="${() => takeFullPageScreenshot()}"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                  />
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-                Take Screenshot
-              </button>
+              <div class="screenshot-placeholder">
+                <span class="screenshot-hint">Capturing screenshot...</span>
+              </div>
             `}
       </div>
     `;
@@ -520,86 +492,6 @@ export class WafirForm extends LitElement {
             </div>
           `;
         })}
-        ${this.showScreenshot
-          ? html`
-              <div>
-                ${this._capturedImageController.value
-                  ? html`
-                      <div class="screenshot-preview">
-                        <img
-                          src="${this._capturedImageController.value}"
-                          alt="Captured screenshot"
-                        />
-                        <button
-                          type="button"
-                          class="screenshot-clear"
-                          @click="${() => setCapturedImage(null)}"
-                        >
-                          &times;
-                        </button>
-                      </div>
-                      <div class="screenshot-actions">
-                        <button
-                          type="button"
-                          @click="${() => takeFullPageScreenshot()}"
-                        >
-                          Retake
-                        </button>
-                        <button
-                          type="button"
-                          class="highlight-btn"
-                          @click="${() => startSelection()}"
-                        >
-                          <svg
-                            width="14"
-                            height="14"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                            />
-                          </svg>
-                          Highlight
-                        </button>
-                      </div>
-                    `
-                  : html`
-                      <button
-                        type="button"
-                        class="capture-button"
-                        @click="${() => takeFullPageScreenshot()}"
-                      >
-                        <svg
-                          width="16"
-                          height="16"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                          />
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                        </svg>
-                        Take Screenshot
-                      </button>
-                    `}
-              </div>
-            `
-          : ""}
 
         <button
           class="submit-button"
@@ -612,48 +504,6 @@ export class WafirForm extends LitElement {
               ? "Service Unavailable"
               : "Submit"}
         </button>
-
-        ${this.showBrowserInfo && this._browserInfoController.value
-          ? html`
-              <div class="telemetry-section">
-                <h4>Browser Information</h4>
-                <div class="telemetry-grid">
-                  <span class="telemetry-label">URL:</span>
-                  <span>${this._browserInfoController.value.url}</span>
-                  <span class="telemetry-label">Viewport:</span>
-                  <span
-                    >${this._browserInfoController.value.viewportWidth}x${this
-                      ._browserInfoController.value.viewportHeight}</span
-                  >
-                  <span class="telemetry-label">UA:</span>
-                  <span style="font-size: 10px;"
-                    >${this._browserInfoController.value.userAgent}</span
-                  >
-                </div>
-              </div>
-            `
-          : ""}
-        ${this.showConsoleLog && this._consoleLogsController.value.length > 0
-          ? html`
-              <div class="telemetry-section">
-                <h4>Recent Console Logs</h4>
-                <div class="logs-container">
-                  ${this._consoleLogsController.value.map(
-                    (log) => html`
-                      <div
-                        class="log-item ${log.type === "warn"
-                          ? "log-warn"
-                          : "log-error"}"
-                      >
-                        [${log.timestamp.split("T")[1].split(".")[0]}]
-                        ${log.message}
-                      </div>
-                    `,
-                  )}
-                </div>
-              </div>
-            `
-          : ""}
       </form>
     `;
   }
