@@ -166,7 +166,7 @@ export class WafirWidget extends LitElement {
       // For now, just open the modal
     } else if (options?.prefill && this.isModalOpen) {
       // Modal is already open, apply prefill immediately
-      this._applyPrefillData(this._activeTabId, options.prefill);
+      this._applyPrefillData(this._activeFormId, options.prefill);
     }
 
     // Open the modal (this will trigger config load and tab application)
@@ -174,15 +174,15 @@ export class WafirWidget extends LitElement {
       this._openModal(options?.prefill);
     } else if (options?.tab) {
       // Modal is already open, just switch tabs
-      const tabExists = this._tabs.some((t) => t.id === options.tab);
+      const tabExists = this._forms.some((t: FormConfig) => t.id === options.tab);
       if (tabExists) {
-        this._activeTabId = options.tab!;
+        this._activeFormId = options.tab!;
         if (options?.prefill) {
           this._applyPrefillData(options.tab, options.prefill);
         }
       } else {
         console.warn(
-          `Wafir: Unknown tab "${options.tab}". Available tabs: ${this._tabs.map((t) => t.id).join(", ")}`,
+          `Wafir: Unknown tab "${options.tab}". Available tabs: ${this._forms.map((t: FormConfig) => t.id).join(", ")}`,
         );
       }
     }
@@ -194,14 +194,14 @@ export class WafirWidget extends LitElement {
    * @param prefill - Key-value pairs of field data
    */
   private _applyPrefillData(tabId: string, prefill: Record<string, any>) {
-    const tab = this._tabs.find((t) => t.id === tabId);
-    if (!tab || !tab.fields) {
+    const form = this._forms.find((t: FormConfig) => t.id === tabId);
+    if (!form || !form.body) {
       console.warn(`Wafir: Cannot apply prefill, tab "${tabId}" not found`);
       return;
     }
 
     // Get valid field IDs from the tab configuration
-    const validFieldIds = new Set(tab.fields.map((f) => String(f.id)));
+    const validFieldIds = new Set(form.body.map((f: FieldConfig) => String(f.id)));
 
     // Filter and warn about unknown fields
     const validPrefillData: Record<string, any> = {};
@@ -230,12 +230,12 @@ export class WafirWidget extends LitElement {
 
     // After config is loaded, apply requested tab and prefill
     if (this._requestedTabId) {
-      const tabExists = this._tabs.some((t) => t.id === this._requestedTabId);
+      const tabExists = this._forms.some((t: FormConfig) => t.id === this._requestedTabId);
       if (tabExists) {
-        this._activeTabId = this._requestedTabId;
+        this._activeFormId = this._requestedTabId;
       } else {
         console.warn(
-          `Wafir: Unknown tab "${this._requestedTabId}". Available tabs: ${this._tabs.map((t) => t.id).join(", ")}`,
+          `Wafir: Unknown tab "${this._requestedTabId}". Available tabs: ${this._forms.map((t: FormConfig) => t.id).join(", ")}`,
         );
       }
       this._requestedTabId = null; // Clear after applying
@@ -243,7 +243,7 @@ export class WafirWidget extends LitElement {
 
     // Apply prefill data after config and tab are set
     if (prefillData) {
-      this._applyPrefillData(this._activeTabId, prefillData);
+      this._applyPrefillData(this._activeFormId, prefillData);
     }
   }
 
@@ -632,7 +632,7 @@ export class WafirWidget extends LitElement {
       });
 
       alert("Thank you for your input!");
-      clearTabFormData(this._activeTabId);
+      clearTabFormData(this._activeFormId);
       capturedImage.set(null);
       this.isModalOpen = false;
     } catch (error) {
@@ -729,7 +729,7 @@ export class WafirWidget extends LitElement {
                   })()}
                 </div>
                 <wafir-form
-                  .tabId="${this._activeTabId}"
+                  .tabId="${this._activeFormId}"
                   .fields="${this._getActiveFormConfig()}"
                   .formLabel="${this._getActiveForm()?.label || ""}"
                   .showBrowserInfo="${this._telemetry.browserInfo}"

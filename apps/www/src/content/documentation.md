@@ -2,118 +2,6 @@
 
 Customize and extend Wafir to match your needs.
 
-## CSS Customization
-
-Wafir uses Shadow DOM for isolation, but exposes CSS custom properties and `::part()` selectors for customization.
-
-### CSS Custom Properties
-
-Override these variables on the `wafir-widget` element to customize the widget's appearance.
-
-#### Reporter Variables
-
-| Variable                          | Default                       | Description                  |
-| --------------------------------- | ----------------------------- | ---------------------------- |
-| `--wafir-font-family`             | System fonts                  | Font stack for all text      |
-| `--wafir-font-size`               | `14px`                        | Base font size               |
-| `--wafir-text-color`              | `#111827`                     | Primary text color           |
-| `--wafir-text-secondary`          | `#6b7280`                     | Secondary/muted text color   |
-| `--wafir-primary-color`           | `#2563eb`                     | Primary brand color          |
-| `--wafir-primary-hover`           | `#1d4ed8`                     | Primary color on hover       |
-| `--wafir-border-color`            | `#e5e7eb`                     | Border color                 |
-| `--wafir-button-size`             | `48px`                        | Trigger button size          |
-| `--wafir-button-border-radius`    | `50%`                         | Trigger button border radius |
-| `--wafir-button-offset`           | `20px`                        | Distance from screen edge    |
-| `--wafir-button-icon-size`        | `24px`                        | Icon size inside button      |
-| `--wafir-button-shadow`           | `0 4px 12px rgba(0,0,0,0.15)` | Button shadow                |
-| `--wafir-button-shadow-hover`     | `0 6px 16px rgba(0,0,0,0.2)`  | Button shadow on hover       |
-| `--wafir-tooltip-bg`              | `#1f2937`                     | Tooltip background color     |
-| `--wafir-backdrop-color`          | `rgba(0,0,0,0.5)`             | Modal backdrop color         |
-| `--wafir-modal-bg`                | `white`                       | Modal background color       |
-| `--wafir-modal-border-radius`     | `12px`                        | Modal border radius          |
-| `--wafir-modal-max-width`         | `800px`                       | Modal maximum width          |
-| `--wafir-modal-padding`           | `20px`                        | Modal header/content padding |
-| `--wafir-modal-shadow`            | `0 20px 60px rgba(0,0,0,0.3)` | Modal shadow                 |
-| `--wafir-modal-title-font-size`   | `18px`                        | Modal title size             |
-| `--wafir-modal-title-font-weight` | `600`                         | Modal title weight           |
-| `--wafir-modal-title-color`       | `--wafir-text-color`          | Modal title color            |
-
-#### Form Variables
-
-| Variable                        | Default       | Description                  |
-| ------------------------------- | ------------- | ---------------------------- |
-| `--wafir-form-text-color`       | `#374151`     | Form text color              |
-| `--wafir-form-bg`               | `transparent` | Form background              |
-| `--wafir-form-padding`          | `20px`        | Form padding                 |
-| `--wafir-form-border-color`     | `#d1d5db`     | Input border color           |
-| `--wafir-form-border-radius`    | `6px`         | Input border radius          |
-| `--wafir-form-input-padding`    | `10px 12px`   | Input padding                |
-| `--wafir-form-input-color`      | `#111827`     | Input text color             |
-| `--wafir-form-input-bg`         | `#ffffff`     | Input background             |
-| `--wafir-form-primary-color`    | `#2563eb`     | Submit button color          |
-| `--wafir-form-primary-hover`    | `#1d4ed8`     | Submit button hover          |
-| `--wafir-form-disabled-color`   | `#9ca3af`     | Disabled state color         |
-| `--wafir-form-bg-secondary`     | `#f3f4f6`     | Secondary background         |
-| `--wafir-form-bg-tertiary`      | `#f9fafb`     | Tertiary background          |
-| `--wafir-form-text-secondary`   | `#6b7280`     | Secondary text color         |
-| `--wafir-form-telemetry-bg`     | `#f9fafb`     | Telemetry section background |
-| `--wafir-form-telemetry-border` | `#e5e7eb`     | Telemetry section border     |
-| `--wafir-form-logs-bg`          | `#111827`     | Console logs background      |
-| `--wafir-form-logs-text`        | `#f3f4f6`     | Console logs text color      |
-| `--wafir-form-log-warn`         | `#fde047`     | Warning log color            |
-| `--wafir-form-log-error`        | `#f87171`     | Error log color              |
-
-#### Highlighter Variables
-
-| Variable                            | Default               | Description            |
-| ----------------------------------- | --------------------- | ---------------------- |
-| `--wafir-highlighter-overlay-bg`    | `rgba(0,0,0,0.1)`     | Overlay background     |
-| `--wafir-highlighter-primary-color` | `#2563eb`             | Highlight border color |
-| `--wafir-highlighter-highlight-bg`  | `rgba(37,99,235,0.1)` | Highlight fill color   |
-
-### Example
-
-```css
-wafir-widget {
-  --wafir-primary-color: #6366f1;
-  --wafir-primary-hover: #818cf8;
-  --wafir-modal-bg: #ffffff;
-  --wafir-text-color: #1f2937;
-  --wafir-border-color: #e5e7eb;
-  --wafir-form-border-radius: 8px;
-  --wafir-font-family: "Inter", sans-serif;
-}
-```
-
-### Part Selectors
-
-Use `::part()` to style specific elements:
-
-```css
-/* Style the trigger button */
-wafir-widget::part(button) {
-  background: #10b981;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-wafir-widget::part(button):hover {
-  background: #059669;
-}
-```
-
-### Available Parts
-
-| Part Name  | Description                  |
-| ---------- | ---------------------------- |
-| `button`   | The floating trigger button  |
-| `modal`    | The feedback modal container |
-| `form`     | The form element             |
-| `input`    | Text input fields            |
-| `textarea` | Textarea fields              |
-| `select`   | Select dropdowns             |
-| `submit`   | The submit button            |
-
----
 
 ## Custom Triggers
 
@@ -153,6 +41,7 @@ Make sure that it is publically accessible.
 | `checkboxes` | Multiple checkbox options                 | label, description?, options (array of objects with label, required?) |
 | `markdown`   | Read-only Markdown display                | label, description?, value (markdown, required)                       |
 | `rating`     | Star rating (displayed as stars, saved as number 1-5) | label, description?, ratingLabels?                       |
+| `date`       | Date picker input                         | label, description?, value?                                           |
 
 ### Field Structure
 
@@ -188,6 +77,31 @@ A markdown field can be used for headings, hints, or formatted instructions anyw
       ## Feedback Form
       Please fill out all required fields. Your responses help us improve!
 ```
+
+#### Date Field Example
+
+A date field renders a native date picker. The `value` attribute supports special tokens that resolve to dynamic dates at form load time.
+
+```yaml
+- id: target-date
+  type: date
+  attributes:
+    label: "Target Completion Date"
+    value: "today+30"  # Defaults to 30 days from now
+  validations:
+    required: false
+```
+
+##### Date Value Tokens
+
+| Token | Example | Description |
+| ----- | ------- | ----------- |
+| `today` | `value: "today"` | Current date |
+| `today+N` | `value: "today+7"` | N days in the future |
+| `today-N` | `value: "today-30"` | N days in the past |
+| `YYYY-MM-DD` | `value: "2026-03-01"` | Static ISO date (passed through) |
+
+> **Note:** Date values are stored and submitted in ISO 8601 format (`YYYY-MM-DD`). When submitting to a GitHub Project, date fields will automatically map to project Date fields with matching names.
 
 #### Field Properties Table
 
@@ -488,10 +402,51 @@ interface wafirWidget {
 - `tab` (optional): String tab identifier to activate on open.
 - `prefill` (optional): Object mapping field IDs (from YAML) to initial values (applied if field exists and is user-editable).
 
-#### Notes & Warnings
+---
 
-> **Migration Notice:**
-> The legacy `storage` key has been **removed**. All feedback routing now uses the `targets` array and form-level `targets` references. To migrate, define each destination under the `targets` key, and update your forms to reference the appropriate target via `targets: [targetId]`. See above examples for details.
+## Connect Personal Projects
+
+GitHub personal projects require additional authorization beyond the GitHub App installation. To enable feedback submission to personal project boards, you need to connect your account with additional permissions.
+
+### Why is this needed?
+
+When you install the Wafir GitHub App, it only has access to organization repositories and projects. Personal projects (under your user account) require separate OAuth authorization to ensure your personal data remains secure.
+
+### How to Connect
+
+1. **Find your Installation ID** from your GitHub App installation URL:
+   ```
+   github.com/settings/installations/12345678
+   ```
+   The number at the end is your Installation ID.
+
+2. **Visit the Connect Page** on the Wafir website or your self-hosted instance.
+
+3. **Enter your Installation ID** and click "Authorize with GitHub".
+
+4. **Grant the requested permissions:**
+   - `read:user` — Read your GitHub profile
+   - `project` — Access your GitHub projects
+
+5. **Complete authorization** and you'll be redirected back with a success message.
+
+### Security & Privacy
+
+- Your access token is stored securely and only used to add issues to your personal projects
+- You can revoke access at any time from your GitHub settings
+- Wafir never stores or accesses any data beyond what's needed to create project items
+
+### Using Personal Projects
+
+Once connected, you can configure targets in your `wafir.yaml` to point to your personal projects:
+
+```yaml
+targets:
+  - id: personal-project
+    type: github/project
+    target: your-username/project-number
+    authRef: "YOUR_INSTALLATION_ID"
+```
 
 ---
 
@@ -510,3 +465,115 @@ Required top-level keys:
 - **Privacy Focused** — No automatic data collection
 - **Feature Requests** — Optimized for ideas
 - **Feedback Focused** — Star rating and satisfaction surveys
+## CSS Customization
+
+Wafir uses Shadow DOM for isolation, but exposes CSS custom properties and `::part()` selectors for customization.
+
+### CSS Custom Properties
+
+Override these variables on the `wafir-widget` element to customize the widget's appearance.
+
+#### Reporter Variables
+
+| Variable                          | Default                       | Description                  |
+| --------------------------------- | ----------------------------- | ---------------------------- |
+| `--wafir-font-family`             | System fonts                  | Font stack for all text      |
+| `--wafir-font-size`               | `14px`                        | Base font size               |
+| `--wafir-text-color`              | `#111827`                     | Primary text color           |
+| `--wafir-text-secondary`          | `#6b7280`                     | Secondary/muted text color   |
+| `--wafir-primary-color`           | `#2563eb`                     | Primary brand color          |
+| `--wafir-primary-hover`           | `#1d4ed8`                     | Primary color on hover       |
+| `--wafir-border-color`            | `#e5e7eb`                     | Border color                 |
+| `--wafir-button-size`             | `48px`                        | Trigger button size          |
+| `--wafir-button-border-radius`    | `50%`                         | Trigger button border radius |
+| `--wafir-button-offset`           | `20px`                        | Distance from screen edge    |
+| `--wafir-button-icon-size`        | `24px`                        | Icon size inside button      |
+| `--wafir-button-shadow`           | `0 4px 12px rgba(0,0,0,0.15)` | Button shadow                |
+| `--wafir-button-shadow-hover`     | `0 6px 16px rgba(0,0,0,0.2)`  | Button shadow on hover       |
+| `--wafir-tooltip-bg`              | `#1f2937`                     | Tooltip background color     |
+| `--wafir-backdrop-color`          | `rgba(0,0,0,0.5)`             | Modal backdrop color         |
+| `--wafir-modal-bg`                | `white`                       | Modal background color       |
+| `--wafir-modal-border-radius`     | `12px`                        | Modal border radius          |
+| `--wafir-modal-max-width`         | `800px`                       | Modal maximum width          |
+| `--wafir-modal-padding`           | `20px`                        | Modal header/content padding |
+| `--wafir-modal-shadow`            | `0 20px 60px rgba(0,0,0,0.3)` | Modal shadow                 |
+| `--wafir-modal-title-font-size`   | `18px`                        | Modal title size             |
+| `--wafir-modal-title-font-weight` | `600`                         | Modal title weight           |
+| `--wafir-modal-title-color`       | `--wafir-text-color`          | Modal title color            |
+
+#### Form Variables
+
+| Variable                        | Default       | Description                  |
+| ------------------------------- | ------------- | ---------------------------- |
+| `--wafir-form-text-color`       | `#374151`     | Form text color              |
+| `--wafir-form-bg`               | `transparent` | Form background              |
+| `--wafir-form-padding`          | `20px`        | Form padding                 |
+| `--wafir-form-border-color`     | `#d1d5db`     | Input border color           |
+| `--wafir-form-border-radius`    | `6px`         | Input border radius          |
+| `--wafir-form-input-padding`    | `10px 12px`   | Input padding                |
+| `--wafir-form-input-color`      | `#111827`     | Input text color             |
+| `--wafir-form-input-bg`         | `#ffffff`     | Input background             |
+| `--wafir-form-primary-color`    | `#2563eb`     | Submit button color          |
+| `--wafir-form-primary-hover`    | `#1d4ed8`     | Submit button hover          |
+| `--wafir-form-disabled-color`   | `#9ca3af`     | Disabled state color         |
+| `--wafir-form-bg-secondary`     | `#f3f4f6`     | Secondary background         |
+| `--wafir-form-bg-tertiary`      | `#f9fafb`     | Tertiary background          |
+| `--wafir-form-text-secondary`   | `#6b7280`     | Secondary text color         |
+| `--wafir-form-telemetry-bg`     | `#f9fafb`     | Telemetry section background |
+| `--wafir-form-telemetry-border` | `#e5e7eb`     | Telemetry section border     |
+| `--wafir-form-logs-bg`          | `#111827`     | Console logs background      |
+| `--wafir-form-logs-text`        | `#f3f4f6`     | Console logs text color      |
+| `--wafir-form-log-warn`         | `#fde047`     | Warning log color            |
+| `--wafir-form-log-error`        | `#f87171`     | Error log color              |
+
+#### Highlighter Variables
+
+| Variable                            | Default               | Description            |
+| ----------------------------------- | --------------------- | ---------------------- |
+| `--wafir-highlighter-overlay-bg`    | `rgba(0,0,0,0.1)`     | Overlay background     |
+| `--wafir-highlighter-primary-color` | `#2563eb`             | Highlight border color |
+| `--wafir-highlighter-highlight-bg`  | `rgba(37,99,235,0.1)` | Highlight fill color   |
+
+### Example
+
+```css
+wafir-widget {
+  --wafir-primary-color: #6366f1;
+  --wafir-primary-hover: #818cf8;
+  --wafir-modal-bg: #ffffff;
+  --wafir-text-color: #1f2937;
+  --wafir-border-color: #e5e7eb;
+  --wafir-form-border-radius: 8px;
+  --wafir-font-family: "Inter", sans-serif;
+}
+```
+
+### Part Selectors
+
+Use `::part()` to style specific elements:
+
+```css
+/* Style the trigger button */
+wafir-widget::part(button) {
+  background: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+wafir-widget::part(button):hover {
+  background: #059669;
+}
+```
+
+### Available Parts
+
+| Part Name  | Description                  |
+| ---------- | ---------------------------- |
+| `button`   | The floating trigger button  |
+| `modal`    | The feedback modal container |
+| `form`     | The form element             |
+| `input`    | Text input fields            |
+| `textarea` | Textarea fields              |
+| `select`   | Select dropdowns             |
+| `submit`   | The submit button            |
+
+---

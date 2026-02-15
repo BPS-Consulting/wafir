@@ -253,7 +253,7 @@ export interface paths {
                                      * @description Field input type. Matches GitHub Form Schema types plus Wafir extensions.
                                      * @enum {string}
                                      */
-                                    type: "input" | "email" | "textarea" | "dropdown" | "checkboxes" | "markdown" | "rating";
+                                    type: "input" | "email" | "textarea" | "dropdown" | "checkboxes" | "markdown" | "rating" | "date";
                                     /** @description Unique identifier for the field (used as key in JSON output/issue body). */
                                     id?: string;
                                     /** @description Visual and behavioral attributes for the field. */
@@ -285,7 +285,7 @@ export interface paths {
                                 }[];
                                 /** @description IDs of target(s) for this form. If omitted or empty, all targets will be used. Each ID must reference a valid target from the top-level targets array. */
                                 targets?: string[];
-                                /** @description Labels automatically added to issues created from this tab. Similar to GitHub issue form templates. */
+                                /** @description Labels automatically added to issues created from this form. Similar to GitHub issue form templates. */
                                 labels?: string[];
                                 /**
                                  * Format: uri
@@ -299,18 +299,6 @@ export interface paths {
                                 name?: string;
                                 color?: string;
                             }[];
-                            /** @description Dedicated project for feedback submissions with star ratings */
-                            feedbackProject?: {
-                                /** @description GitHub Project number for feedback */
-                                projectNumber?: number;
-                                /** @description Project owner (defaults to repo owner) */
-                                owner?: string;
-                                /**
-                                 * @description Name of the Rating field in the project
-                                 * @default Rating
-                                 */
-                                ratingField: string;
-                            };
                         };
                     };
                 };

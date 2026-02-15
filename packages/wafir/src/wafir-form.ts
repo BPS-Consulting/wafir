@@ -15,6 +15,7 @@ import {
   setCapturedImage,
 } from "./store";
 import { takeFullPageScreenshot } from "./utils/screenshot";
+import { resolveDateValue, isDateToken } from "./utils/date";
 import type { FieldConfigApi as FieldConfig } from "./api/client";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
@@ -67,8 +68,17 @@ export class WafirForm extends LitElement {
       const newData = { ...currentData };
 
       this.fields.forEach((field) => {
-        if (field.attributes!.value && !newData[String(field.id) || ""]) {
-          newData[String(field.id) || ""] = field.attributes!.value;
+        const fieldId = String(field.id) || "";
+        const defaultValue = field.attributes?.value;
+
+        // Only set default if field doesn't already have a value
+        if (defaultValue && !newData[fieldId]) {
+          // For date fields, resolve tokens like "today" or "today+7"
+          if (field.type === "date" && isDateToken(defaultValue)) {
+            newData[fieldId] = resolveDateValue(defaultValue);
+          } else {
+            newData[fieldId] = defaultValue;
+          }
           hasChanges = true;
         }
       });
@@ -243,6 +253,18 @@ export class WafirForm extends LitElement {
               });
             }}"
           ></wafir-star-rating>
+        `;
+
+      case "date":
+        return html`
+          <input
+            type="date"
+            id="${String(field.id)}"
+            .value="${value}"
+            ?required="${field.validations?.required}"
+            @input="${(e: Event) =>
+              this._handleInputChange(e, String(field.id))}"
+          />
         `;
 
       case "input":

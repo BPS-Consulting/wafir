@@ -286,7 +286,8 @@
                                     "dropdown",
                                     "checkboxes",
                                     "markdown",
-                                    "rating"
+                                    "rating",
+                                    "date"
                                   ],
                                   "description": "Field input type. Matches GitHub Form Schema types plus Wafir extensions."
                                 },
