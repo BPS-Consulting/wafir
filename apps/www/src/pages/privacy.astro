@@ -1,0 +1,91 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { Content as PrivacyContent } from "../content/privacy.md";
+---
+
+<Layout
+  title="Privacy Policy - Wafir"
+  description="Learn how Wafir handles your data and privacy when collecting user feedback."
+>
+  <section class="py-20 pb-8 border-b border-border max-md:py-12">
+    <div class="max-w-[1200px] mx-auto px-6">
+      <h1 class="text-4xl font-bold mb-2 max-md:text-3xl">Privacy Policy</h1>
+      <p class="text-text-muted text-lg">
+        How Wafir handles your data
+      </p>
+    </div>
+  </section>
+
+  <section class="py-20 max-md:py-12">
+    <div class="max-w-[1200px] mx-auto px-6">
+      <div class="grid grid-cols-[220px_1fr] gap-12 max-[900px]:grid-cols-1">
+        <aside
+          class="sticky top-24 h-fit max-[900px]:static max-[900px]:pb-8 max-[900px]:border-b max-[900px]:border-border max-[900px]:mb-8"
+        >
+          <nav>
+            <h4 class="text-xs uppercase tracking-wider text-text-muted mb-4">
+              On this page
+            </h4>
+            <ul
+              class="list-none p-0 m-0 max-[900px]:flex max-[900px]:flex-wrap max-[900px]:gap-x-4 max-[900px]:gap-y-2"
+            >
+              <li class="mb-2 max-[900px]:m-0">
+                <a
+                  href="#what-data-wafir-collects"
+                  class="text-text-muted text-sm transition-colors duration-200 hover:text-text"
+                  >What Data Wafir Collects</a
+                >
+              </li>
+              <li class="mb-2 max-[900px]:m-0">
+                <a
+                  href="#where-data-is-stored"
+                  class="text-text-muted text-sm transition-colors duration-200 hover:text-text"
+                  >Where Data Is Stored</a
+                >
+              </li>
+              <li class="mb-2 max-[900px]:m-0">
+                <a
+                  href="#who-has-access"
+                  class="text-text-muted text-sm transition-colors duration-200 hover:text-text"
+                  >Who Has Access</a
+                >
+              </li>
+              <li class="mb-2 max-[900px]:m-0">
+                <a
+                  href="#data-retention"
+                  class="text-text-muted text-sm transition-colors duration-200 hover:text-text"
+                  >Data Retention</a
+                >
+              </li>
+              <li class="mb-2 max-[900px]:m-0">
+                <a
+                  href="#self-hosting-option"
+                  class="text-text-muted text-sm transition-colors duration-200 hover:text-text"
+                  >Self-Hosting Option</a
+                >
+              </li>
+              <li class="mb-2 max-[900px]:m-0">
+                <a
+                  href="#your-rights"
+                  class="text-text-muted text-sm transition-colors duration-200 hover:text-text"
+                  >Your Rights</a
+                >
+              </li>
+              <li class="mb-2 max-[900px]:m-0">
+                <a
+                  href="#contact"
+                  class="text-text-muted text-sm transition-colors duration-200 hover:text-text"
+                  >Contact</a
+                >
+              </li>
+            </ul>
+          </nav>
+        </aside>
+
+        <div class="max-w-[800px] prose prose-invert [&_h2]:scroll-mt-24 [&_h3]:scroll-mt-24 [&_h4]:scroll-mt-24">
+          <PrivacyContent />
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>
