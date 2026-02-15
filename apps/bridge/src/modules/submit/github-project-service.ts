@@ -68,19 +68,6 @@ const UPDATE_PROJECT_FIELD_MUTATION = `
   }
 `;
 
-const UPDATE_PROJECT_DATE_FIELD_MUTATION = `
-  mutation UpdateProjectDateField($projectId: ID!, $itemId: ID!, $fieldId: ID!, $dateValue: Date!) {
-    updateProjectV2ItemFieldValue(input: {
-      projectId: $projectId
-      itemId: $itemId
-      fieldId: $fieldId
-      value: { date: $dateValue }
-    }) {
-      projectV2Item { id }
-    }
-  }
-`;
-
 export interface ProjectLookupResult {
   nodeId: string | undefined;
   shouldUseUserToken: boolean;

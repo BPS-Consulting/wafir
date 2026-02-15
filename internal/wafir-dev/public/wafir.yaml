@@ -27,7 +27,6 @@ forms:
   - id: feedback
     label: Feedback
     icon: thumbsup
-    isFeedback: true
     targets: [project]
     body:
       - id: rating
