@@ -6,209 +6,261 @@ import Layout from "../layouts/Layout.astro";
   title="Contribute - Wafir"
   description="Join us in making Wafir better. Contribute to the open source project and help shape the future of feedback widgets."
 >
+  <section class="py-20 pb-8 border-b border-border max-md:py-12">
+    <div class="max-w-[1200px] mx-auto px-6">
+      <h1 class="text-4xl font-bold mb-2 max-md:text-3xl">Contribute to Wafir</h1>
+      <p class="text-text-muted text-lg">
+        Join us in making Wafir better for everyone
+      </p>
+    </div>
+  </section>
+
   <section class="py-20 max-md:py-12">
     <div class="max-w-[1200px] mx-auto px-6">
-      <div class="max-w-[800px] mx-auto">
-        <h1 class="text-5xl font-bold mb-6 max-md:text-4xl">Contribute to Wafir</h1>
-        <p class="text-xl text-text-muted mb-12 leading-relaxed max-md:text-lg">
-          Wafir is an open source project, and we welcome contributions from the community.
-          Whether you're a developer, designer, or enthusiast, there are many ways you can help
-          make Wafir better for everyone.  You can start by just clicking the Wafir widget on this page! 
-        </p>
-
-        <div class="mb-16">
-          <h2 class="text-3xl font-bold mb-6">Why Contribute?</h2>
-          <div class="grid gap-6 max-md:grid-cols-1">
-            <div class="bg-bg-card border border-border rounded-xl p-6">
-              <div class="text-3xl mb-3">🌟</div>
-              <h3 class="text-xl font-bold mb-2">Make an Impact</h3>
-              <p class="text-text-muted">
-                Your contributions help thousands of developers build better feedback systems
-                for their applications.
-              </p>
-            </div>
-            <div class="bg-bg-card border border-border rounded-xl p-6">
-              <div class="text-3xl mb-3">🚀</div>
-              <h3 class="text-xl font-bold mb-2">Grow Your Skills</h3>
-              <p class="text-text-muted">
-                Work with modern technologies like Lit, TypeScript, Fastify, and learn
-                best practices for building scalable web components.
-              </p>
-            </div>
-            <div class="bg-bg-card border border-border rounded-xl p-6">
-              <div class="text-3xl mb-3">🤝</div>
-              <h3 class="text-xl font-bold mb-2">Join the Community</h3>
-              <p class="text-text-muted">
-                Connect with other developers, share ideas, and be part of building
-                something meaningful together.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div class="mb-16">
-          <h2 class="text-3xl font-bold mb-6">Areas for Improvement</h2>
-          <p class="text-text-muted text-lg mb-6">
-            We're actively looking for contributions in the following areas:
-          </p>
-
-          <div class="space-y-4">
-            <div class="bg-bg-card border border-border rounded-xl p-6">
-              <h3 class="text-xl font-bold mb-3 flex items-center gap-2">
-                <span class="text-2xl">🎯</span>
-                New Target Types for the Bridge
-              </h3>
-              <p class="text-text-muted mb-3">
-                Expand Wafir's capabilities by adding support for additional issue tracking
-                and project management platforms.
-              </p>
-              <ul class="list-disc list-inside text-text-muted space-y-1 ml-6">
-                <li>Jira integration</li>
-                <li>Linear integration</li>
-                <li>Asana integration</li>
-                <li>Monday.com integration</li>
-                <li>GitLab Issues integration</li>
-                <li>Other popular project management tools</li>
-              </ul>
-            </div>
-
-            <div class="bg-bg-card border border-border rounded-xl p-6">
-              <h3 class="text-xl font-bold mb-3 flex items-center gap-2">
-                <span class="text-2xl">🤖</span>
-                Chatbot Integration
-              </h3>
-              <p class="text-text-muted mb-3">
-                Help users get instant answers by integrating AI-powered chatbots into
-                the feedback widget.
-              </p>
-              <ul class="list-disc list-inside text-text-muted space-y-1 ml-6">
-                <li>LLM integration for automated responses</li>
-                <li>Context-aware help system</li>
-                <li>Smart categorization of feedback</li>
-                <li>Automated triage and routing</li>
-              </ul>
-            </div>
-
-            <div class="bg-bg-card border border-border rounded-xl p-6">
-              <h3 class="text-xl font-bold mb-3 flex items-center gap-2">
-                <span class="text-2xl">✨</span>
-                Feature Enhancements
-              </h3>
-              <p class="text-text-muted mb-3">
-                Improve the core functionality and user experience of Wafir.
-              </p>
-              <ul class="list-disc list-inside text-text-muted space-y-1 ml-6">
-                <li>Additional field types and form options</li>
-                <li>Enhanced telemetry and analytics</li>
-                <li>Improved accessibility features</li>
-                <li>Mobile experience optimizations</li>
-                <li>Internationalization and localization</li>
-              </ul>
-            </div>
-
-            <div class="bg-bg-card border border-border rounded-xl p-6">
-              <h3 class="text-xl font-bold mb-3 flex items-center gap-2">
-                <span class="text-2xl">📚</span>
-                Documentation & Examples
-              </h3>
-              <p class="text-text-muted mb-3">
-                Help others get started with Wafir more easily.
-              </p>
-              <ul class="list-disc list-inside text-text-muted space-y-1 ml-6">
-                <li>Tutorial videos and guides</li>
-                <li>Integration examples for popular frameworks</li>
-                <li>Best practices documentation</li>
-                <li>API reference improvements</li>
-              </ul>
-            </div>
-
-            <div class="bg-bg-card border border-border rounded-xl p-6">
-              <h3 class="text-xl font-bold mb-3 flex items-center gap-2">
-                <span class="text-2xl">🧪</span>
-                Testing & Quality Assurance
-              </h3>
-              <p class="text-text-muted mb-3">
-                Help ensure Wafir is reliable and bug-free.
-              </p>
-              <ul class="list-disc list-inside text-text-muted space-y-1 ml-6">
-                <li>Write unit and integration tests</li>
-                <li>Test in different browsers and environments</li>
-                <li>Report and fix bugs</li>
-                <li>Performance optimization</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <div class="mb-16">
-          <h2 class="text-3xl font-bold mb-6">How to Get Started</h2>
-          <div class="space-y-6">
-            <div>
-              <h3 class="text-xl font-bold mb-2">1. Check out the Repository</h3>
-              <p class="text-text-muted mb-3">
-                Visit our GitHub repository to explore the codebase, read the contributing
-                guidelines, and find issues to work on.
-              </p>
-              <a
-                href="https://github.com/BPS-Consulting/wafir"
-                target="_blank"
-                rel="noopener"
-                class="inline-flex items-center gap-2 py-3 px-6 rounded-lg font-medium text-base transition-all duration-200 cursor-pointer bg-transparent text-text border border-border hover:border-text-muted hover:bg-bg-elevated"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <path
-                    d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
-                  ></path>
-                </svg>
-                View on GitHub
-              </a>
-            </div>
-
-            <div>
-              <h3 class="text-xl font-bold mb-2">2. Join the Discussion</h3>
-              <p class="text-text-muted mb-3">
-                Have questions or ideas? Open an issue on GitHub or reach out to discuss
-                potential contributions.
-              </p>
-            </div>
-
-            <div>
-              <h3 class="text-xl font-bold mb-2">3. Submit a Pull Request</h3>
-              <p class="text-text-muted mb-3">
-                Once you've made your changes, submit a pull request. We'll review it
-                and work with you to get it merged.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-primary/10 border border-primary/30 rounded-xl p-8 text-center">
-          <h2 class="text-2xl font-bold mb-4">Get in Touch</h2>
-          <p class="text-text-muted text-lg mb-6">
-            Interested in collaborating or have questions about contributing?
-            We'd love to hear from you!
-          </p>
-          <a
-            href="mailto:info@bpsconsulting.com?subject=Wafir"
-            class="inline-flex items-center gap-2 py-3 px-6 rounded-lg font-medium text-base transition-all duration-200 cursor-pointer border-none bg-primary text-white hover:bg-primary-hover hover:-translate-y-0.5"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
+      <div class="grid grid-cols-[220px_1fr] gap-12 max-[900px]:grid-cols-1">
+        <aside
+          class="sticky top-24 h-fit max-[900px]:static max-[900px]:pb-8 max-[900px]:border-b max-[900px]:border-border max-[900px]:mb-8"
+        >
+          <nav>
+            <h4 class="text-xs uppercase tracking-wider text-text-muted mb-4">
+              On this page
+            </h4>
+            <ul
+              class="list-none p-0 m-0 max-[900px]:flex max-[900px]:flex-wrap max-[900px]:gap-x-4 max-[900px]:gap-y-2"
             >
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
-              ></path>
-              <polyline points="22,6 12,13 2,6"></polyline>
-            </svg>
-            info@bpsconsulting.com
-          </a>
-          <p class="text-text-muted text-sm mt-4">
-            We respond to all collaboration inquiries within 24-48 hours.
+              <li class="mb-2 max-[900px]:m-0">
+                <a
+                  href="#why-contribute"
+                  class="text-text-muted text-sm transition-colors duration-200 hover:text-text"
+                  >Why Contribute?</a
+                >
+              </li>
+              <li class="mb-2 max-[900px]:m-0">
+                <a
+                  href="#areas-for-improvement"
+                  class="text-text-muted text-sm transition-colors duration-200 hover:text-text"
+                  >Areas for Improvement</a
+                >
+              </li>
+              <li class="mb-2 max-[900px]:m-0">
+                <a
+                  href="#how-to-get-started"
+                  class="text-text-muted text-sm transition-colors duration-200 hover:text-text"
+                  >How to Get Started</a
+                >
+              </li>
+              <li class="mb-2 max-[900px]:m-0">
+                <a
+                  href="#get-in-touch"
+                  class="text-text-muted text-sm transition-colors duration-200 hover:text-text"
+                  >Get in Touch</a
+                >
+              </li>
+            </ul>
+          </nav>
+        </aside>
+
+        <div class="max-w-[800px] [&_h2]:scroll-mt-24 [&_h3]:scroll-mt-24">
+          <p class="text-xl text-text-muted mb-12 leading-relaxed max-md:text-lg">
+            Wafir is an open source project, and we welcome contributions from the community.
+            Whether you're a developer, designer, or enthusiast, there are many ways you can help
+            make Wafir better for everyone. You can start by just clicking the Wafir widget on this page!
           </p>
+
+          <div class="mb-16" id="why-contribute">
+            <h2 class="text-3xl font-bold mb-6">Why Contribute?</h2>
+            <div class="grid gap-6 max-md:grid-cols-1">
+              <div class="bg-bg-card border border-border rounded-xl p-6">
+                <div class="text-3xl mb-3">🌟</div>
+                <h3 class="text-xl font-bold mb-2">Make an Impact</h3>
+                <p class="text-text-muted">
+                  Your contributions help thousands of developers build better feedback systems
+                  for their applications.
+                </p>
+              </div>
+              <div class="bg-bg-card border border-border rounded-xl p-6">
+                <div class="text-3xl mb-3">🚀</div>
+                <h3 class="text-xl font-bold mb-2">Grow Your Skills</h3>
+                <p class="text-text-muted">
+                  Work with modern technologies like Lit, TypeScript, Fastify, and learn
+                  best practices for building scalable web components.
+                </p>
+              </div>
+              <div class="bg-bg-card border border-border rounded-xl p-6">
+                <div class="text-3xl mb-3">🤝</div>
+                <h3 class="text-xl font-bold mb-2">Join the Community</h3>
+                <p class="text-text-muted">
+                  Connect with other developers, share ideas, and be part of building
+                  something meaningful together.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-16" id="areas-for-improvement">
+            <h2 class="text-3xl font-bold mb-6">Areas for Improvement</h2>
+            <p class="text-text-muted text-lg mb-6">
+              We're actively looking for contributions in the following areas:
+            </p>
+
+            <div class="space-y-4">
+              <div class="bg-bg-card border border-border rounded-xl p-6">
+                <h3 class="text-xl font-bold mb-3 flex items-center gap-2">
+                  <span class="text-2xl">🎯</span>
+                  New Target Types for the Bridge
+                </h3>
+                <p class="text-text-muted mb-3">
+                  Expand Wafir's capabilities by adding support for additional issue tracking
+                  and project management platforms.
+                </p>
+                <ul class="list-disc list-inside text-text-muted space-y-1 ml-6">
+                  <li>Jira integration</li>
+                  <li>Linear integration</li>
+                  <li>Asana integration</li>
+                  <li>Monday.com integration</li>
+                  <li>GitLab Issues integration</li>
+                  <li>Other popular project management tools</li>
+                </ul>
+              </div>
+
+              <div class="bg-bg-card border border-border rounded-xl p-6">
+                <h3 class="text-xl font-bold mb-3 flex items-center gap-2">
+                  <span class="text-2xl">🤖</span>
+                  Chatbot Integration
+                </h3>
+                <p class="text-text-muted mb-3">
+                  Help users get instant answers by integrating AI-powered chatbots into
+                  the feedback widget.
+                </p>
+                <ul class="list-disc list-inside text-text-muted space-y-1 ml-6">
+                  <li>LLM integration for automated responses</li>
+                  <li>Context-aware help system</li>
+                  <li>Smart categorization of feedback</li>
+                  <li>Automated triage and routing</li>
+                </ul>
+              </div>
+
+              <div class="bg-bg-card border border-border rounded-xl p-6">
+                <h3 class="text-xl font-bold mb-3 flex items-center gap-2">
+                  <span class="text-2xl">✨</span>
+                  Feature Enhancements
+                </h3>
+                <p class="text-text-muted mb-3">
+                  Improve the core functionality and user experience of Wafir.
+                </p>
+                <ul class="list-disc list-inside text-text-muted space-y-1 ml-6">
+                  <li>Additional field types and form options</li>
+                  <li>Enhanced telemetry and analytics</li>
+                  <li>Improved accessibility features</li>
+                  <li>Mobile experience optimizations</li>
+                  <li>Internationalization and localization</li>
+                </ul>
+              </div>
+
+              <div class="bg-bg-card border border-border rounded-xl p-6">
+                <h3 class="text-xl font-bold mb-3 flex items-center gap-2">
+                  <span class="text-2xl">📚</span>
+                  Documentation & Examples
+                </h3>
+                <p class="text-text-muted mb-3">
+                  Help others get started with Wafir more easily.
+                </p>
+                <ul class="list-disc list-inside text-text-muted space-y-1 ml-6">
+                  <li>Tutorial videos and guides</li>
+                  <li>Integration examples for popular frameworks</li>
+                  <li>Best practices documentation</li>
+                  <li>API reference improvements</li>
+                </ul>
+              </div>
+
+              <div class="bg-bg-card border border-border rounded-xl p-6">
+                <h3 class="text-xl font-bold mb-3 flex items-center gap-2">
+                  <span class="text-2xl">🧪</span>
+                  Testing & Quality Assurance
+                </h3>
+                <p class="text-text-muted mb-3">
+                  Help ensure Wafir is reliable and bug-free.
+                </p>
+                <ul class="list-disc list-inside text-text-muted space-y-1 ml-6">
+                  <li>Write unit and integration tests</li>
+                  <li>Test in different browsers and environments</li>
+                  <li>Report and fix bugs</li>
+                  <li>Performance optimization</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-16" id="how-to-get-started">
+            <h2 class="text-3xl font-bold mb-6">How to Get Started</h2>
+            <div class="space-y-6">
+              <div>
+                <h3 class="text-xl font-bold mb-2">1. Check out the Repository</h3>
+                <p class="text-text-muted mb-3">
+                  Visit our GitHub repository to explore the codebase, read the contributing
+                  guidelines, and find issues to work on.
+                </p>
+                <a
+                  href="https://github.com/BPS-Consulting/wafir"
+                  target="_blank"
+                  rel="noopener"
+                  class="inline-flex items-center gap-2 py-3 px-6 rounded-lg font-medium text-base transition-all duration-200 cursor-pointer bg-transparent text-text border border-border hover:border-text-muted hover:bg-bg-elevated"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+                    ></path>
+                  </svg>
+                  View on GitHub
+                </a>
+              </div>
+
+              <div>
+                <h3 class="text-xl font-bold mb-2">2. Join the Discussion</h3>
+                <p class="text-text-muted mb-3">
+                  Have questions or ideas? Open an issue on GitHub or reach out to discuss
+                  potential contributions.
+                </p>
+              </div>
+
+              <div>
+                <h3 class="text-xl font-bold mb-2">3. Submit a Pull Request</h3>
+                <p class="text-text-muted mb-3">
+                  Once you've made your changes, submit a pull request. We'll review it
+                  and work with you to get it merged.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-primary/10 border border-primary/30 rounded-xl p-8 text-center" id="get-in-touch">
+            <h2 class="text-2xl font-bold mb-4">Get in Touch</h2>
+            <p class="text-text-muted text-lg mb-6">
+              Interested in collaborating or have questions about contributing?
+              We'd love to hear from you!
+            </p>
+            <a
+              href="mailto:info@bpsconsulting.com?subject=Wafir"
+              class="inline-flex items-center gap-2 py-3 px-6 rounded-lg font-medium text-base transition-all duration-200 cursor-pointer border-none bg-primary text-white hover:bg-primary-hover hover:-translate-y-0.5"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                ></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              info@bpsconsulting.com
+            </a>
+            <p class="text-text-muted text-sm mt-4">
+              We respond to all collaboration inquiries within 24-48 hours.
+            </p>
+          </div>
         </div>
       </div>
     </div>
