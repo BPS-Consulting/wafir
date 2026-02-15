@@ -4,11 +4,13 @@ Get Wafir running in your application in minutes.
 
 ## 1. Install the GitHub App
 
-First, install the Wafir GitHub App on your repository. This allows Wafir to add items to the issue and project lists for your repository.
+The Wafir GitHub App authorizes the bridge to create issues and project items on your behalf.
 
 [Install GitHub App](https://github.com/apps/wafir-web-feedback-widget)
 
-> **Note:** After installation, note your **Installation ID** from the URL. You'll need this to configure the widget.
+> **Important:** If you collect feedback in a GitHub Project (recommended), install the app on your **account** rather than a specific repository. GitHub V2 Projects are account-level and not tied to individual repositories.
+
+> **Note:** After installation, note your **Installation ID** from the URL (the number at the end). You'll need this to configure the widget.
 
 ## 2. Install the Widget Package
 
@@ -107,6 +109,73 @@ forms:
 
 ---
 
+## Setting Up a GitHub Project
+
+While Wafir can add issues directly to a repository issue list, we recommend creating a dedicated GitHub Project to manage feedback. This keeps user feedback separated from your internal development issue tracking. After review, any project item can be converted to an issue if development action is required.
+
+> **Note:** Only GitHub Projects V2 are supported. Legacy V1 projects attached to a single repository are not supported.
+
+### Create a Feedback Project
+
+1. Go to **GitHub > Projects > New Project** and create a dedicated project (e.g., "MyApp Feedback")
+2. Give your team access: **Project > Settings > Manage Access > Invite Collaborators**
+
+### Configure the Project Workflow
+
+1. Add a "Review" status: **Project > Settings > Custom Fields > Status > Add Option**
+2. Set new items to start in Review: **Project > Workflows > Item added to project > Edit**
+
+### Add Custom Fields
+
+Add fields for any data you want to collect from users:
+
+- **Rating** (Number): Wafir will render this as a star rating input and store the response as a number.
+- **Priority** (Single select): Low, Medium, High
+- **Category** (Single select): Bug, Feature Request, Question
+
+> **Tip:** Typical customer satisfaction ratings use 1-5 stars (Very Unsatisfied → Very Satisfied). Customer Effort Scores also use 1-5 stars (Very Difficult → Very Easy).
+
+### Connect the Widget to Your Project
+
+Update your `wafir.yaml` to route feedback to your project:
+
+```yaml
+targets:
+  - id: feedback-project
+    type: github/project
+    target: your-username/project-number
+    authRef: "YOUR_INSTALLATION_ID"
+
+forms:
+  - id: feedback
+    label: "Feedback"
+    targets: [feedback-project]
+    body:
+      - id: title
+        type: input
+        attributes:
+          label: "Title"
+        validations:
+          required: true
+```
+
+---
+
+## Generate Config Helper
+
+The Wafir Bridge provides an API to automatically generate a `wafir.yaml` configuration file based on your GitHub repository labels and project fields.
+
+<div id="config-generator-placeholder"></div>
+
+The API returns a ready-to-use YAML configuration with:
+
+- **For `github/issues` targets:** A form with a dropdown populated from your repository labels
+- **For `github/project` targets:** A form with fields mapped from your project's custom fields (dropdowns, dates, text inputs)
+
+Save the response to `public/wafir.yaml` and customize as needed.
+
+---
+
 ## Self-Hosting the Bridge
 
 For self-hosted deployments, set `bridge-url` to your server:
@@ -119,3 +188,9 @@ For self-hosted deployments, set `bridge-url` to your server:
 ```
 
 > See the [Documentation](/documentation#connect-personal-projects) for personal project setup and advanced configuration.
+
+---
+
+## Analyzing Your Feedback
+
+Once feedback starts flowing into your GitHub Project, you can analyze it using tools like GitHub Project Insights, Screenful, or Excel (via export) to identify opportunities for improvement.

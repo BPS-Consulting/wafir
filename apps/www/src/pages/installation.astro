@@ -66,9 +66,30 @@ import { Content as InstallationContent } from "../content/installation.md";
               </li>
               <li class="mb-2 max-[900px]:m-0">
                 <a
+                  href="#setting-up-a-github-project"
+                  class="text-text-muted text-sm transition-colors duration-200 hover:text-text"
+                  >Setting Up a GitHub Project</a
+                >
+              </li>
+              <li class="mb-2 max-[900px]:m-0">
+                <a
+                  href="#generate-config-helper"
+                  class="text-text-muted text-sm transition-colors duration-200 hover:text-text"
+                  >Generate Config Helper</a
+                >
+              </li>
+              <li class="mb-2 max-[900px]:m-0">
+                <a
                   href="#self-hosting-the-bridge"
                   class="text-text-muted text-sm transition-colors duration-200 hover:text-text"
                   >Self-Hosting the Bridge</a
+                >
+              </li>
+              <li class="mb-2 max-[900px]:m-0">
+                <a
+                  href="#analyzing-your-feedback"
+                  class="text-text-muted text-sm transition-colors duration-200 hover:text-text"
+                  >Analyzing Your Feedback</a
                 >
               </li>
             </ul>
@@ -81,4 +102,102 @@ import { Content as InstallationContent } from "../content/installation.md";
       </div>
     </div>
   </section>
+
+  <!-- Config Generator Form (injected via JS) -->
+  <script>
+    const BRIDGE_URL = 'https://bridge.wafir.io';
+    const sampleJson = `{
+  "installationId": 12345678,
+  "targets": [
+    { "type": "github/issues", "target": "owner/repo" },
+    { "type": "github/project", "target": "owner/42" }
+  ]
+}`;
+
+    // Create and inject the form
+    const placeholder = document.getElementById('config-generator-placeholder');
+    if (placeholder) {
+      placeholder.innerHTML = `
+        <div class="not-prose my-6 p-4 bg-[#1a1a2e] rounded-lg border border-border">
+          <label class="block text-sm font-medium text-text-muted mb-2">
+            Request JSON
+          </label>
+          <textarea
+            id="generator-input"
+            rows="8"
+            class="w-full p-3 bg-[#0d0d1a] text-text font-mono text-sm rounded border border-border focus:border-primary focus:outline-none resize-y"
+          >${sampleJson}</textarea>
+          <div class="mt-3 flex gap-3 items-center">
+            <button
+              id="generator-btn"
+              class="px-4 py-2 bg-primary text-white rounded hover:bg-primary-hover transition-colors font-medium"
+            >
+              Generate Config
+            </button>
+            <span id="generator-status" class="text-sm text-text-muted"></span>
+          </div>
+          <div id="generator-output" class="hidden mt-4">
+            <div class="flex justify-between items-center mb-2">
+              <label class="text-sm font-medium text-text-muted">Generated wafir.yaml</label>
+              <button
+                id="copy-btn"
+                class="px-3 py-1 text-xs bg-[#2a2a4a] text-text-muted rounded hover:bg-[#3a3a5a] transition-colors"
+              >
+                Copy
+              </button>
+            </div>
+            <pre id="generator-result" class="p-3 bg-[#0d0d1a] text-text font-mono text-sm rounded border border-border overflow-x-auto max-h-96 overflow-y-auto"></pre>
+          </div>
+          <div id="generator-error" class="hidden mt-4 p-3 bg-red-900/30 border border-red-500/50 rounded text-red-300 text-sm"></div>
+        </div>
+      `;
+
+      const btn = document.getElementById('generator-btn');
+      const input = document.getElementById('generator-input') as HTMLTextAreaElement;
+      const status = document.getElementById('generator-status');
+      const output = document.getElementById('generator-output');
+      const result = document.getElementById('generator-result');
+      const error = document.getElementById('generator-error');
+      const copyBtn = document.getElementById('copy-btn');
+
+      btn?.addEventListener('click', async () => {
+        if (!input || !status || !output || !result || !error) return;
+
+        status.textContent = 'Generating...';
+        output.classList.add('hidden');
+        error.classList.add('hidden');
+
+        try {
+          const parsed = JSON.parse(input.value);
+          const response = await fetch(`${BRIDGE_URL}/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(parsed),
+          });
+
+          if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.message || `HTTP ${response.status}`);
+          }
+
+          const yaml = await response.text();
+          result.textContent = yaml;
+          output.classList.remove('hidden');
+          status.textContent = '✓ Generated successfully';
+        } catch (e: any) {
+          error.textContent = `Error: ${e.message}`;
+          error.classList.remove('hidden');
+          status.textContent = '';
+        }
+      });
+
+      copyBtn?.addEventListener('click', () => {
+        if (result) {
+          navigator.clipboard.writeText(result.textContent || '');
+          if (copyBtn) copyBtn.textContent = 'Copied!';
+          setTimeout(() => { if (copyBtn) copyBtn.textContent = 'Copy'; }, 2000);
+        }
+      });
+    }
+  </script>
 </Layout>
