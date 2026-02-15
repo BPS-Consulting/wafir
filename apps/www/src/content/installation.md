@@ -65,99 +65,57 @@ Example:
 
 ```yaml
 # public/wafir.yaml
-installationId: 12345 # Your GitHub App installation ID
 targets:
   - id: default
     type: github/issues
     target: your-username/your-repo
     authRef: "YOUR_INSTALLATION_ID"
-  - id: project
-    type: github/project
-    target: your-username/your-project-id
-    authRef: "YOUR_INSTALLATION_ID"
+
 forms:
   - id: feedback
     label: "Feedback"
     icon: thumbsup
-    targets: [project] # Routes feedback to 'project'
-    fields:
+    body:
       - id: title
         type: input
         attributes:
           label: "Title"
-          placeholder: "Short summary"
         validations:
           required: true
       - id: description
         type: textarea
         attributes:
           label: "Description"
-          placeholder: "Describe the feedback"
-        validations:
-          required: true
-      - id: rating
-        type: rating
-        attributes:
-          label: "How satisfied are you with our website?"
-        validations:
-          required: true
-  - id: issue
-    label: "Issue"
-    icon: bug
-    targets: [default] # Routes feedback to 'default'
-    fields:
-      - id: title
-        type: input
-        attributes:
-          label: "Issue title"
-          placeholder: "Summarize the issue"
-        validations:
-          required: true
-      - id: description
-        type: textarea
-        attributes:
-          label: "Description"
-          placeholder: "Describe the issue"
-        validations:
-          required: true
-      - id: type
-        type: dropdown
-        attributes:
-          label: "Type"
-          options: ["Bug", "Feature Request", "Question"]
         validations:
           required: true
 ```
 
-> See `/examples/default/wafir.yaml` for up-to-date config templates using the new targets paradigm.
+> See the [Documentation](/documentation) for the full configuration reference and examples.
 
-## Props Reference
+## Widget Attributes
 
-| Prop             | Type   | Required | Description                                                             |
-| ---------------- | ------ | -------- | ----------------------------------------------------------------------- |
-| `installationId` | number | Yes      | Your GitHub App installation ID                                         |
-| `owner`          | string | Yes      | GitHub repository owner                                                 |
-| `repo`           | string | Yes      | GitHub repository name                                                  |
-| `bridgeUrl`      | string | No       | Custom bridge server URL (for self-hosted bridge)                       |
-| `position`       | string | No       | Widget position: `bottom-right`, `bottom-left`, `top-right`, `top-left` |
-| `modalTitle`     | string | No       | Custom title for the feedback modal                                     |
-| `tooltipText`    | string | No       | Tooltip text for the trigger button                                     |
+| Attribute      | Type   | Required | Description                                            |
+| -------------- | ------ | -------- | ------------------------------------------------------ |
+| `config-url`   | string | No       | URL to your wafir.yaml config file                     |
+| `bridge-url`   | string | No       | Custom bridge server URL (default: hosted service)     |
+| `target-type`  | string | No       | `github/issues` or `github/project`                    |
+| `target`       | string | No       | Target identifier (e.g., `owner/repo`)                 |
+| `auth-ref`     | string | No       | GitHub App installation ID for authentication          |
+| `position`     | string | No       | `bottom-right` (default) or `bottom-left`              |
+| `modal-title`  | string | No       | Custom title for the feedback modal                    |
+| `tooltip-text` | string | No       | Tooltip text shown on trigger button hover             |
 
 ---
 
 ## Self-Hosting the Bridge
 
-If you're self-hosting the Wafir bridge server, you can configure the widget to use your custom bridge URL:
-
-### Vanilla JS
+For self-hosted deployments, set `bridge-url` to your server:
 
 ```html
 <wafir-widget
-  target-type="string"   # github/issues | github/project
-  target="string"        # e.g., owner/repo or owner/projectNum
-  auth-ref="string"       # e.g., GitHub installation ID
-  bridgeUrl="https://your-bridge.example.com"
+  config-url="/wafir.yaml"
+  bridge-url="https://your-bridge.example.com"
 ></wafir-widget>
 ```
 
-> **Note:** If you don't specify a `bridgeUrl`, the widget will use the default hosted bridge service.
+> See the [Documentation](/documentation#connect-personal-projects) for personal project setup and advanced configuration.
