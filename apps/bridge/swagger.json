@@ -357,6 +357,15 @@
                                         "type": "string"
                                       },
                                       "description": "Custom labels for star rating (Wafir extension only)."
+                                    },
+                                    "autofill": {
+                                      "type": "string",
+                                      "enum": [
+                                        "browserInfo",
+                                        "screenshot",
+                                        "consoleLog"
+                                      ],
+                                      "description": "Auto-fill the field with telemetry data. When specified, renders an opt-in checkbox. Values: browserInfo (URL, user agent, viewport), screenshot (captured screenshot), consoleLog (recent console messages)."
                                     }
                                   }
                                 },
@@ -421,6 +430,110 @@
             }
           },
           "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate/": {
+      "post": {
+        "summary": "Generate Sample Config",
+        "tags": [
+          "WAFIR"
+        ],
+        "description": "Generates a sample wafir.yaml configuration file based on GitHub repository labels and project fields. Provide your installation ID and an array of targets to analyze. Returns the config as plain text YAML.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "installationId",
+                  "targets"
+                ],
+                "properties": {
+                  "installationId": {
+                    "type": "number",
+                    "description": "Your GitHub App installation ID"
+                  },
+                  "targets": {
+                    "type": "array",
+                    "description": "Array of targets to analyze",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "target"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "github/issues",
+                            "github/project"
+                          ],
+                          "description": "Target type"
+                        },
+                        "target": {
+                          "type": "string",
+                          "description": "Target identifier: \"owner/repo\" for issues, \"owner/projectNumber\" for projects"
+                        }
+                      }
+                    },
+                    "minItems": 1
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Generated wafir.yaml configuration content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "description": "Generated wafir.yaml configuration content"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
             "description": "Default Response",
             "content": {
               "application/json": {

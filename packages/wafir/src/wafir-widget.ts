@@ -64,7 +64,7 @@ export class WafirWidget extends LitElement {
   position: WidgetPosition = "bottom-right";
 
   @property({ type: String, attribute: "tooltip-text" })
-  tooltipText = "Open Issue Widget";
+  tooltipText = "Give Feedback";
 
   @property({ type: Array })
   forms: FormConfig[] = [];

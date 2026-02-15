@@ -2,19 +2,35 @@
 
 Customize and extend Wafir to match your needs.
 
+## Quick Start
 
-## Custom Triggers
-
-Replace the default floating button with your own custom trigger element using the `trigger` slot.
-
-### Vanilla HTML Example
+### Widget Attributes
 
 ```html
 <wafir-widget
-  target-type="string"   # github/issues | github/project
-  target="string"        # e.g., owner/repo or owner/projectNum
-  auth-ref="string"       # e.g., GitHub installation ID
+  config-url="/wafir.yaml"
+  bridge-url="https://your-bridge.example.com"
 >
+</wafir-widget>
+```
+
+Or configure inline without a config file:
+
+```html
+<wafir-widget
+  target-type="github/issues"
+  target="owner/repo"
+  auth-ref="YOUR_INSTALLATION_ID"
+>
+</wafir-widget>
+```
+
+### Custom Triggers
+
+Replace the default floating button with your own custom trigger element using the `trigger` slot:
+
+```html
+<wafir-widget config-url="/wafir.yaml">
   <button slot="trigger" class="my-custom-button">Report an Issue</button>
 </wafir-widget>
 ```
@@ -23,35 +39,192 @@ Replace the default floating button with your own custom trigger element using t
 
 ---
 
-## Form Configuration
+## Configuration File
 
-Configure the feedback form fields by placing a `wafir.yaml` file in your app's `public` folder (e.g. `public/wafir.yaml`).
-Make sure that it is publically accessible.
+Configure the feedback widget by placing a `wafir.yaml` file in your app's `public` folder (e.g. `public/wafir.yaml`). Make sure it is publicly accessible.
 
-**With the new schema, each field is defined using `id`, `type`, `attributes`, and `validations` subkeys.**
+### Basic Structure
+
+```yaml
+title: "Contact Us"
+
+targets:
+  - id: default
+    type: github/issues
+    target: your-username/your-repo
+    authRef: "YOUR_INSTALLATION_ID"
+
+forms:
+  - id: bug
+    label: Report Bug
+    icon: bug
+    targets: [default]
+    body:
+      - id: title
+        type: input
+        attributes:
+          label: "Issue Title"
+        validations:
+          required: true
+```
+
+---
+
+## Targets
+
+The `targets` key defines where feedback submissions are routed. Each target specifies a destination type and authentication.
+
+### Target Properties
+
+| Property  | Type   | Description                                                |
+| --------- | ------ | ---------------------------------------------------------- |
+| `id`      | string | Unique identifier referenced by forms                      |
+| `type`    | string | `github/issues` or `github/project`                        |
+| `target`  | string | `owner/repo` for issues, `owner/project-number` for projects |
+| `authRef` | string | GitHub App installation ID                                 |
+
+### Example
+
+```yaml
+targets:
+  - id: default
+    type: github/issues
+    target: your-username/your-repo
+    authRef: "YOUR_INSTALLATION_ID"
+  - id: project
+    type: github/project
+    target: your-username/9
+    authRef: "YOUR_INSTALLATION_ID"
+```
+
+---
+
+## Forms
+
+Forms define the structure of your feedback widget. Each form represents a distinct feedback type with its own fields and routing, displayed as tabs in the widget UI.
+
+### Form Properties
+
+| Property      | Type      | Description                                                              |
+| ------------- | --------- | ------------------------------------------------------------------------ |
+| `id`          | string    | Unique identifier. Also used as GitHub issue type when creating issues.  |
+| `label`       | string    | Display label shown in the form tab                                      |
+| `icon`        | string?   | Icon name: `bug`, `lightbulb`, or `thumbsup`                             |
+| `labels`      | string[]? | GitHub labels to auto-apply to issues                                    |
+| `templateUrl` | string?   | URL to a GitHub issue form template YAML                                 |
+| `targets`     | array?    | Array of target IDs to route submissions to                              |
+| `body`        | array     | Array of field definitions                                               |
+
+### Example
+
+```yaml
+forms:
+  - id: Bug
+    label: Report Bug
+    icon: bug
+    labels:
+      - bug
+    targets: [default]
+    body:
+      - id: title
+        type: input
+        attributes:
+          label: "Issue Title"
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: "Description"
+        validations:
+          required: true
+
+  - id: feedback
+    label: Feedback
+    icon: thumbsup
+    targets: [project]
+    body:
+      - id: rating
+        type: rating
+        attributes:
+          label: "How satisfied are you?"
+        validations:
+          required: true
+```
+
+### Using GitHub Issue Templates
+
+Reference an existing GitHub issue form template by providing a `templateUrl`. The fields will be fetched from the template:
+
+```yaml
+forms:
+  - id: Bug
+    label: Report Bug
+    icon: bug
+    templateUrl: https://raw.githubusercontent.com/owner/repo/main/.github/ISSUE_TEMPLATE/bug_report.yml
+    targets: [default]
+```
+
+### Single Form Mode
+
+If you only need one type of feedback, define a single form. The tab selector will be hidden automatically:
+
+```yaml
+forms:
+  - id: issue
+    label: Report Issue
+    icon: bug
+    body:
+      - id: title
+        type: input
+        attributes:
+          label: "Issue Title"
+        validations:
+          required: true
+```
+
+---
+
+## Fields
+
+Each field is defined using `id`, `type`, `attributes`, and `validations` subkeys. The schema is inspired by GitHub Issue Forms, extended with additional field types.
 
 ### Field Types
 
-| Type         | Description                               | Attributes (required/optional)                                        |
-| ------------ | ----------------------------------------- | --------------------------------------------------------------------- |
-| `input`      | Single-line text input                    | label, description?, placeholder?, value?                             |
-| `email`      | Email input                               | label, description?, placeholder?, value?                             |
-| `textarea`   | Multi-line text area                      | label, description?, placeholder?, value?, render?                    |
-| `dropdown`   | Dropdown selection                        | label, description?, placeholder?, value?, options, multiple?         |
-| `checkboxes` | Multiple checkbox options                 | label, description?, options (array of objects with label, required?) |
-| `markdown`   | Read-only Markdown display                | label, description?, value (markdown, required)                       |
-| `rating`     | Star rating (displayed as stars, saved as number 1-5) | label, description?, ratingLabels?                       |
-| `date`       | Date picker input                         | label, description?, value?                                           |
+| Type         | Description                                           | Key Attributes                                                        |
+| ------------ | ----------------------------------------------------- | --------------------------------------------------------------------- |
+| `input`      | Single-line text input                                | label, description?, placeholder?, value?                             |
+| `email`      | Email input                                           | label, description?, placeholder?, value?                             |
+| `textarea`   | Multi-line text area                                  | label, description?, placeholder?, value?, render?                    |
+| `dropdown`   | Dropdown selection                                    | label, options, description?, multiple?                               |
+| `checkboxes` | Multiple checkbox options                             | label, options (array of objects with label, required?)               |
+| `markdown`   | Read-only Markdown display                            | value (required)                                                      |
+| `rating`     | Star rating (1-5)                                     | label, description?, ratingLabels?                                    |
+| `date`       | Date picker input                                     | label, description?, value?                                           |
 
-### Field Structure
+### Field Properties
 
-> **Schema Source & Novelty**  
-> The overall field schema is inspired by GitHub Issue Forms, but Wafir extends it with the ability to add non-input (static) markdown fields for contextual instructions, help text, sections, and rich formatting within a form.
+| Property     | Location     | Type         | Description                                              |
+| ------------ | ------------ | ------------ | -------------------------------------------------------- |
+| id           | field (root) | string       | Unique identifier for the field                          |
+| type         | field (root) | string       | Field input type (see above)                             |
+| attributes   | field (root) | object       | Display and options attributes                           |
+| validations  | field (root) | object       | Validation rules (e.g., required: true/false)            |
+| label        | attributes   | string       | Display label                                            |
+| description  | attributes   | string?      | Helper/description text                                  |
+| placeholder  | attributes   | string?      | Placeholder text                                         |
+| value        | attributes   | string?      | Default value or Markdown content                        |
+| render       | attributes   | string?      | Syntax highlighting for textarea (e.g. shell)            |
+| options      | attributes   | array        | Options for dropdowns or checkboxes                      |
+| multiple     | attributes   | boolean?     | Allow multiple selections (dropdown only)                |
+| ratingLabels | attributes   | array?       | Custom labels for star rating                            |
+| autofill     | attributes   | string?      | Auto-fill with telemetry data (see Opt-In Telemetry)     |
+| required     | validations  | boolean      | If the field is required                                 |
 
-Each field must be defined as follows:
+### Basic Field Example
 
 ```yaml
-fields:
+body:
   - id: priority
     type: dropdown
     attributes:
@@ -65,9 +238,9 @@ fields:
       required: true
 ```
 
-#### Markdown Field Example
+### Markdown Field
 
-A markdown field can be used for headings, hints, or formatted instructions anywhere in your form. Markdown content is rendered securely (sanitized HTML) and is never included in submission data.
+Markdown fields display formatted content and are never included in submission data:
 
 ```yaml
 - id: instructions
@@ -78,78 +251,59 @@ A markdown field can be used for headings, hints, or formatted instructions anyw
       Please fill out all required fields. Your responses help us improve!
 ```
 
-#### Date Field Example
+### Date Field
 
-A date field renders a native date picker. The `value` attribute supports special tokens that resolve to dynamic dates at form load time.
+Date fields render a native date picker with support for dynamic date tokens:
 
 ```yaml
 - id: target-date
   type: date
   attributes:
     label: "Target Completion Date"
-    value: "today+30"  # Defaults to 30 days from now
+    value: "today+30"
   validations:
     required: false
 ```
 
-##### Date Value Tokens
+#### Date Value Tokens
 
-| Token | Example | Description |
-| ----- | ------- | ----------- |
-| `today` | `value: "today"` | Current date |
-| `today+N` | `value: "today+7"` | N days in the future |
-| `today-N` | `value: "today-30"` | N days in the past |
-| `YYYY-MM-DD` | `value: "2026-03-01"` | Static ISO date (passed through) |
+| Token        | Example              | Description           |
+| ------------ | -------------------- | --------------------- |
+| `today`      | `value: "today"`     | Current date          |
+| `today+N`    | `value: "today+7"`   | N days in the future  |
+| `today-N`    | `value: "today-30"`  | N days in the past    |
+| `YYYY-MM-DD` | `value: "2026-03-01"`| Static ISO date       |
 
-> **Note:** Date values are stored and submitted in ISO 8601 format (`YYYY-MM-DD`). When submitting to a GitHub Project, date fields will automatically map to project Date fields with matching names.
-
-#### Field Properties Table
-
-| Property     | Location     | Type         | Description                                     |
-| ------------ | ------------ | ------------ | ----------------------------------------------- |
-| id           | field (root) | string       | Unique identifier for the field                 |
-| type         | field (root) | string       | Field input type (see above)                    |
-| attributes   | field (root) | object       | All display/options attributes (see below)      |
-| validations  | field (root) | object       | Validation rules (e.g., required: true/false)   |
-| label        | attributes   | string       | Display label                                   |
-| description  | attributes   | string?      | Helper/description text                         |
-| placeholder  | attributes   | string?      | Placeholder text (if supported by type)         |
-| value        | attributes   | string?      | Default value or Markdown content               |
-| render       | attributes   | string?      | Syntax highlighting for textarea (e.g. shell)   |
-| options      | attributes   | array/object | Options for dropdowns or checkboxes             |
-| multiple     | attributes   | boolean?     | Allow multiple selections (dropdown only)       |
-| ratingLabels | attributes   | array?       | Custom labels for star rating (Wafir extension) |
-| autofill     | attributes   | string?      | Auto-fill field with telemetry data (see Opt-In Telemetry) |
-| required     | validations  | boolean      | If the field is required                        |
+> **Note:** Date values are stored and submitted in ISO 8601 format (`YYYY-MM-DD`). When submitting to a GitHub Project, date fields automatically map to project Date fields with matching names.
 
 ---
 
-## Opt-In Telemetry Fields
+## Opt-In Telemetry
 
-Wafir supports opt-in telemetry through special **autofill fields**. Unlike automatic telemetry collection, autofill fields give users explicit control over what data they share by presenting a checkbox they must enable.
+Wafir supports opt-in telemetry through **autofill fields**. These give users explicit control over what data they share by presenting a checkbox they must enable.
 
 ### Available Autofill Types
 
-| Autofill Value | Data Collected                                              | User Control |
-| -------------- | ----------------------------------------------------------- | ------------ |
-| `screenshot`   | DOM-to-canvas screenshot with optional element highlighting | Checkbox + capture button |
-| `browserInfo`  | URL, user agent, viewport size, language                    | Checkbox to include |
-| `consoleLog`   | Recent console messages (errors, warnings)                  | Checkbox to include |
+| Value        | Data Collected                                              | User Control                |
+| ------------ | ----------------------------------------------------------- | --------------------------- |
+| `screenshot` | DOM-to-canvas screenshot with optional element highlighting | Checkbox + capture          |
+| `browserInfo`| URL, user agent, viewport size, language                    | Checkbox to include         |
+| `consoleLog` | Recent console messages (errors, warnings)                  | Checkbox to include         |
 
 ### How It Works
 
-1. Add a `textarea` field with the `autofill` attribute to your form
-2. The widget displays an "Include [Label]" checkbox next to the field
-3. When the user checks the box, the field is auto-populated with the telemetry data
-4. Users can see exactly what data will be shared before submitting
+1. Add a `textarea` field with the `autofill` attribute
+2. The widget displays an "Include [Label]" checkbox
+3. When checked, the field auto-populates with telemetry data
+4. Users see exactly what data will be shared before submitting
 5. If unchecked, no telemetry data is included
 
-### Configuration Example
+### Example
 
 ```yaml
 forms:
   - id: bug
-    label: "Report Bug"
+    label: Report Bug
     icon: bug
     body:
       - id: title
@@ -190,206 +344,22 @@ forms:
 
 ---
 
-## Forms Configuration
-
-Define the structure of your feedback widget using forms in your `public/wafir.yaml` config file. Each form represents a distinct feedback type with its own fields and routing.
-
-> **Note:** Forms are displayed as tabs in the widget UI by default.
-
-### Form Properties
-
-| Property      | Type      | Description                                                                                      |
-| ------------- | --------- | ------------------------------------------------------------------------------------------------ |
-| `id`          | string    | Unique identifier for the form. Also used as the GitHub issue type when creating issues.          |
-| `label`       | string    | Display label shown in the form tab                                                                   |
-| `icon`        | string?   | Icon name (e.g., `bug`, `lightbulb`, `thumbsup`)                                                 |
-| `labels`      | string[]? | GitHub labels to auto-apply to issues created from this form                                      |
-| `templateUrl` | string?   | URL to a GitHub issue form template YAML file to use for this form's fields                       |
-| `targets`     | array?    | Array of target IDs to route submissions to                                                      |
-| `fields`      | array     | Array of field definitions for this form                                                          |
-
-> **Note:** The form `id` is automatically used as the GitHub issue type when creating issues. For example, a form with `id: Bug` will set the issue type to "Bug" in GitHub (requires issue types to be enabled in your repository/organization).
-
-### Using GitHub Issue Templates
-
-You can reference an existing GitHub issue form template by providing a `templateUrl`. The fields will be fetched from the template:
-
-```yaml
-forms:
-  - id: Bug
-    label: Report Bug
-    icon: bug
-    templateUrl: https://raw.githubusercontent.com/owner/repo/main/.github/ISSUE_TEMPLATE/bug_report.yml
-    targets: [default]
-```
-
-### Configuration Example
-
-```yaml
-forms:
-  - id: Bug
-    label: Report Bug
-    icon: bug
-    labels:
-      - bug
-      - wafir
-    targets: [default]
-    fields:
-      - id: title
-        type: input
-        attributes:
-          label: "Issue Title"
-        validations:
-          required: true
-
-  - id: Feature
-    label: Feature Request
-    icon: lightbulb
-    labels:
-      - enhancement
-      - feature-request
-    targets: [default]
-    fields:
-      - id: title
-        type: input
-        attributes:
-          label: "Feature Title"
-        validations:
-          required: true
-
-  - id: feedback
-    label: Feedback
-    icon: thumbsup
-    labels:
-      - feedback
-    targets: [project]
-    fields:
-      - id: rating
-        type: rating
-        attributes:
-          label: "How satisfied are you?"
-        validations:
-          required: true
-
-```
-
-### Single Form Mode
-
-If you only need one type of feedback, define a single form. The form selector will be hidden automatically:
-
-```yaml
-forms:
-  - id: issue
-    label: Report Issue
-    icon: bug
-    fields:
-      - id: title
-        type: input
-        attributes:
-          label: "Issue Title"
-        validations:
-          required: true
-```
-
----
-
-## Target Configuration
-
-The `targets` key in your `public/wafir.yaml` file allows you to define multiple destinations for user feedback, bug reports, and suggestions. Each target is an object specifying its id, type, destination, and authentication reference:
-
-### Example Targets Config
-
-```yaml
-targets:
-  - id: default
-    type: github/issues
-    target: your-username/your-repo
-    authRef: "YOUR_INSTALLATION_ID" # Replace with your installation ID
-  - id: project
-    type: github/project
-    target: your-username/your-project-id
-    authRef: "YOUR_INSTALLATION_ID"
-```
-
-Forms in your configuration reference targets:
-
-```yaml
-forms:
-  - id: feedback
-    label: Feedback
-    icon: thumbsup
-    isFeedback: true
-    targets: [project] # Routes this form's feedback to 'project' target
-    fields:
-      - id: rating
-        type: rating
-        attributes:
-          label: "How satisfied are you with our website?"
-        validations:
-          required: true
-      - id: description
-        type: textarea
-        attributes:
-          label: "What is the main reason for this rating?"
-        validations:
-          required: false
-
-  - id: suggestion
-    label: Suggestion
-    icon: lightbulb
-    fields:
-      - id: title
-        type: input
-        attributes:
-          label: "What is your suggestion?"
-        validations:
-          required: true
-      - id: description
-        type: textarea
-        attributes:
-          label: "Additional information:"
-        validations:
-          required: false
-
-  - id: issue
-    label: Issue
-    icon: bug
-    targets: [default] # Routes this form's feedback to 'default' target
-    fields:
-      - id: title
-        type: input
-        attributes:
-          label: "What issue did you encounter?"
-        validations:
-          required: true
-      - id: description
-        type: textarea
-        attributes:
-          label: "Additional information:"
-        validations:
-          required: true
-```
-
----
-
 ## JavaScript API
 
-Wafir provides a lightweight JavaScript API for programmatically opening the feedback widget, switching to a specific tab, or prefilling its fields. This lets you integrate advanced user flows (e.g., contextual help, report-a-bug, or dynamic survey entry from your app).
+Wafir provides a JavaScript API for programmatically opening the widget, switching tabs, or prefilling fields.
 
-### Usage Patterns
-
-#### NPM/Module Usage (Recommended)
+### NPM/Module Usage
 
 ```ts
 import { wafirWidget } from "wafir";
 
-// Opens the widget (default tab);
+// Open the widget (default tab)
 wafirWidget.open();
 
-// Opens the widget on a specific tab by tab ID
+// Open a specific tab
 wafirWidget.open({ tab: "suggestion" });
 
-// Opens the 'issue' tab with fields prefilled
+// Open with prefilled fields
 wafirWidget.open({
   tab: "issue",
   prefill: {
@@ -399,9 +369,9 @@ wafirWidget.open({
 });
 ```
 
-#### Script Tag/CDN Usage
+### Script Tag/CDN Usage
 
-When loaded from a `<script>` tag, the same API is available on the global `window`:
+When loaded from a `<script>` tag, the API is available on `window`:
 
 ```js
 window.wafirWidget.open({
@@ -413,14 +383,25 @@ window.wafirWidget.open({
 });
 ```
 
-- **Works from anywhere:** You can call `open()` before the widget is injected/loaded; your request will be queued until setup completes.
-- **Tab IDs**: Must match a defined `id` under `tabs:` in your YAML config. Invalid IDs will show a warning and fall back to the default tab.
-- **Field IDs**: Prefill keys must correspond to field `id`s for that tab. Invalid keys will warn and be ignored.
-- **Read-only/static fields**: Prefill does not affect fields of type `markdown` or other non-inputs.
+### API Reference
 
-#### Example: Custom Button
+```ts
+interface wafirWidget {
+  open(options?: {
+    tab?: string;                    // Form ID from your config
+    prefill?: Record<string, any>;   // Field ID/value pairs
+  }): void;
+}
+```
 
-You can show the widget on _any_ user action, not just with the built-in trigger!
+#### Notes
+
+- **Queued execution:** You can call `open()` before the widget loads; requests are queued until ready.
+- **Tab IDs:** Must match a form `id` in your config. Invalid IDs fall back to the default tab with a warning.
+- **Field IDs:** Prefill keys must match field `id`s. Invalid keys are ignored with a warning.
+- **Read-only fields:** Prefill does not affect `markdown` fields.
+
+### Example: Custom Button
 
 ```html
 <button onclick="window.wafirWidget.open({tab: 'suggestion'})">
@@ -428,33 +409,15 @@ You can show the widget on _any_ user action, not just with the built-in trigger
 </button>
 ```
 
-#### API Reference
-
-```ts
-interface wafirWidget {
-  open(options?: {
-    tab?: string; // Tab ID from your config
-    prefill?: Record<string, any>; // Field ID/value for the activated tab
-  }): void;
-}
-```
-
-- Returns: `void` (shows the widget)
-
-##### Options
-
-- `tab` (optional): String tab identifier to activate on open.
-- `prefill` (optional): Object mapping field IDs (from YAML) to initial values (applied if field exists and is user-editable).
-
 ---
 
 ## Connect Personal Projects
 
-GitHub personal projects require additional authorization beyond the GitHub App installation. To enable feedback submission to personal project boards, you need to connect your account with additional permissions.
+GitHub personal projects require additional authorization beyond the GitHub App installation.
 
 ### Why is this needed?
 
-When you install the Wafir GitHub App, it only has access to organization repositories and projects. Personal projects (under your user account) require separate OAuth authorization to ensure your personal data remains secure.
+The Wafir GitHub App only has access to organization repositories and projects. Personal projects require separate OAuth authorization.
 
 ### How to Connect
 
@@ -482,8 +445,6 @@ When you install the Wafir GitHub App, it only has access to organization reposi
 
 ### Using Personal Projects
 
-Once connected, you can configure targets in your `wafir.yaml` to point to your personal projects:
-
 ```yaml
 targets:
   - id: personal-project
@@ -496,28 +457,26 @@ targets:
 
 ## Configuration Examples
 
-Place your Wafir configuration file in the `public` folder of your app, e.g. `public/wafir.yaml`. We provide ready-to-use configuration templates for common use cases (see `/examples`). All examples use the new targets config format and schema:
+We provide ready-to-use configuration templates in the `/examples` folder:
 
-Required top-level keys:
-
-- `installationId`: Your numeric GitHub App installation ID
-- `targets`: Array of target definitions for feedback routing
-
-- **Basic** — Standard bug reporting setup with targets
+- **Basic** — Standard bug reporting setup
 - **Minimal** — Simplest possible config
 - **Full Featured** — All options demonstrated
 - **Privacy Focused** — No automatic data collection
 - **Feature Requests** — Optimized for ideas
 - **Feedback Focused** — Star rating and satisfaction surveys
+
+---
+
 ## CSS Customization
 
 Wafir uses Shadow DOM for isolation, but exposes CSS custom properties and `::part()` selectors for customization.
 
 ### CSS Custom Properties
 
-Override these variables on the `wafir-widget` element to customize the widget's appearance.
+Override these variables on the `wafir-widget` element:
 
-#### Reporter Variables
+#### Widget Variables
 
 | Variable                          | Default                       | Description                  |
 | --------------------------------- | ----------------------------- | ---------------------------- |
@@ -597,7 +556,6 @@ wafir-widget {
 Use `::part()` to style specific elements:
 
 ```css
-/* Style the trigger button */
 wafir-widget::part(button) {
   background: #10b981;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);

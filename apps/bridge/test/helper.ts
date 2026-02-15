@@ -25,6 +25,7 @@ export interface MockOctokit {
     };
     issues: {
       create: Mock;
+      listLabelsForRepo: Mock;
     };
     users: {
       getByUsername: Mock;
@@ -43,6 +44,7 @@ export function createMockOctokit(): MockOctokit {
       },
       issues: {
         create: vi.fn(),
+        listLabelsForRepo: vi.fn(),
       },
       users: {
         getByUsername: vi.fn(),
