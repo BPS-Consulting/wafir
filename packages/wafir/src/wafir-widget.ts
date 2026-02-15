@@ -598,6 +598,16 @@ export class WafirWidget extends LitElement {
       const submitFields = activeFields.filter((f) => f.type !== "markdown");
       const fieldOrder = submitFields.map((f) => String(f.id));
 
+      // Build field labels map from config
+      const fieldLabels: Record<string, string> = {};
+      for (const field of submitFields) {
+        const id = String(field.id);
+        const label = field.attributes?.label;
+        if (label) {
+          fieldLabels[id] = label;
+        }
+      }
+
       // Only send user-data fields in formFields
       const filteredFormData: Record<string, unknown> = {};
       for (const field of submitFields) {
@@ -609,6 +619,12 @@ export class WafirWidget extends LitElement {
       const resolvedConfigUrl = this.configUrl
         ? this._resolveConfigUrl(this.configUrl)
         : "";
+
+      // Check if form uses new autofill fields (opt-in telemetry)
+      // If so, telemetry data is included in formFields, not as separate params
+      const hasAutofillFields = activeFields.some(
+        (f) => f.type === "textarea" && (f.attributes as any)?.autofill
+      );
 
       // Note: We send one target for validation, but the backend will determine
       // which targets to actually submit to based on the form's targets array in the config.
@@ -625,10 +641,17 @@ export class WafirWidget extends LitElement {
         bridgeUrl: this.bridgeUrl || undefined,
         formFields: filteredFormData,
         fieldOrder,
-        browserInfo: this._telemetry.browserInfo
-          ? (browserInfo.get() ?? undefined)
-          : undefined,
-        consoleLogs: this._telemetry.consoleLog ? consoleLogs.get() : undefined,
+        fieldLabels,
+        // Only send legacy telemetry params if no autofill fields are defined
+        // (for backward compatibility with old configs)
+        browserInfo:
+          !hasAutofillFields && this._telemetry.browserInfo
+            ? (browserInfo.get() ?? undefined)
+            : undefined,
+        consoleLogs:
+          !hasAutofillFields && this._telemetry.consoleLog
+            ? consoleLogs.get()
+            : undefined,
       });
 
       alert("Thank you for your input!");

@@ -12,6 +12,8 @@ export interface SubmitBody {
   labels?: string[];
   formFields?: Record<string, unknown>;
   fieldOrder?: string[];
+  /** Map of field IDs to their display labels */
+  fieldLabels?: Record<string, string>;
   browserInfo?: {
     url?: string;
     userAgent?: string;
@@ -54,10 +56,14 @@ export class SubmitService {
 
   /**
    * Builds a markdown body from form fields.
+   * @param formFields - The form field values keyed by field ID
+   * @param fieldOrder - Optional array of field IDs specifying display order
+   * @param fieldLabels - Optional map of field IDs to their display labels
    */
   buildMarkdownFromFields(
     formFields: Record<string, unknown>,
     fieldOrder?: string[],
+    fieldLabels?: Record<string, string>,
   ): string {
     const orderedKeys = fieldOrder?.length
       ? fieldOrder.filter((key) => key in formFields)
@@ -71,7 +77,8 @@ export class SubmitService {
       const value = formFields[key];
       if (value === undefined || value === null || value === "") continue;
 
-      const label = this.formatFieldLabel(key);
+      // Use provided label if available, otherwise format from field ID
+      const label = fieldLabels?.[key] || this.formatFieldLabel(key);
       let displayValue: string;
 
       if (key === "rating" && typeof value === "number") {

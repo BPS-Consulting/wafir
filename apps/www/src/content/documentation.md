@@ -119,29 +119,85 @@ A date field renders a native date picker. The `value` attribute supports specia
 | options      | attributes   | array/object | Options for dropdowns or checkboxes             |
 | multiple     | attributes   | boolean?     | Allow multiple selections (dropdown only)       |
 | ratingLabels | attributes   | array?       | Custom labels for star rating (Wafir extension) |
+| autofill     | attributes   | string?      | Auto-fill field with telemetry data (see Opt-In Telemetry) |
 | required     | validations  | boolean      | If the field is required                        |
 
 ---
 
-## Telemetry Options
+## Opt-In Telemetry Fields
 
-Wafir can automatically capture browser context to help with debugging. All telemetry is opt-in via configuration in your `public/wafir.yaml` file.
+Wafir supports opt-in telemetry through special **autofill fields**. Unlike automatic telemetry collection, autofill fields give users explicit control over what data they share by presenting a checkbox they must enable.
 
-### Available Options
+### Available Autofill Types
 
-| Option        | Data Collected                                              |
-| ------------- | ----------------------------------------------------------- |
-| `screenshot`  | DOM-to-canvas screenshot with optional element highlighting |
-| `browserInfo` | URL, user agent, viewport size, language                    |
-| `consoleLog`  | Recent console messages (errors, warnings, logs)            |
+| Autofill Value | Data Collected                                              | User Control |
+| -------------- | ----------------------------------------------------------- | ------------ |
+| `screenshot`   | DOM-to-canvas screenshot with optional element highlighting | Checkbox + capture button |
+| `browserInfo`  | URL, user agent, viewport size, language                    | Checkbox to include |
+| `consoleLog`   | Recent console messages (errors, warnings)                  | Checkbox to include |
 
-### Configuration
+### How It Works
+
+1. Add a `textarea` field with the `autofill` attribute to your form
+2. The widget displays an "Include [Label]" checkbox next to the field
+3. When the user checks the box, the field is auto-populated with the telemetry data
+4. Users can see exactly what data will be shared before submitting
+5. If unchecked, no telemetry data is included
+
+### Configuration Example
 
 ```yaml
+forms:
+  - id: bug
+    label: "Report Bug"
+    icon: bug
+    body:
+      - id: title
+        type: input
+        attributes:
+          label: "Issue Title"
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: "Describe the issue"
+        validations:
+          required: true
+      # Opt-in telemetry fields
+      - id: browser-info
+        type: textarea
+        attributes:
+          label: "Browser Info"
+          autofill: browserInfo
+        validations:
+          required: false
+      - id: screenshot
+        type: textarea
+        attributes:
+          label: "Screenshot"
+          autofill: screenshot
+        validations:
+          required: false
+      - id: console-logs
+        type: textarea
+        attributes:
+          label: "Console Logs"
+          autofill: consoleLog
+        validations:
+          required: false
+```
+
+### Legacy Telemetry Configuration (Deprecated)
+
+The top-level `telemetry` configuration section is deprecated but still supported for backward compatibility. We recommend migrating to autofill fields for better user privacy control.
+
+```yaml
+# DEPRECATED - Use autofill fields instead
 telemetry:
-  screenshot: true # Enable screenshot capture
-  browserInfo: true # Collect browser details
-  consoleLog: true # Capture console messages
+  screenshot: true
+  browserInfo: true
+  consoleLog: true
 ```
 
 ---

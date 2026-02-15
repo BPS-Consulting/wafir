@@ -14,10 +14,11 @@ targets:
     target: BPS-Consulting/9
     authRef: "105081464"
 
-telemetry:
-  screenshot: true
-  browserInfo: true
-  consoleLog: false
+# Note: telemetry section is deprecated, use autofill fields instead for user opt-in
+# telemetry:
+#   screenshot: true
+#   browserInfo: true
+#   consoleLog: false
 
 forms:
   - id: feedback
@@ -80,3 +81,18 @@ forms:
           placeholder: "Please include steps to reproduce and expected vs actual behavior"
         validations:
           required: true
+      # Opt-in telemetry fields - users choose what to share
+      - id: browser-info
+        type: textarea
+        attributes:
+          label: "Browser Info"
+          autofill: browserInfo
+        validations:
+          required: false
+      - id: screenshot
+        type: textarea
+        attributes:
+          label: "Screenshot"
+          autofill: screenshot
+        validations:
+          required: false

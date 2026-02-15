@@ -18,10 +18,11 @@ targets:
     target: BPS-Consulting/9
     authRef: "105081464"
 
-telemetry:
-  screenshot: true
-  browserInfo: true
-  consoleLog: false
+# Note: telemetry section is deprecated, use autofill fields instead for user opt-in
+# telemetry:
+#   screenshot: true
+#   browserInfo: true
+#   consoleLog: false
 
 forms:
   - id: feedback
@@ -89,4 +90,38 @@ forms:
     label: Issue
     icon: bug
     targets: [default]
-    templateUrl: "/subform.yaml"
+    body:
+      - id: title
+        type: input
+        attributes:
+          label: "Issue Title"
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: "Describe the issue"
+        validations:
+          required: true
+      # Opt-in telemetry fields
+      - id: browser-info
+        type: textarea
+        attributes:
+          label: "Browser Info"
+          autofill: browserInfo
+        validations:
+          required: false
+      - id: console-logs
+        type: textarea
+        attributes:
+          label: "Console Logs"
+          autofill: consoleLog
+        validations:
+          required: false
+      - id: screenshot
+        type: textarea
+        attributes:
+          label: "Screenshot"
+          autofill: screenshot
+        validations:
+          required: false

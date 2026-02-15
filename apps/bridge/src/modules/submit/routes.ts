@@ -155,6 +155,7 @@ const submitRoute: FastifyPluginAsync = async (
         let finalBody = submitService.buildMarkdownFromFields(
           input.formFields || {},
           input.fieldOrder,
+          input.fieldLabels,
         );
 
         // Append browser info if provided

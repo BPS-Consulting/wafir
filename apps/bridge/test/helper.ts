@@ -196,6 +196,33 @@ forms:
         validations:
           required: true
 `,
+  withAutofillFields: `
+title: "Config with Autofill Fields"
+targets:
+  - id: default
+    type: github/issues
+    target: testowner/testrepo
+    authRef: "123"
+forms:
+  - id: issue
+    label: "Report Issue"
+    body:
+      - id: title
+        type: input
+        validations:
+          required: true
+      - id: message
+        type: textarea
+        validations:
+          required: true
+      - id: browser-info
+        type: textarea
+        attributes:
+          label: "Browser Info"
+          autofill: browserInfo
+        validations:
+          required: false
+`,
 };
 
 // Build a test Fastify app with mocked plugins

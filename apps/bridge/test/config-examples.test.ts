@@ -179,11 +179,8 @@ describe("Example Configurations", () => {
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
 
-      // Check telemetry settings
-      expect(body.telemetry).toBeDefined();
-      expect(body.telemetry.screenshot).toBe(true);
-      expect(body.telemetry.browserInfo).toBe(true);
-      expect(body.telemetry.consoleLog).toBe(true);
+      // Note: telemetry section is now deprecated in favor of autofill fields
+      // The full-featured config no longer has a telemetry section
 
       // Check forms exist
       expect(body.forms).toBeDefined();
@@ -196,6 +193,15 @@ describe("Example Configurations", () => {
       expect(firstForm.label).toBeDefined();
       expect(firstForm.body).toBeDefined();
       expect(Array.isArray(firstForm.body)).toBe(true);
+
+      // Check that bug form has autofill fields
+      const bugForm = body.forms.find((f: any) => f.id === "bug");
+      if (bugForm) {
+        const browserInfoField = bugForm.body?.find(
+          (f: any) => f.attributes?.autofill === "browserInfo",
+        );
+        expect(browserInfoField).toBeDefined();
+      }
     });
   });
 

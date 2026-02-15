@@ -61,6 +61,13 @@ export class RequestParserService {
                 result.fieldOrder = [];
               }
               break;
+            case "fieldLabels":
+              try {
+                result.fieldLabels = JSON.parse(val);
+              } catch {
+                result.fieldLabels = {};
+              }
+              break;
             case "browserInfo":
               try {
                 result.browserInfo = JSON.parse(val);

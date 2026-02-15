@@ -116,6 +116,8 @@ export interface SubmitIssueParams {
   bridgeUrl?: string;
   formFields?: Record<string, unknown>;
   fieldOrder?: string[];
+  /** Map of field IDs to their display labels */
+  fieldLabels?: Record<string, string>;
   browserInfo?: BrowserInfo;
   consoleLogs?: ConsoleLogEntry[];
 }
@@ -133,6 +135,7 @@ export const submitIssue = async (params: SubmitIssueParams) => {
     bridgeUrl,
     formFields,
     fieldOrder,
+    fieldLabels,
     browserInfo,
     consoleLogs,
   } = params;
@@ -161,6 +164,9 @@ export const submitIssue = async (params: SubmitIssueParams) => {
   }
   if (fieldOrder) {
     formData.append("fieldOrder", JSON.stringify(fieldOrder));
+  }
+  if (fieldLabels) {
+    formData.append("fieldLabels", JSON.stringify(fieldLabels));
   }
   if (browserInfo) {
     formData.append("browserInfo", JSON.stringify(browserInfo));
