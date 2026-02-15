@@ -17,6 +17,7 @@ import {
 import { takeFullPageScreenshot } from "./utils/screenshot";
 import { resolveDateValue, isDateToken } from "./utils/date";
 import type { FieldConfigApi as FieldConfig } from "./api/client";
+import type { BrowserInfo, ConsoleLog } from "./utils/telemetry";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
@@ -40,15 +41,6 @@ export class WafirForm extends LitElement {
   }
 
   @property({ type: Boolean })
-  showBrowserInfo = false;
-
-  @property({ type: Boolean })
-  showConsoleLog = false;
-
-  @property({ type: Boolean })
-  showScreenshot = true;
-
-  @property({ type: Boolean })
   loading = false;
 
   @property({ type: Boolean })
@@ -59,7 +51,159 @@ export class WafirForm extends LitElement {
   private _consoleLogsController = new StoreController(this, consoleLogs);
   private _capturedImageController = new StoreController(this, capturedImage);
 
+  // Track which autofill fields are enabled (checked)
+  private _autofillEnabled: Record<string, boolean> = {};
+
   static styles = [unsafeCSS(formStyles)];
+
+  /**
+   * Formats browser info as a readable text string for textarea display.
+   */
+  private _formatBrowserInfo(info: BrowserInfo): string {
+    const lines: string[] = [];
+    if (info.url) lines.push(`URL: ${info.url}`);
+    if (info.userAgent) lines.push(`User Agent: ${info.userAgent}`);
+    if (info.viewportWidth && info.viewportHeight) {
+      lines.push(`Viewport: ${info.viewportWidth}x${info.viewportHeight}`);
+    }
+    if (info.language) lines.push(`Language: ${info.language}`);
+    return lines.join("\n");
+  }
+
+  /**
+   * Formats console logs as a readable text string for textarea display.
+   */
+  private _formatConsoleLogs(logs: ConsoleLog[]): string {
+    if (!logs || logs.length === 0) return "";
+    return logs
+      .map(
+        (log) =>
+          `[${log.type.toUpperCase()}] ${log.timestamp.split("T")[1]?.split(".")[0] || ""} ${log.message}`,
+      )
+      .join("\n");
+  }
+
+  /**
+   * Handles toggling of autofill checkbox for telemetry fields.
+   */
+  private _handleAutofillToggle(fieldId: string, autofillType: string, checked: boolean) {
+    this._autofillEnabled[fieldId] = checked;
+    const currentData = getTabFormData(this.tabId);
+
+    if (checked) {
+      // Populate field with telemetry data
+      let value = "";
+      if (autofillType === "browserInfo") {
+        const info = this._browserInfoController.value;
+        if (info) {
+          value = this._formatBrowserInfo(info);
+        }
+      } else if (autofillType === "consoleLog") {
+        const logs = this._consoleLogsController.value;
+        if (logs && logs.length > 0) {
+          value = this._formatConsoleLogs([...logs]);
+        }
+      } else if (autofillType === "screenshot") {
+        // Automatically take a screenshot when checkbox is checked
+        takeFullPageScreenshot();
+      }
+      setTabFormData(this.tabId, { ...currentData, [fieldId]: value });
+    } else {
+      // Clear the field and screenshot if applicable
+      if (autofillType === "screenshot") {
+        setCapturedImage(null);
+      }
+      setTabFormData(this.tabId, { ...currentData, [fieldId]: "" });
+    }
+    this.requestUpdate();
+  }
+
+  /**
+   * Renders the screenshot field with opt-in checkbox and capture controls.
+   */
+  private _renderScreenshotField(_field: FieldConfig, isEnabled: boolean) {
+    const hasScreenshot = !!this._capturedImageController.value;
+
+    if (!isEnabled) {
+      return html`
+        <div class="screenshot-placeholder">
+          <span class="screenshot-hint">Enable the checkbox above to capture a screenshot</span>
+        </div>
+      `;
+    }
+
+    return html`
+      <div class="screenshot-container">
+        ${hasScreenshot
+          ? html`
+              <div class="screenshot-preview">
+                <img
+                  src="${this._capturedImageController.value}"
+                  alt="Captured screenshot"
+                />
+                <button
+                  type="button"
+                  class="screenshot-clear"
+                  @click="${() => setCapturedImage(null)}"
+                >
+                  &times;
+                </button>
+              </div>
+              <div class="screenshot-actions">
+                <button
+                  type="button"
+                  @click="${() => takeFullPageScreenshot()}"
+                >
+                  Retake
+                </button>
+                <button
+                  type="button"
+                  class="highlight-btn"
+                  @click="${() => startSelection()}"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                    />
+                  </svg>
+                  Highlight
+                </button>
+              </div>
+            `
+          : html`
+              <div class="screenshot-placeholder">
+                <span class="screenshot-hint">Capturing screenshot...</span>
+              </div>
+            `}
+      </div>
+    `;
+  }
+
+  /**
+   * Returns a human-readable label for an autofill type.
+   */
+  private _getAutofillLabel(autofillType: string, customLabel?: string): string {
+    if (customLabel) return customLabel;
+    switch (autofillType) {
+      case "browserInfo":
+        return "Browser Info";
+      case "consoleLog":
+        return "Console Logs";
+      case "screenshot":
+        return "Screenshot";
+      default:
+        return autofillType;
+    }
+  }
 
   willUpdate(changedProperties: Map<string, any>) {
     if (changedProperties.has("fields")) {
@@ -143,17 +287,28 @@ export class WafirForm extends LitElement {
         const htmlString = DOMPurify.sanitize(marked.parse(markdown) as string);
         return html`<div class="form-markdown">${unsafeHTML(htmlString)}</div>`;
       }
-      case "textarea":
+      case "textarea": {
+        const autofill = (field.attributes as any)?.autofill;
+        const isAutofillField = autofill === "browserInfo" || autofill === "consoleLog" || autofill === "screenshot";
+        const isAutofillEnabled = this._autofillEnabled[String(field.id)] ?? false;
+
+        // For screenshot autofill, render the screenshot capture UI
+        if (autofill === "screenshot") {
+          return this._renderScreenshotField(field, isAutofillEnabled);
+        }
+
         return html`
           <textarea
             id="${String(field.id)}"
             .value="${value}"
             placeholder="${field.attributes!.placeholder || ""}"
-            ?required="${field.validations?.required}"
+            ?required="${field.validations?.required && !isAutofillField}"
+            ?disabled="${isAutofillField && isAutofillEnabled}"
             @input="${(e: Event) =>
               this._handleInputChange(e, String(field.id))}"
           ></textarea>
         `;
+      }
       case "dropdown": // GitHub Issue Forms (was select)
         return html`
           <select
@@ -299,6 +454,34 @@ export class WafirForm extends LitElement {
             return html`<div class="form-markdown-group">
               ${this._renderFieldInput(field)}
             </div>`;
+
+          // Check for autofill attribute on textarea fields
+          const autofill = (field.attributes as any)?.autofill;
+          const isAutofillField = field.type === "textarea" && 
+            (autofill === "browserInfo" || autofill === "consoleLog" || autofill === "screenshot");
+          const isAutofillEnabled = this._autofillEnabled[String(field.id)] ?? false;
+
+          if (isAutofillField) {
+            const labelText = this._getAutofillLabel(autofill, field.attributes?.label);
+            return html`
+              <div class="form-group autofill-group">
+                <label class="autofill-label">
+                  <input
+                    type="checkbox"
+                    class="autofill-checkbox"
+                    .checked="${isAutofillEnabled}"
+                    @change="${(e: Event) => {
+                      const checked = (e.target as HTMLInputElement).checked;
+                      this._handleAutofillToggle(String(field.id), autofill, checked);
+                    }}"
+                  />
+                  Include ${labelText}
+                </label>
+                ${this._renderFieldInput(field)}
+              </div>
+            `;
+          }
+
           return html`
             <div class="form-group">
               <label for="${String(field.id)}">
@@ -309,86 +492,6 @@ export class WafirForm extends LitElement {
             </div>
           `;
         })}
-        ${this.showScreenshot
-          ? html`
-              <div>
-                ${this._capturedImageController.value
-                  ? html`
-                      <div class="screenshot-preview">
-                        <img
-                          src="${this._capturedImageController.value}"
-                          alt="Captured screenshot"
-                        />
-                        <button
-                          type="button"
-                          class="screenshot-clear"
-                          @click="${() => setCapturedImage(null)}"
-                        >
-                          &times;
-                        </button>
-                      </div>
-                      <div class="screenshot-actions">
-                        <button
-                          type="button"
-                          @click="${() => takeFullPageScreenshot()}"
-                        >
-                          Retake
-                        </button>
-                        <button
-                          type="button"
-                          class="highlight-btn"
-                          @click="${() => startSelection()}"
-                        >
-                          <svg
-                            width="14"
-                            height="14"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                            />
-                          </svg>
-                          Highlight
-                        </button>
-                      </div>
-                    `
-                  : html`
-                      <button
-                        type="button"
-                        class="capture-button"
-                        @click="${() => takeFullPageScreenshot()}"
-                      >
-                        <svg
-                          width="16"
-                          height="16"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                          />
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                        </svg>
-                        Take Screenshot
-                      </button>
-                    `}
-              </div>
-            `
-          : ""}
 
         <button
           class="submit-button"
@@ -401,48 +504,6 @@ export class WafirForm extends LitElement {
               ? "Service Unavailable"
               : "Submit"}
         </button>
-
-        ${this.showBrowserInfo && this._browserInfoController.value
-          ? html`
-              <div class="telemetry-section">
-                <h4>Browser Information</h4>
-                <div class="telemetry-grid">
-                  <span class="telemetry-label">URL:</span>
-                  <span>${this._browserInfoController.value.url}</span>
-                  <span class="telemetry-label">Viewport:</span>
-                  <span
-                    >${this._browserInfoController.value.viewportWidth}x${this
-                      ._browserInfoController.value.viewportHeight}</span
-                  >
-                  <span class="telemetry-label">UA:</span>
-                  <span style="font-size: 10px;"
-                    >${this._browserInfoController.value.userAgent}</span
-                  >
-                </div>
-              </div>
-            `
-          : ""}
-        ${this.showConsoleLog && this._consoleLogsController.value.length > 0
-          ? html`
-              <div class="telemetry-section">
-                <h4>Recent Console Logs</h4>
-                <div class="logs-container">
-                  ${this._consoleLogsController.value.map(
-                    (log) => html`
-                      <div
-                        class="log-item ${log.type === "warn"
-                          ? "log-warn"
-                          : "log-error"}"
-                      >
-                        [${log.timestamp.split("T")[1].split(".")[0]}]
-                        ${log.message}
-                      </div>
-                    `,
-                  )}
-                </div>
-              </div>
-            `
-          : ""}
       </form>
     `;
   }

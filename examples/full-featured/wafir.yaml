@@ -10,10 +10,12 @@ targets:
     target: your-username/your-repo
     authRef: "YOUR_INSTALLATION_ID" # Replace with your installation ID
 
-telemetry:
-  screenshot: true
-  browserInfo: true
-  consoleLog: true
+# Note: The telemetry section is deprecated. Use autofill fields instead for user opt-in.
+# Legacy telemetry config is still supported for backward compatibility.
+# telemetry:
+#   screenshot: true
+#   browserInfo: true
+#   consoleLog: true
 
 forms:
   - id: feedback
@@ -140,7 +142,29 @@ forms:
         type: markdown
         attributes:
           value: |
-            _Tip: Attach a screenshot on the next screen for faster diagnosis!_
+            _Tip: Include a screenshot and browser info for faster diagnosis!_
+      # New: Opt-in telemetry fields - users choose what to share
+      - id: browser-info
+        type: textarea
+        attributes:
+          label: "Browser Info"
+          autofill: browserInfo
+        validations:
+          required: false
+      - id: screenshot
+        type: textarea
+        attributes:
+          label: "Screenshot"
+          autofill: screenshot
+        validations:
+          required: false
+      - id: console-logs
+        type: textarea
+        attributes:
+          label: "Console Logs"
+          autofill: consoleLog
+        validations:
+          required: false
   - id: suggestion
     label: "Suggest a Feature"
     icon: "lightbulb"

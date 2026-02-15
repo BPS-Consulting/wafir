@@ -144,9 +144,6 @@ describe("GET /config", () => {
       expect(body.targets.some((t: any) => t.type === "github/project")).toBe(
         true,
       );
-      expect(body.telemetry.screenshot).toBe(true);
-      expect(body.telemetry.browserInfo).toBe(true);
-      expect(body.telemetry.consoleLog).toBe(true);
       expect(body.forms).toHaveLength(2);
       expect(body.forms[0].id).toBe("issue");
       expect(body.forms[1].id).toBe("feedback");

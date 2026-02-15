@@ -79,6 +79,13 @@ const fieldSchema = {
           items: { type: "string" },
           description: "Custom labels for star rating (Wafir extension only).",
         },
+        // Wafir Extension: Auto-fill attribute for telemetry fields
+        autofill: {
+          type: "string",
+          enum: ["browserInfo", "screenshot", "consoleLog"],
+          description:
+            "Auto-fill the field with telemetry data. When specified, renders an opt-in checkbox. Values: browserInfo (URL, user agent, viewport), screenshot (captured screenshot), consoleLog (recent console messages).",
+        },
       },
     },
     validations: {

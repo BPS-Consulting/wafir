@@ -195,6 +195,63 @@ textarea {
   background: #dbeafe;
 }
 
+/* Autofill field styles (opt-in telemetry) */
+.autofill-group {
+  border: 1px solid var(--wafir-form-border-color, #d1d5db);
+  border-radius: var(--wafir-form-border-radius, 6px);
+  padding: 12px;
+  background: var(--wafir-form-telemetry-bg, #f9fafb);
+}
+
+.autofill-label {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--wafir-form-text-color, #374151);
+  font-size: 13px;
+  margin-bottom: 8px !important;
+}
+
+.autofill-checkbox {
+  width: 16px !important;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--wafir-form-primary-color, #2563eb);
+}
+
+.autofill-group textarea {
+  margin-top: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  min-height: 60px;
+  background: var(--wafir-form-input-bg, #ffffff);
+}
+
+.autofill-group textarea:disabled {
+  background: var(--wafir-form-bg-secondary, #f3f4f6);
+  color: var(--wafir-form-text-secondary, #6b7280);
+}
+
+.screenshot-container {
+  margin-top: 8px;
+}
+
+.screenshot-placeholder {
+  padding: 16px;
+  text-align: center;
+  background: var(--wafir-form-bg-secondary, #f3f4f6);
+  border: 1px dashed var(--wafir-form-border-color, #d1d5db);
+  border-radius: var(--wafir-form-border-radius, 6px);
+  margin-top: 8px;
+}
+
+.screenshot-hint {
+  color: var(--wafir-form-text-secondary, #6b7280);
+  font-size: 12px;
+}
+
 .telemetry-section {
   margin-top: 16px;
   padding: 12px;

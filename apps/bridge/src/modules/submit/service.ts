@@ -12,18 +12,8 @@ export interface SubmitBody {
   labels?: string[];
   formFields?: Record<string, unknown>;
   fieldOrder?: string[];
-  browserInfo?: {
-    url?: string;
-    userAgent?: string;
-    viewportWidth?: number;
-    viewportHeight?: number;
-    language?: string;
-  };
-  consoleLogs?: Array<{
-    type: string;
-    message: string;
-    timestamp: string;
-  }>;
+  /** Map of field IDs to their display labels */
+  fieldLabels?: Record<string, string>;
 }
 
 // Keys to exclude from the markdown body (used for other purposes)
@@ -54,10 +44,14 @@ export class SubmitService {
 
   /**
    * Builds a markdown body from form fields.
+   * @param formFields - The form field values keyed by field ID
+   * @param fieldOrder - Optional array of field IDs specifying display order
+   * @param fieldLabels - Optional map of field IDs to their display labels
    */
   buildMarkdownFromFields(
     formFields: Record<string, unknown>,
     fieldOrder?: string[],
+    fieldLabels?: Record<string, string>,
   ): string {
     const orderedKeys = fieldOrder?.length
       ? fieldOrder.filter((key) => key in formFields)
@@ -71,7 +65,8 @@ export class SubmitService {
       const value = formFields[key];
       if (value === undefined || value === null || value === "") continue;
 
-      const label = this.formatFieldLabel(key);
+      // Use provided label if available, otherwise format from field ID
+      const label = fieldLabels?.[key] || this.formatFieldLabel(key);
       let displayValue: string;
 
       if (key === "rating" && typeof value === "number") {
@@ -86,48 +81,6 @@ export class SubmitService {
     }
 
     return lines.join("\n\n");
-  }
-
-  /**
-   * Appends browser info as markdown if provided.
-   */
-  appendBrowserInfo(
-    body: string,
-    browserInfo?: SubmitBody["browserInfo"],
-  ): string {
-    if (!browserInfo) return body;
-
-    const infoLines: string[] = [];
-    if (browserInfo.url) infoLines.push(`| URL | ${browserInfo.url} |`);
-    if (browserInfo.userAgent)
-      infoLines.push(`| User Agent | \`${browserInfo.userAgent}\` |`);
-    if (browserInfo.viewportWidth && browserInfo.viewportHeight)
-      infoLines.push(
-        `| Viewport | ${browserInfo.viewportWidth}x${browserInfo.viewportHeight} |`,
-      );
-    if (browserInfo.language)
-      infoLines.push(`| Language | ${browserInfo.language} |`);
-
-    if (infoLines.length === 0) return body;
-
-    const browserSection = `\n\n---\n\n**Browser Info**\n| Field | Value |\n| :--- | :--- |\n${infoLines.join("\n")}`;
-    return body + browserSection;
-  }
-
-  /**
-   * Appends console logs as markdown if provided.
-   */
-  appendConsoleLogs(
-    body: string,
-    consoleLogs?: SubmitBody["consoleLogs"],
-  ): string {
-    if (!consoleLogs || consoleLogs.length === 0) return body;
-
-    const logsText = consoleLogs
-      .map((log) => `[${log.type.toUpperCase()}] ${log.message}`)
-      .join("\n");
-
-    return body + `\n\n---\n\n**Console Logs**\n\`\`\`\n${logsText}\n\`\`\``;
   }
 
   /**
@@ -154,6 +107,6 @@ export class SubmitService {
     );
 
     const publicUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${fileKey}`;
-    return `\n\n![Screenshot](${publicUrl})`;
+    return `\n\n**Screenshot**\n![Screenshot](${publicUrl})`;
   }
 }

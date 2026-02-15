@@ -16,8 +16,6 @@ import {
   setTabFormData,
   setBrowserInfo,
   setConsoleLogs,
-  browserInfo,
-  consoleLogs,
 } from "./store.js";
 import { StoreController } from "@nanostores/lit";
 import type {
@@ -104,13 +102,6 @@ export class WafirWidget extends LitElement {
 
   @state()
   private _activeFormId: string = "feedback";
-
-  @state()
-  private _telemetry = {
-    screenshot: true,
-    browserInfo: true,
-    consoleLog: false,
-  };
 
   // Requested tab from programmatic open() call, to be applied after config loads
   private _requestedTabId: string | null = null;
@@ -487,14 +478,6 @@ export class WafirWidget extends LitElement {
     if (config.title) {
       this.modalTitle = config.title;
     }
-
-    if (config.telemetry) {
-      this._telemetry = {
-        screenshot: config.telemetry.screenshot ?? true,
-        browserInfo: config.telemetry.browserInfo ?? true,
-        consoleLog: config.telemetry.consoleLog ?? false,
-      };
-    }
   }
 
   private _capitalize(str: string): string {
@@ -598,6 +581,16 @@ export class WafirWidget extends LitElement {
       const submitFields = activeFields.filter((f) => f.type !== "markdown");
       const fieldOrder = submitFields.map((f) => String(f.id));
 
+      // Build field labels map from config
+      const fieldLabels: Record<string, string> = {};
+      for (const field of submitFields) {
+        const id = String(field.id);
+        const label = field.attributes?.label;
+        if (label) {
+          fieldLabels[id] = label;
+        }
+      }
+
       // Only send user-data fields in formFields
       const filteredFormData: Record<string, unknown> = {};
       for (const field of submitFields) {
@@ -625,10 +618,7 @@ export class WafirWidget extends LitElement {
         bridgeUrl: this.bridgeUrl || undefined,
         formFields: filteredFormData,
         fieldOrder,
-        browserInfo: this._telemetry.browserInfo
-          ? (browserInfo.get() ?? undefined)
-          : undefined,
-        consoleLogs: this._telemetry.consoleLog ? consoleLogs.get() : undefined,
+        fieldLabels,
       });
 
       alert("Thank you for your input!");
@@ -647,15 +637,16 @@ export class WafirWidget extends LitElement {
   }
 
   render() {
-    if (this._isCapturingController.value) {
-      return html``;
-    }
+    // During capture, hide with CSS instead of not rendering
+    // This preserves component state (like autofill checkbox state)
+    const isCapturing = this._isCapturingController.value;
 
     if (this._isSelectingController.value) {
       return html`<wafir-highlighter></wafir-highlighter>`;
     }
 
     return html`
+      <div style="${isCapturing ? 'display: none;' : ''}">
       ${this._hasCustomTrigger
         ? html`<div
             class="trigger-container ${this.position}"
@@ -732,9 +723,6 @@ export class WafirWidget extends LitElement {
                   .tabId="${this._activeFormId}"
                   .fields="${this._getActiveFormConfig()}"
                   .formLabel="${this._getActiveForm()?.label || ""}"
-                  .showBrowserInfo="${this._telemetry.browserInfo}"
-                  .showConsoleLog="${this._telemetry.consoleLog}"
-                  .showScreenshot="${this._telemetry.screenshot}"
                   @form-submit="${this._handleSubmit}"
                 ></wafir-form>
                 ${this.isConfigLoading
@@ -758,6 +746,7 @@ export class WafirWidget extends LitElement {
         : ""}
 
       <wafir-highlighter></wafir-highlighter>
+      </div>
     `;
   }
 }

@@ -329,14 +329,26 @@ forms:
       expect(createCall.body).toContain("⭐⭐⭐⭐");
     });
 
-    it("includes browser info in issue body when provided", async () => {
+    it("includes browser info as form field in issue body when sent in formFields", async () => {
+      // This tests the new autofill field approach where browser info
+      // is included as a regular form field rather than a separate param
+      // Use config with autofill fields defined
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(sampleConfigs.withAutofillFields),
+      );
+
       mockOctokit.rest.issues.create.mockResolvedValue({
         data: {
-          number: 46,
-          html_url: "https://github.com/testowner/testrepo/issues/46",
-          node_id: "I_abc127",
+          number: 50,
+          html_url: "https://github.com/testowner/testrepo/issues/50",
+          node_id: "I_abc130",
         },
       });
+
+      const browserInfoText = `URL: https://example.com/page
+User Agent: Mozilla/5.0 (Test)
+Viewport: 1920x1080
+Language: en-US`;
 
       const response = await app.inject({
         method: "POST",
@@ -347,77 +359,31 @@ forms:
           targetType: "github/issues",
           target: "testowner/testrepo",
           authRef: "123",
-          title: "Issue with Browser Info",
+          title: "Issue with Browser Info as Form Field",
           formId: "issue",
           formFields: {
-            title: "Issue with Browser Info",
-            message: "A bug",
+            title: "Issue with Browser Info as Form Field",
+            message: "A bug description",
+            "browser-info": browserInfoText,
           },
-          browserInfo: {
-            url: "https://example.com/page",
-            userAgent: "Mozilla/5.0 (Test)",
-            viewportWidth: 1920,
-            viewportHeight: 1080,
-            language: "en-US",
+          fieldOrder: ["title", "message", "browser-info"],
+          fieldLabels: {
+            title: "Issue Title",
+            message: "Description",
+            "browser-info": "Browser Info",
           },
+          // Note: no browserInfo param - it's in formFields instead
         },
       });
 
       expect(response.statusCode).toBe(201);
 
       const createCall = mockOctokit.rest.issues.create.mock.calls[0][0];
+      // Browser info should appear in body with the configured label
       expect(createCall.body).toContain("Browser Info");
       expect(createCall.body).toContain("https://example.com/page");
       expect(createCall.body).toContain("Mozilla/5.0 (Test)");
       expect(createCall.body).toContain("1920x1080");
-      expect(createCall.body).toContain("en-US");
-    });
-
-    it("includes console logs in issue body when provided", async () => {
-      mockOctokit.rest.issues.create.mockResolvedValue({
-        data: {
-          number: 47,
-          html_url: "https://github.com/testowner/testrepo/issues/47",
-          node_id: "I_abc128",
-        },
-      });
-
-      const response = await app.inject({
-        method: "POST",
-        url: "/submit",
-        payload: {
-          configUrl: TEST_CONFIG_URL,
-          installationId: 123,
-          targetType: "github/issues",
-          target: "testowner/testrepo",
-          authRef: "123",
-          title: "Issue with Console Logs",
-          formId: "issue",
-          formFields: {
-            title: "Issue with Console Logs",
-            message: "Error occurred",
-          },
-          consoleLogs: [
-            {
-              type: "error",
-              message: "Uncaught TypeError",
-              timestamp: "2024-01-01T00:00:00Z",
-            },
-            {
-              type: "warn",
-              message: "Deprecated API",
-              timestamp: "2024-01-01T00:00:01Z",
-            },
-          ],
-        },
-      });
-
-      expect(response.statusCode).toBe(201);
-
-      const createCall = mockOctokit.rest.issues.create.mock.calls[0][0];
-      expect(createCall.body).toContain("Console Logs");
-      expect(createCall.body).toContain("[ERROR] Uncaught TypeError");
-      expect(createCall.body).toContain("[WARN] Deprecated API");
     });
 
     it("gets title from formFields if not provided directly", async () => {

@@ -15,11 +15,6 @@ targets:
     target: your-username/your-project-id
     authRef: "YOUR_INSTALLATION_ID" # Replace with your installation ID
 
-telemetry:
-  screenshot: true
-  browserInfo: true
-  consoleLog: false
-
 forms:
   - id: feedback
     label: Feedback
