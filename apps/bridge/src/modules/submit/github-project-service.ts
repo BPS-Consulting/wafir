@@ -197,11 +197,12 @@ export class GitHubProjectService {
 
     try {
       if (issueNodeId) {
-        await client.graphql(ADD_TO_PROJECT_MUTATION, {
+        // Link existing issue to project - capture the item ID for field updates
+        const result: any = await client.graphql(ADD_TO_PROJECT_MUTATION, {
           projectId,
           contentId: issueNodeId,
         });
-        return { added: true };
+        return { added: true, itemId: result.addProjectV2ItemById.item.id };
       } else {
         const result: any = await client.graphql(
           ADD_DRAFT_TO_PROJECT_MUTATION,
@@ -346,11 +347,15 @@ export class GitHubProjectService {
 
       const projectFields = fieldsResult.node?.fields?.nodes || [];
 
-      // Create a map for case-insensitive field lookup
+      // Normalize a field name for matching: lowercase and convert spaces to dashes
+      // This matches how generate service creates form field IDs from project field names
+      const normalizeFieldName = (name: string) => name.toLowerCase().replace(/\s+/g, '-');
+
+      // Create a map for normalized field lookup
       const fieldMap = new Map<string, any>();
       for (const field of projectFields) {
         if (field?.name) {
-          fieldMap.set(field.name.toLowerCase(), field);
+          fieldMap.set(normalizeFieldName(field.name), field);
         }
       }
 
@@ -364,8 +369,8 @@ export class GitHubProjectService {
           continue;
         }
 
-        // Find matching project field
-        const projectField = fieldMap.get(fieldId.toLowerCase());
+        // Find matching project field (normalize both names for comparison)
+        const projectField = fieldMap.get(normalizeFieldName(fieldId));
         if (!projectField) {
           log.debug({ fieldId }, 'No matching project field found, skipping');
           continue;
