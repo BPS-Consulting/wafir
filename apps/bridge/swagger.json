@@ -323,6 +323,10 @@
                                       "type": "boolean",
                                       "description": "Allow multiple selections (dropdown type only)."
                                     },
+                                    "default": {
+                                      "type": "integer",
+                                      "description": "Index of the pre-selected option in the options array (dropdown type only)."
+                                    },
                                     "options": {
                                       "description": "Options for dropdown or checkboxes.",
                                       "oneOf": [
@@ -573,6 +577,66 @@
                       "type": "string"
                     },
                     "timestamp": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/": {
+      "post": {
+        "summary": "Store Notification",
+        "tags": [
+          "WAFIR"
+        ],
+        "description": "Accepts a JSON payload and stores it in S3 in the notifications folder.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "filename": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
                       "type": "string"
                     }
                   }

@@ -51,6 +51,11 @@ const fieldSchema = {
           type: "boolean",
           description: "Allow multiple selections (dropdown type only).",
         },
+        default: {
+          type: "integer",
+          description:
+            "Index of the pre-selected option in the options array (dropdown type only).",
+        },
         options: {
           description: "Options for dropdown or checkboxes.",
           oneOf: [

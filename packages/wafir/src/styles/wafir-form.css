@@ -65,6 +65,22 @@ textarea {
   width: auto;
 }
 
+/* Required checkbox indicator */
+.checkboxes-group .checkbox-required {
+  font-weight: 500;
+}
+
+.checkboxes-group .required-indicator {
+  color: #dc2626;
+  margin-left: 2px;
+}
+
+/* Multi-select dropdown */
+select[multiple] {
+  min-height: 100px;
+  padding: 8px;
+}
+
 .submit-button {
   width: 100%;
   padding: 10px;

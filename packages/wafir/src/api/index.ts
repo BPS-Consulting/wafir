@@ -270,6 +270,8 @@ export interface paths {
                                         render?: string;
                                         /** @description Allow multiple selections (dropdown type only). */
                                         multiple?: boolean;
+                                        /** @description Index of the pre-selected option in the options array (dropdown type only). */
+                                        default?: number;
                                         /** @description Options for dropdown or checkboxes. */
                                         options?: string[] | {
                                             label: string;
@@ -277,6 +279,11 @@ export interface paths {
                                         }[];
                                         /** @description Custom labels for star rating (Wafir extension only). */
                                         ratingLabels?: string[];
+                                        /**
+                                         * @description Auto-fill the field with telemetry data. When specified, renders an opt-in checkbox. Values: browserInfo (URL, user agent, viewport), screenshot (captured screenshot), consoleLog (recent console messages).
+                                         * @enum {string}
+                                         */
+                                        autofill?: "browserInfo" | "screenshot" | "consoleLog";
                                     };
                                     validations?: {
                                         /** @description Whether the field is required. */
@@ -324,6 +331,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/generate/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generate Sample Config
+         * @description Generates a sample wafir.yaml configuration file based on GitHub repository labels and project fields. Provide your installation ID and an array of targets to analyze. Returns the config as plain text YAML.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Your GitHub App installation ID */
+                        installationId: number;
+                        /** @description Array of targets to analyze */
+                        targets: {
+                            /**
+                             * @description Target type
+                             * @enum {string}
+                             */
+                            type: "github/issues" | "github/project";
+                            /** @description Target identifier: "owner/repo" for issues, "owner/projectNumber" for projects */
+                            target: string;
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Generated wafir.yaml configuration content */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": string;
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                            message?: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health/": {
         parameters: {
             query?: never;
@@ -360,6 +447,67 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Store Notification
+         * @description Accepts a JSON payload and stores it in S3 in the notifications folder.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            success?: boolean;
+                            filename?: string;
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                            message?: string;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
