@@ -5,6 +5,11 @@ on:
     tags:
       - "wafir@*"
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (e.g., 1.2.3)"
+        required: true
+        type: string
 
 jobs:
   publish-npm:
@@ -34,8 +39,12 @@ jobs:
       - name: Extract version from tag
         id: version
         run: |
-          # Tag format: wafir@1.2.3
-          VERSION="${GITHUB_REF_NAME#wafir@}"
+          # Use input version for workflow_dispatch, or extract from tag
+          if [ -n "${{ inputs.version }}" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#wafir@}"
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Update package.json version
@@ -78,8 +87,12 @@ jobs:
       - name: Extract version from tag
         id: version
         run: |
-          # Tag format: wafir@1.2.3
-          VERSION="${GITHUB_REF_NAME#wafir@}"
+          # Use input version for workflow_dispatch, or extract from tag
+          if [ -n "${{ inputs.version }}" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#wafir@}"
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Configure AWS credentials
