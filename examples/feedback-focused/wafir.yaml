@@ -19,6 +19,13 @@ forms:
         type: rating
         attributes:
           label: "How satisfied are you?"
+          icon: "⭐"
+          options:
+            - "Very Unsatisfied"
+            - "Unsatisfied"
+            - "Neutral"
+            - "Satisfied"
+            - "Very Satisfied"
         validations:
           required: true
       - id: comment

@@ -256,10 +256,21 @@ export class GitHubProjectService {
       let value: Record<string, string | number>;
 
       if (dataType === 'SINGLE_SELECT') {
-        const matchingOption = field.options?.find(
-          (opt: any) =>
-            opt.name.toLowerCase() === String(fieldValue).toLowerCase(),
-        );
+        let matchingOption: any;
+        
+        // If the value is a number, use it as a 1-based index into options
+        if (typeof fieldValue === 'number') {
+          const index = fieldValue - 1; // Convert 1-based to 0-based index
+          if (index >= 0 && index < (field.options?.length || 0)) {
+            matchingOption = field.options[index];
+          }
+        } else {
+          // Otherwise, match by name (case-insensitive)
+          matchingOption = field.options?.find(
+            (opt: any) =>
+              opt.name.toLowerCase() === String(fieldValue).toLowerCase(),
+          );
+        }
 
         if (!matchingOption) {
           return {
@@ -273,11 +284,11 @@ export class GitHubProjectService {
         value = { text: String(fieldValue) };
       } else if (dataType === 'NUMBER') {
         const numValue =
-          typeof fieldValue === 'number' ? fieldValue : parseFloat(fieldValue);
+          typeof fieldValue === 'number' ? fieldValue : parseFloat(String(fieldValue));
         if (isNaN(numValue)) {
           return {
             success: false,
-            error: `Invalid number value "${fieldValue}" for field "${fieldName}"`,
+            error: `Invalid number value "${fieldValue}" for field "${fieldName}"`
           };
         }
         value = { number: numValue };
@@ -411,10 +422,21 @@ export class GitHubProjectService {
     let value: Record<string, string | number>;
 
     if (dataType === 'SINGLE_SELECT') {
-      const matchingOption = field.options?.find(
-        (opt: any) =>
-          opt.name.toLowerCase() === String(fieldValue).toLowerCase(),
-      );
+      let matchingOption: any;
+      
+      // If the value is a number, use it as a 1-based index into options
+      if (typeof fieldValue === 'number') {
+        const index = fieldValue - 1; // Convert 1-based to 0-based index
+        if (index >= 0 && index < (field.options?.length || 0)) {
+          matchingOption = field.options[index];
+        }
+      } else {
+        // Otherwise, match by name (case-insensitive)
+        matchingOption = field.options?.find(
+          (opt: any) =>
+            opt.name.toLowerCase() === String(fieldValue).toLowerCase(),
+        );
+      }
 
       if (!matchingOption) {
         return {

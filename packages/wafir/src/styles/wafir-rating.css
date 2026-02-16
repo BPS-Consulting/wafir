@@ -1,52 +1,61 @@
-.star-rating {
+.rating {
   display: inline-flex;
   align-items: center;
   gap: 4px;
 }
 
-.star-rating.readonly {
+.rating.readonly {
   pointer-events: none;
 }
 
-.star {
+.rating-icon {
   background: none;
   border: none;
   padding: 4px;
   cursor: pointer;
-  color: var(--wafir-star-empty-color, #d1d5db);
   transition:
     transform 0.15s ease,
-    color 0.15s ease;
+    opacity 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0.3;
 }
 
-.star:hover:not(:disabled) {
+.rating-icon .icon-char {
+  font-size: var(--wafir-rating-icon-size, 28px);
+  line-height: 1;
+  filter: grayscale(100%);
+  transition: filter 0.15s ease;
+}
+
+.rating-icon:hover:not(:disabled) {
   transform: scale(1.15);
 }
 
-.star:focus-visible {
+.rating-icon:focus-visible {
   outline: 2px solid var(--wafir-primary-color, #2563eb);
   outline-offset: 2px;
   border-radius: 4px;
 }
 
-.star svg {
-  width: var(--wafir-star-size, 28px);
-  height: var(--wafir-star-size, 28px);
-  transition: fill 0.15s ease;
+.rating-icon.filled {
+  opacity: 1;
 }
 
-.star.filled {
-  color: var(--wafir-star-color, #fbbf24);
+.rating-icon.filled .icon-char {
+  filter: grayscale(0%);
 }
 
-.star.active {
-  color: var(--wafir-star-color, #fbbf24);
+.rating-icon.active {
+  opacity: 1;
 }
 
-.star:disabled {
+.rating-icon.active .icon-char {
+  filter: grayscale(0%);
+}
+
+.rating-icon:disabled {
   cursor: default;
   opacity: 0.8;
 }
@@ -58,7 +67,7 @@
   font-weight: 500;
 }
 
-@keyframes star-pop {
+@keyframes rating-pop {
   0% {
     transform: scale(1);
   }
@@ -68,8 +77,4 @@
   100% {
     transform: scale(1);
   }
-}
-
-.star.active {
-  animation: star-pop 0.3s ease;
 }

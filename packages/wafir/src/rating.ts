@@ -1,28 +1,33 @@
 import { LitElement, html, unsafeCSS } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import starRatingStyles from "./styles/wafir-star-rating.css?inline";
-import { RATING_LABELS } from "./default-config.js";
+import ratingStyles from "./styles/wafir-rating.css?inline";
+import { RATING_OPTIONS, RATING_ICON } from "./default-config.js";
 
-@customElement("wafir-star-rating")
-export class WafirStarRating extends LitElement {
+@customElement("wafir-rating")
+export class WafirRating extends LitElement {
   @property({ type: Number })
   value = 0;
-
-  @property({ type: Number })
-  max = 5;
 
   @property({ type: Boolean })
   readonly = false;
 
   @property({ type: Array })
-  labels: string[] = RATING_LABELS;
+  options: string[] = RATING_OPTIONS;
+
+  @property({ type: String })
+  icon: string = RATING_ICON;
 
   @state()
   private _hoverValue = 0;
 
-  static styles = [unsafeCSS(starRatingStyles)];
+  static styles = [unsafeCSS(ratingStyles)];
 
-  private _handleClick(rating: number) {
+  /** Number of rating options (replaces fixed max of 5) */
+  private get _max(): number {
+    return this.options.length || 5;
+  }
+
+  private _handleClick(rating: number): void {
     if (this.readonly) return;
 
     this.value = rating;
@@ -35,16 +40,16 @@ export class WafirStarRating extends LitElement {
     );
   }
 
-  private _handleMouseEnter(rating: number) {
+  private _handleMouseEnter(rating: number): void {
     if (this.readonly) return;
     this._hoverValue = rating;
   }
 
-  private _handleMouseLeave() {
+  private _handleMouseLeave(): void {
     this._hoverValue = 0;
   }
 
-  private _handleKeyDown(e: KeyboardEvent, rating: number) {
+  private _handleKeyDown(e: KeyboardEvent, rating: number): void {
     if (this.readonly) return;
 
     if (e.key === "Enter" || e.key === " ") {
@@ -52,7 +57,7 @@ export class WafirStarRating extends LitElement {
       this._handleClick(rating);
     } else if (e.key === "ArrowRight" || e.key === "ArrowUp") {
       e.preventDefault();
-      const newValue = Math.min(this.value + 1, this.max);
+      const newValue = Math.min(this.value + 1, this._max);
       this._handleClick(newValue);
     } else if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
       e.preventDefault();
@@ -62,10 +67,10 @@ export class WafirStarRating extends LitElement {
   }
 
   private _getLabelForRating(rating: number): string {
-    if (this.labels && this.labels[rating - 1]) {
-      return this.labels[rating - 1];
+    if (this.options && this.options[rating - 1]) {
+      return this.options[rating - 1];
     }
-    return `${rating} star${rating !== 1 ? "s" : ""}`;
+    return `${rating} of ${this._max}`;
   }
 
   render() {
@@ -75,12 +80,12 @@ export class WafirStarRating extends LitElement {
 
     return html`
       <div
-        class="star-rating ${this.readonly ? "readonly" : ""}"
+        class="rating ${this.readonly ? "readonly" : ""}"
         role="radiogroup"
         aria-label="Rating"
         @mouseleave="${this._handleMouseLeave}"
       >
-        ${Array.from({ length: this.max }, (_, i) => {
+        ${Array.from({ length: this._max }, (_, i) => {
           const rating = i + 1;
           const isFilled = rating <= displayValue;
           const isActive = rating <= this.value;
@@ -88,7 +93,7 @@ export class WafirStarRating extends LitElement {
           return html`
             <button
               type="button"
-              class="star ${isFilled ? "filled" : ""} ${isActive
+              class="rating-icon ${isFilled ? "filled" : ""} ${isActive
                 ? "active"
                 : ""}"
               role="radio"
@@ -100,16 +105,7 @@ export class WafirStarRating extends LitElement {
               @mouseenter="${() => this._handleMouseEnter(rating)}"
               @keydown="${(e: KeyboardEvent) => this._handleKeyDown(e, rating)}"
             >
-              <svg
-                viewBox="0 0 24 24"
-                fill="${isFilled ? "currentColor" : "none"}"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                />
-              </svg>
+              <span class="icon-char">${this.icon}</span>
             </button>
           `;
         })}
@@ -127,6 +123,6 @@ export class WafirStarRating extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "wafir-star-rating": WafirStarRating;
+    "wafir-rating": WafirRating;
   }
 }
