@@ -309,7 +309,69 @@ export class WafirForm extends LitElement {
           ></textarea>
         `;
       }
-      case "dropdown": // GitHub Issue Forms (was select)
+      case "dropdown": {
+        // GitHub Issue Forms dropdown with multiple and default support
+        const isMultiple = (field.attributes as any)?.multiple === true;
+        const defaultIndex = (field.attributes as any)?.default as number | undefined;
+        
+        // For multiple select, value is an array; for single select, it's a string
+        const selectedValues: string[] = isMultiple 
+          ? (Array.isArray(value) ? value : [])
+          : (value ? [value] : []);
+
+        // Get option labels for comparison
+        const getOptionLabel = (opt: any, index: number): string => {
+          return typeof opt === 'object' && opt !== null ? opt.label : String(opt);
+        };
+
+        // Initialize default value if not set and default index is provided
+        if (!value && defaultIndex !== undefined && opts && Array.isArray(opts) && opts[defaultIndex]) {
+          const defaultValue = getOptionLabel(opts[defaultIndex], defaultIndex);
+          const currentData = getTabFormData(this.tabId);
+          setTabFormData(this.tabId, {
+            ...currentData,
+            [String(field.id)]: isMultiple ? [defaultValue] : defaultValue,
+          });
+        }
+
+        if (isMultiple) {
+          // Multi-select dropdown
+          return html`
+            <select
+              id="${String(field.id)}"
+              multiple
+              ?required="${field.validations?.required}"
+              @change="${(e: Event) => {
+                const select = e.target as HTMLSelectElement;
+                const selected = Array.from(select.selectedOptions).map(opt => opt.value);
+                const currentData = getTabFormData(this.tabId);
+                setTabFormData(this.tabId, {
+                  ...currentData,
+                  [String(field.id)]: selected,
+                });
+              }}"
+            >
+              ${opts && isOptionObjectArray(opts)
+                ? opts.map(
+                    (opt) =>
+                      html`<option 
+                        value="${opt.label}" 
+                        ?selected="${selectedValues.includes(opt.label)}"
+                      >${opt.label}</option>`,
+                  )
+                : Array.isArray(opts)
+                  ? opts.map(
+                      (opt) => html`<option 
+                        value="${opt}" 
+                        ?selected="${selectedValues.includes(String(opt))}"
+                      >${opt}</option>`,
+                    )
+                  : ""}
+            </select>
+          `;
+        }
+
+        // Single-select dropdown
         return html`
           <select
             id="${String(field.id)}"
@@ -318,30 +380,38 @@ export class WafirForm extends LitElement {
             @change="${(e: Event) =>
               this._handleInputChange(e, String(field.id))}"
           >
-            <option value="" disabled selected>Select an option</option>
+            <option value="" disabled ?selected="${!value}">Select an option</option>
             ${opts && isOptionObjectArray(opts)
               ? opts.map(
-                  (opt) =>
-                    html`<option value="${opt.label}">${opt.label}</option>`,
+                  (opt, index) =>
+                    html`<option 
+                      value="${opt.label}" 
+                      ?selected="${value === opt.label || (!value && defaultIndex === index)}"
+                    >${opt.label}</option>`,
                 )
               : Array.isArray(opts)
                 ? opts.map(
-                    (opt) => html`<option value="${opt}">${opt}</option>`,
+                    (opt, index) => html`<option 
+                      value="${opt}" 
+                      ?selected="${value === opt || (!value && defaultIndex === index)}"
+                    >${opt}</option>`,
                   )
                 : ""}
           </select>
         `;
+      }
       case "checkboxes": // GitHub Issue Forms (was checkbox group; multi-select)
         return html`
           <div class="checkboxes-group">
             ${opts && isOptionObjectArray(opts)
               ? opts.map(
                   (opt) => html`
-                    <label>
+                    <label class="${opt.required ? 'checkbox-required' : ''}">
                       <input
                         type="checkbox"
                         name="${String(field.id)}"
                         .checked="${(value || []).includes(String(opt.label))}"
+                        ?required="${opt.required}"
                         @change="${(e: Event) => {
                           const checked = (e.target as HTMLInputElement)
                             .checked;
@@ -358,7 +428,7 @@ export class WafirForm extends LitElement {
                           });
                         }}"
                       />
-                      ${opt.label}
+                      ${opt.label}${opt.required ? html`<span class="required-indicator">*</span>` : ''}
                     </label>
                   `,
                 )
