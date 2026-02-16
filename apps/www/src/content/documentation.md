@@ -564,6 +564,12 @@ Override these variables on the `wafir-widget` element:
 | `--wafir-form-log-warn`         | `#fde047`     | Warning log color            |
 | `--wafir-form-log-error`        | `#f87171`     | Error log color              |
 
+#### Rating Variables
+
+| Variable                        | Default       | Description                  |
+| ------------------------------- | ------------- | ---------------------------- |
+| `--wafir-rating-icon-size`      | `28px`        | Rating icon size             |
+
 #### Highlighter Variables
 
 | Variable                            | Default               | Description            |

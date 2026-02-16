@@ -1,10 +1,10 @@
 import { LitElement, html, unsafeCSS } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import starRatingStyles from "./styles/wafir-star-rating.css?inline";
+import ratingStyles from "./styles/wafir-rating.css?inline";
 import { RATING_OPTIONS, RATING_ICON } from "./default-config.js";
 
-@customElement("wafir-star-rating")
-export class WafirStarRating extends LitElement {
+@customElement("wafir-rating")
+export class WafirRating extends LitElement {
   @property({ type: Number })
   value = 0;
 
@@ -20,7 +20,7 @@ export class WafirStarRating extends LitElement {
   @state()
   private _hoverValue = 0;
 
-  static styles = [unsafeCSS(starRatingStyles)];
+  static styles = [unsafeCSS(ratingStyles)];
 
   /** Number of rating options (replaces fixed max of 5) */
   private get _max(): number {
@@ -80,7 +80,7 @@ export class WafirStarRating extends LitElement {
 
     return html`
       <div
-        class="star-rating ${this.readonly ? "readonly" : ""}"
+        class="rating ${this.readonly ? "readonly" : ""}"
         role="radiogroup"
         aria-label="Rating"
         @mouseleave="${this._handleMouseLeave}"
@@ -123,6 +123,6 @@ export class WafirStarRating extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "wafir-star-rating": WafirStarRating;
+    "wafir-rating": WafirRating;
   }
 }

@@ -1,10 +1,10 @@
-.star-rating {
+.rating {
   display: inline-flex;
   align-items: center;
   gap: 4px;
 }
 
-.star-rating.readonly {
+.rating.readonly {
   pointer-events: none;
 }
 
@@ -77,8 +77,4 @@
   100% {
     transform: scale(1);
   }
-}
-
-.rating-icon.active {
-  animation: rating-pop 0.3s ease;
 }

@@ -1,7 +1,7 @@
 // Copyright (c) BPS-Consulting. Licensed under the AGPLv3 License.
 import { LitElement, html, unsafeCSS } from "lit";
 import formStyles from "./styles/wafir-form.css?inline";
-import "./star-rating";
+import "./rating";
 import { RATING_OPTIONS, RATING_ICON } from "./default-config.js";
 import { customElement, property } from "lit/decorators.js";
 import { StoreController } from "@nanostores/lit";
@@ -468,7 +468,7 @@ export class WafirForm extends LitElement {
         `;
       case "rating":
         return html`
-          <wafir-star-rating
+          <wafir-rating
             .value="${Number(value) || 0}"
             .options="${field.attributes?.options || RATING_OPTIONS}"
             .icon="${field.attributes?.icon || RATING_ICON}"
@@ -479,7 +479,7 @@ export class WafirForm extends LitElement {
                 [String(field.id)]: e.detail.value,
               });
             }}"
-          ></wafir-star-rating>
+          ></wafir-rating>
         `;
 
       case "date":
