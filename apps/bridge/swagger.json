@@ -328,7 +328,7 @@
                                       "description": "Index of the pre-selected option in the options array (dropdown type only)."
                                     },
                                     "options": {
-                                      "description": "Options for dropdown or checkboxes.",
+                                      "description": "Options for dropdown, checkboxes, or rating fields.",
                                       "oneOf": [
                                         {
                                           "type": "array",
@@ -355,12 +355,9 @@
                                         }
                                       ]
                                     },
-                                    "ratingLabels": {
-                                      "type": "array",
-                                      "items": {
-                                        "type": "string"
-                                      },
-                                      "description": "Custom labels for star rating (Wafir extension only)."
+                                    "icon": {
+                                      "type": "string",
+                                      "description": "Unicode character/emoji used as the rating icon (rating type only). Defaults to ⭐."
                                     },
                                     "autofill": {
                                       "type": "string",

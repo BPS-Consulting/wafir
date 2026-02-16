@@ -2,6 +2,7 @@
 import { LitElement, html, unsafeCSS } from "lit";
 import formStyles from "./styles/wafir-form.css?inline";
 import "./star-rating";
+import { RATING_OPTIONS, RATING_ICON } from "./default-config.js";
 import { customElement, property } from "lit/decorators.js";
 import { StoreController } from "@nanostores/lit";
 import {
@@ -320,13 +321,13 @@ export class WafirForm extends LitElement {
           : (value ? [value] : []);
 
         // Get option labels for comparison
-        const getOptionLabel = (opt: any, index: number): string => {
+        const getOptionLabel = (opt: any): string => {
           return typeof opt === 'object' && opt !== null ? opt.label : String(opt);
         };
 
         // Initialize default value if not set and default index is provided
         if (!value && defaultIndex !== undefined && opts && Array.isArray(opts) && opts[defaultIndex]) {
-          const defaultValue = getOptionLabel(opts[defaultIndex], defaultIndex);
+          const defaultValue = getOptionLabel(opts[defaultIndex]);
           const currentData = getTabFormData(this.tabId);
           setTabFormData(this.tabId, {
             ...currentData,
@@ -469,7 +470,8 @@ export class WafirForm extends LitElement {
         return html`
           <wafir-star-rating
             .value="${Number(value) || 0}"
-            .labels="${field.attributes!.ratingLabels || []}"
+            .options="${field.attributes?.options || RATING_OPTIONS}"
+            .icon="${field.attributes?.icon || RATING_ICON}"
             @rating-change="${(e: CustomEvent) => {
               const currentData = getTabFormData(this.tabId);
               setTabFormData(this.tabId, {

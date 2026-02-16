@@ -36,7 +36,8 @@ forms:
         type: rating
         attributes:
           label: "Overall Experience"
-          ratingLabels:
+          icon: "⭐"
+          options:
             - "Very Unsatisfied"
             - "Unsatisfied"
             - "Neutral"

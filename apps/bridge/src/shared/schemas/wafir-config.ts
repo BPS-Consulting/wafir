@@ -57,10 +57,10 @@ const fieldSchema = {
             "Index of the pre-selected option in the options array (dropdown type only).",
         },
         options: {
-          description: "Options for dropdown or checkboxes.",
+          description: "Options for dropdown, checkboxes, or rating fields.",
           oneOf: [
             {
-              // Dropdown options are an array of strings
+              // Dropdown/rating options are an array of strings
               type: "array",
               items: { type: "string" },
             },
@@ -78,11 +78,11 @@ const fieldSchema = {
             },
           ],
         },
-        // Wafir Extension Attribute
-        ratingLabels: {
-          type: "array",
-          items: { type: "string" },
-          description: "Custom labels for star rating (Wafir extension only).",
+        // Wafir Extension: Icon for rating field
+        icon: {
+          type: "string",
+          description:
+            "Unicode character/emoji used as the rating icon (rating type only). Defaults to ⭐.",
         },
         // Wafir Extension: Auto-fill attribute for telemetry fields
         autofill: {

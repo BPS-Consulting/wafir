@@ -4,7 +4,7 @@ import type {
   WafirConfig,
 } from "./api/client";
 
-export const RATING_LABELS = [
+export const RATING_OPTIONS = [
   "Very Unsatisfied",
   "Unsatisfied",
   "Neither satisfied or unsatisfied",
@@ -12,13 +12,16 @@ export const RATING_LABELS = [
   "Very Satisfied",
 ];
 
+export const RATING_ICON = "⭐";
+
 export const DEFAULT_FEEDBACK_FIELDS: FieldConfig[] = [
   {
     id: "rating",
     type: "rating",
     attributes: {
       label: "How satisfied are you with our website?",
-      ratingLabels: RATING_LABELS,
+      icon: RATING_ICON,
+      options: RATING_OPTIONS,
     },
     validations: {
       required: true,

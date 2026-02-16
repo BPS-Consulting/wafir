@@ -148,6 +148,12 @@ forms:
         type: rating
         attributes:
           label: "How satisfied are you?"
+          options:
+            - "Very Unsatisfied"
+            - "Unsatisfied"
+            - "Neutral"
+            - "Satisfied"
+            - "Excellent"
         validations:
           required: true
 ```
@@ -199,7 +205,7 @@ Each field is defined using `id`, `type`, `attributes`, and `validations` subkey
 | `dropdown`   | Dropdown selection                                    | label, options, description?, multiple?                               |
 | `checkboxes` | Multiple checkbox options                             | label, options (array of objects with label, required?)               |
 | `markdown`   | Read-only Markdown display                            | value (required)                                                      |
-| `rating`     | Star rating (1-5)                                     | label, description?, ratingLabels?                                    |
+| `rating`     | Icon-based rating selector                            | label, options, description?, icon?                                   |
 | `date`       | Date picker input                                     | label, description?, value?                                           |
 
 ### Field Properties
@@ -215,9 +221,9 @@ Each field is defined using `id`, `type`, `attributes`, and `validations` subkey
 | placeholder  | attributes   | string?      | Placeholder text                                         |
 | value        | attributes   | string?      | Default value or Markdown content                        |
 | render       | attributes   | string?      | Syntax highlighting for textarea (e.g. shell)            |
-| options      | attributes   | array        | Options for dropdowns or checkboxes                      |
+| options      | attributes   | array        | Options for dropdowns, checkboxes, or rating fields      |
 | multiple     | attributes   | boolean?     | Allow multiple selections (dropdown only)                |
-| ratingLabels | attributes   | array?       | Custom labels for star rating                            |
+| icon         | attributes   | string?      | Unicode character/emoji for rating icon (default: ⭐)    |
 | autofill     | attributes   | string?      | Auto-fill with telemetry data (see Opt-In Telemetry)     |
 | required     | validations  | boolean      | If the field is required                                 |
 
@@ -275,6 +281,35 @@ Date fields render a native date picker with support for dynamic date tokens:
 | `YYYY-MM-DD` | `value: "2026-03-01"`| Static ISO date       |
 
 > **Note:** Date values are stored and submitted in ISO 8601 format (`YYYY-MM-DD`). When submitting to a GitHub Project, date fields automatically map to project Date fields with matching names.
+
+### Rating Field
+
+Rating fields display a row of clickable icons for user satisfaction ratings. The number of icons matches the number of options provided:
+
+```yaml
+- id: satisfaction
+  type: rating
+  attributes:
+    label: "How satisfied are you?"
+    icon: "⭐"  # Optional, defaults to ⭐
+    options:
+      - "Very Unsatisfied"
+      - "Unsatisfied"
+      - "Neutral"
+      - "Satisfied"
+      - "Excellent"
+  validations:
+    required: true
+```
+
+#### Rating Properties
+
+| Property | Type     | Default | Description                                      |
+| -------- | -------- | ------- | ------------------------------------------------ |
+| options  | string[] | 5 items | Labels for each rating level (determines count)  |
+| icon     | string   | ⭐      | Unicode character/emoji displayed for each level |
+
+> **Tip:** Use any unicode character as the icon: `❤️` for hearts, `👍` for thumbs up, `●` for circles, etc. The selected rating value (1 to N) is stored and displayed with the corresponding option label on hover.
 
 ---
 

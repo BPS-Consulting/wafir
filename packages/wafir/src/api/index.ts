@@ -272,13 +272,13 @@ export interface paths {
                                         multiple?: boolean;
                                         /** @description Index of the pre-selected option in the options array (dropdown type only). */
                                         default?: number;
-                                        /** @description Options for dropdown or checkboxes. */
+                                        /** @description Options for dropdown, checkboxes, or rating fields. */
                                         options?: string[] | {
                                             label: string;
                                             required?: boolean;
                                         }[];
-                                        /** @description Custom labels for star rating (Wafir extension only). */
-                                        ratingLabels?: string[];
+                                        /** @description Unicode character/emoji used as the rating icon (rating type only). Defaults to ⭐. */
+                                        icon?: string;
                                         /**
                                          * @description Auto-fill the field with telemetry data. When specified, renders an opt-in checkbox. Values: browserInfo (URL, user agent, viewport), screenshot (captured screenshot), consoleLog (recent console messages).
                                          * @enum {string}

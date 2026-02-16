@@ -30,6 +30,14 @@ const DEFAULT_CONFIG: WafirConfig = {
           type: "rating",
           attributes: {
             label: "How satisfied are you with our website?",
+            icon: "⭐",
+            options: [
+              "Very Unsatisfied",
+              "Unsatisfied",
+              "Neither satisfied or unsatisfied",
+              "Satisfied",
+              "Very Satisfied",
+            ],
           },
           validations: {
             required: true,
@@ -113,6 +121,7 @@ interface FieldConfig {
   attributes?: {
     label?: string;
     options?: string[] | Array<{ label: string; required?: boolean }>;
+    icon?: string;
   };
   validations?: {
     required?: boolean;
@@ -573,10 +582,14 @@ function validateFieldValue(
 
     case "rating":
       if (value !== undefined && value !== null) {
-        if (typeof value !== "number" || value < 1 || value > 5) {
+        // Determine max rating from options array, default to 5
+        const ratingOptions = fieldConfig.attributes?.options;
+        const maxRating = Array.isArray(ratingOptions) && ratingOptions.length > 0 ? ratingOptions.length : 5;
+        
+        if (typeof value !== "number" || value < 1 || value > maxRating) {
           return {
             code: "INVALID_RATING",
-            message: `Field "${fieldId}" must be a number between 1 and 5`,
+            message: `Field "${fieldId}" must be a number between 1 and ${maxRating}`,
             field: fieldId,
           };
         }

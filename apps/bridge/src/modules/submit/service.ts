@@ -24,11 +24,14 @@ const EXCLUDED_FORM_KEYS = new Set(["title"]);
  */
 export class SubmitService {
   /**
-   * Converts a numeric rating (1-5) to star emojis.
+   * Converts a numeric rating to repeated icon characters.
+   * @param rating - The rating value (1-based)
+   * @param maxRating - Maximum rating value (defaults to 5)
+   * @param icon - The icon character to repeat (defaults to ⭐)
    */
-  ratingToStars(rating: number): string {
-    const clampedRating = Math.min(Math.max(Math.round(rating), 1), 5);
-    return "⭐".repeat(clampedRating);
+  ratingToIcons(rating: number, maxRating = 5, icon = "⭐"): string {
+    const clampedRating = Math.min(Math.max(Math.round(rating), 1), maxRating);
+    return icon.repeat(clampedRating);
   }
 
   /**
@@ -70,7 +73,7 @@ export class SubmitService {
       let displayValue: string;
 
       if (key === "rating" && typeof value === "number") {
-        displayValue = this.ratingToStars(value);
+        displayValue = this.ratingToIcons(value);
       } else if (Array.isArray(value)) {
         displayValue = value.join(", ");
       } else {
