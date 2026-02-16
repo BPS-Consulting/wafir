@@ -30,6 +30,16 @@ jobs:
         run: pnpm install --frozen-lockfile
         working-directory: .
 
+      - name: Extract version from tag
+        id: version
+        run: |
+          # Tag format: wafir@1.2.3
+          VERSION="${GITHUB_REF_NAME#wafir@}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update package.json version
+        run: npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+
       - name: Build package
         run: pnpm run build
 
