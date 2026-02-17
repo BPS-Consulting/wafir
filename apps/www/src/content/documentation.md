@@ -214,6 +214,7 @@ Each field is defined using `id`, `type`, `attributes`, and `validations` subkey
 | ------------ | ------------ | ------------ | -------------------------------------------------------- |
 | id           | field (root) | string       | Unique identifier for the field                          |
 | type         | field (root) | string       | Field input type (see above)                             |
+| display      | field (root) | string?      | Field visibility: `visible` (default) or `none` (hidden) |
 | attributes   | field (root) | object       | Display and options attributes                           |
 | validations  | field (root) | object       | Validation rules (e.g., required: true/false)            |
 | label        | attributes   | string       | Display label                                            |
