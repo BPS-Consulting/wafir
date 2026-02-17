@@ -62,7 +62,14 @@ export class SubmitService {
     fieldOrder?: string[],
     fieldLabels?: Record<string, string>,
     excludeFields?: Set<string>,
-    fieldConfigs?: Array<{ id?: string; type: string; attributes?: { icon?: string; options?: string[] } }>,
+    fieldConfigs?: Array<{ 
+      id?: string; 
+      type: string; 
+      attributes?: { 
+        icon?: string; 
+        options?: string[] | Array<{ label: string; required?: boolean }>;
+      };
+    }>,
   ): string {
     const orderedKeys = fieldOrder?.length
       ? fieldOrder.filter((key) => key in formFields)
@@ -71,14 +78,19 @@ export class SubmitService {
     const lines: string[] = [];
     
     // Build a map of field IDs to their types for quick lookup
-    const fieldTypeMap = new Map<string, { type: string; icon?: string; options?: string[] }>();
+    const fieldTypeMap = new Map<string, { type: string; icon?: string; maxRating?: number }>();
     if (fieldConfigs) {
       for (const config of fieldConfigs) {
         if (config.id) {
+          // Calculate maxRating from options array length
+          let maxRating = 5; // default
+          if (config.attributes?.options) {
+            maxRating = config.attributes.options.length;
+          }
           fieldTypeMap.set(String(config.id), {
             type: config.type,
             icon: config.attributes?.icon,
-            options: config.attributes?.options,
+            maxRating,
           });
         }
       }
@@ -102,7 +114,7 @@ export class SubmitService {
       // Check if this is a rating field by type, or fallback to key name
       if ((fieldType === "rating" || key === "rating") && typeof value === "number") {
         const icon = fieldTypeMap.get(key)?.icon || "⭐";
-        const maxRating = fieldTypeMap.get(key)?.options?.length || 5;
+        const maxRating = fieldTypeMap.get(key)?.maxRating || 5;
         displayValue = this.ratingToIcons(value, maxRating, icon);
       } else if (Array.isArray(value)) {
         displayValue = value.join(", ");
