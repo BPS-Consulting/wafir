@@ -1231,6 +1231,11 @@ forms:
         organization: { projectV2: { id: "PVT_abc123" } },
       });
 
+      // Mock fetching project fields (for getMappableFieldIds)
+      mockOctokit.graphql.mockResolvedValueOnce({
+        node: { fields: { nodes: [] } },
+      });
+
       // Mock adding draft to project
       mockOctokit.graphql.mockResolvedValueOnce({
         addProjectV2DraftIssue: {
@@ -1405,6 +1410,11 @@ forms:
         organization: { projectV2: { id: "PVT_both123" } },
       });
 
+      // Mock fetching project fields (for getMappableFieldIds)
+      mockOctokit.graphql.mockResolvedValueOnce({
+        node: { fields: { nodes: [] } },
+      });
+
       // Mock adding issue to project
       mockOctokit.graphql.mockResolvedValueOnce({
         addProjectV2ItemById: {
@@ -1549,6 +1559,11 @@ forms:
         organization: { projectV2: { id: "PVT_multi123" } },
       });
 
+      // Mock fetching project fields (for getMappableFieldIds)
+      mockOctokit.graphql.mockResolvedValueOnce({
+        node: { fields: { nodes: [] } },
+      });
+
       // Mock adding issue to project
       mockOctokit.graphql.mockResolvedValueOnce({
         addProjectV2ItemById: {
@@ -1622,6 +1637,11 @@ forms:
       // Mock finding the project
       mockOctokit.graphql.mockResolvedValueOnce({
         organization: { projectV2: { id: "PVT_all123" } },
+      });
+
+      // Mock fetching project fields (for getMappableFieldIds)
+      mockOctokit.graphql.mockResolvedValueOnce({
+        node: { fields: { nodes: [] } },
       });
 
       // Mock adding issue to project
@@ -1700,6 +1720,11 @@ forms:
         organization: { projectV2: { id: "PVT_empty123" } },
       });
 
+      // Mock fetching project fields (for getMappableFieldIds)
+      mockOctokit.graphql.mockResolvedValueOnce({
+        node: { fields: { nodes: [] } },
+      });
+
       // Mock adding issue to project
       mockOctokit.graphql.mockResolvedValueOnce({
         addProjectV2ItemById: {
@@ -1766,6 +1791,11 @@ forms:
       // Mock finding the project
       mockOctokit.graphql.mockResolvedValueOnce({
         organization: { projectV2: { id: "PVT_proj_only123" } },
+      });
+
+      // Mock fetching project fields (for getMappableFieldIds)
+      mockOctokit.graphql.mockResolvedValueOnce({
+        node: { fields: { nodes: [] } },
       });
 
       // Mock adding draft to project
@@ -1886,6 +1916,11 @@ forms:
       // User project lookup succeeds
       mockOctokit.graphql.mockResolvedValueOnce({
         user: { projectV2: { id: "PVT_user123" } },
+      });
+
+      // Mock fetching project fields (for getMappableFieldIds)
+      mockOctokit.graphql.mockResolvedValueOnce({
+        node: { fields: { nodes: [] } },
       });
 
       // Add draft succeeds

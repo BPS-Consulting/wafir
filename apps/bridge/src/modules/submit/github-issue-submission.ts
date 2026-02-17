@@ -16,6 +16,10 @@ export interface GithubSubmissionContext extends SubmissionContext {
   userOctokit?: any | null;
   projectOwner?: string;
   projectNumber?: number;
+  /** Pre-resolved project node ID (to avoid duplicate lookups) */
+  projectNodeId?: string;
+  /** Whether to use user token for project operations */
+  projectUseUserToken?: boolean;
   storageType: "issue" | "project" | "both";
 }
 
@@ -160,6 +164,8 @@ export class GithubIssueSubmission extends SubmissionBase {
         userOctokit: context.userOctokit,
         projectOwner: context.projectOwner!,
         projectNumber: context.projectNumber,
+        projectNodeId: context.projectNodeId,
+        projectUseUserToken: context.projectUseUserToken,
         title: context.title,
         body: context.body,
         issueNodeId: targetNodeId,
@@ -168,14 +174,21 @@ export class GithubIssueSubmission extends SubmissionBase {
 
       // Set project fields from form data
       if (projectResult.added && projectResult.itemId && context.formFields) {
-        const { nodeId: projId, shouldUseUserToken } =
-          await this.projectService.findProjectNodeId(
+        // Use pre-resolved project node ID if available, otherwise look it up
+        let projId = context.projectNodeId;
+        let shouldUseUserToken = context.projectUseUserToken ?? false;
+
+        if (!projId) {
+          const lookup = await this.projectService.findProjectNodeId(
             context.appOctokit,
             context.userOctokit,
             context.projectOwner!,
             context.projectNumber,
             context.log,
           );
+          projId = lookup.nodeId;
+          shouldUseUserToken = lookup.shouldUseUserToken;
+        }
 
         if (projId) {
           const client =
