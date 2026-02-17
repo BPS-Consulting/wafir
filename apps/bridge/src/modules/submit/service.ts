@@ -25,12 +25,16 @@ const EXCLUDED_FORM_KEYS = new Set(["title"]);
 export class SubmitService {
   /**
    * Converts a numeric rating to repeated icon characters.
-   * @param rating - The rating value (1-based)
+   * @param rating - The rating value (0-based, where 0 means no rating)
    * @param maxRating - Maximum rating value (defaults to 5)
    * @param icon - The icon character to repeat (defaults to ⭐)
    */
   ratingToIcons(rating: number, maxRating = 5, icon = "⭐"): string {
-    const clampedRating = Math.min(Math.max(Math.round(rating), 1), maxRating);
+    // Allow 0 to represent no rating (empty string)
+    if (rating === 0) {
+      return "No rating";
+    }
+    const clampedRating = Math.min(Math.max(Math.round(rating), 0), maxRating);
     return icon.repeat(clampedRating);
   }
 
@@ -51,32 +55,54 @@ export class SubmitService {
    * @param fieldOrder - Optional array of field IDs specifying display order
    * @param fieldLabels - Optional map of field IDs to their display labels
    * @param excludeFields - Optional set of field IDs to exclude (e.g., fields written to project)
+   * @param fieldConfigs - Optional array of field configurations to determine field types
    */
   buildMarkdownFromFields(
     formFields: Record<string, unknown>,
     fieldOrder?: string[],
     fieldLabels?: Record<string, string>,
     excludeFields?: Set<string>,
+    fieldConfigs?: Array<{ id?: string; type: string; attributes?: { icon?: string; options?: string[] } }>,
   ): string {
     const orderedKeys = fieldOrder?.length
       ? fieldOrder.filter((key) => key in formFields)
       : Object.keys(formFields);
 
     const lines: string[] = [];
+    
+    // Build a map of field IDs to their types for quick lookup
+    const fieldTypeMap = new Map<string, { type: string; icon?: string; options?: string[] }>();
+    if (fieldConfigs) {
+      for (const config of fieldConfigs) {
+        if (config.id) {
+          fieldTypeMap.set(String(config.id), {
+            type: config.type,
+            icon: config.attributes?.icon,
+            options: config.attributes?.options,
+          });
+        }
+      }
+    }
 
     for (const key of orderedKeys) {
       if (EXCLUDED_FORM_KEYS.has(key)) continue;
       if (excludeFields?.has(key)) continue;
 
       const value = formFields[key];
+      // Skip undefined, null, or empty string, but allow 0 for numeric fields (e.g., ratings)
       if (value === undefined || value === null || value === "") continue;
 
       // Use provided label if available, otherwise format from field ID
       const label = fieldLabels?.[key] || this.formatFieldLabel(key);
       let displayValue: string;
 
-      if (key === "rating" && typeof value === "number") {
-        displayValue = this.ratingToIcons(value);
+      const fieldType = fieldTypeMap.get(key)?.type;
+      
+      // Check if this is a rating field by type, or fallback to key name
+      if ((fieldType === "rating" || key === "rating") && typeof value === "number") {
+        const icon = fieldTypeMap.get(key)?.icon || "⭐";
+        const maxRating = fieldTypeMap.get(key)?.options?.length || 5;
+        displayValue = this.ratingToIcons(value, maxRating, icon);
       } else if (Array.isArray(value)) {
         displayValue = value.join(", ");
       } else {

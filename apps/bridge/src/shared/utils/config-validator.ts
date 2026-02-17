@@ -586,10 +586,11 @@ function validateFieldValue(
         const ratingOptions = fieldConfig.attributes?.options;
         const maxRating = Array.isArray(ratingOptions) && ratingOptions.length > 0 ? ratingOptions.length : 5;
         
-        if (typeof value !== "number" || value < 1 || value > maxRating) {
+        // Allow 0 to represent no rating selected
+        if (typeof value !== "number" || value < 0 || value > maxRating) {
           return {
             code: "INVALID_RATING",
-            message: `Field "${fieldId}" must be a number between 1 and ${maxRating}`,
+            message: `Field "${fieldId}" must be a number between 0 and ${maxRating}`,
             field: fieldId,
           };
         }
