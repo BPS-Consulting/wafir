@@ -112,7 +112,7 @@ Forms define the structure of your feedback widget. Each form represents a disti
 | `icon`        | string?   | Icon name: `bug`, `lightbulb`, or `thumbsup`                             |
 | `labels`      | string[]? | GitHub labels to auto-apply to issues                                    |
 | `templateUrl` | string?   | URL to a GitHub issue form template YAML                                 |
-| `targets`     | array?    | Array of target IDs to route submissions to                              |
+| `targets`     | array?    | Array of target IDs to route submissions to. Set to a non-existent ID (e.g., `[none]`) to disable the submit button for informational forms. |
 | `body`        | array     | Array of field definitions                                               |
 
 ### Example

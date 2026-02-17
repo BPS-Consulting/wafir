@@ -463,6 +463,7 @@ export class WafirWidget extends LitElement {
         id: form.id,
         label: form.label || this._capitalize(form.id),
         icon: form.icon,
+        targets: form.targets,
         body:
           form.body && form.body.length > 0
             ? form.body
@@ -500,6 +501,18 @@ export class WafirWidget extends LitElement {
 
   private _switchForm(formId: string) {
     this._activeFormId = formId;
+  }
+
+  private _formHasValidTarget(): boolean {
+    if (!this._config?.targets?.length) return false;
+    const activeForm = this._getActiveForm();
+    const formTargets = activeForm?.targets;
+    if (formTargets?.length) {
+      return formTargets.some((id) =>
+        this._config!.targets.some((t) => t.id === id),
+      );
+    }
+    return true;
   }
 
   @property({ type: String, attribute: "config-url" })
@@ -728,6 +741,7 @@ export class WafirWidget extends LitElement {
                   .tabId="${this._activeFormId}"
                   .fields="${this._getActiveFormConfig()}"
                   .formLabel="${this._getActiveForm()?.label || ""}"
+                  .hasValidTarget="${this._formHasValidTarget()}"
                   @form-submit="${this._handleSubmit}"
                 ></wafir-form>
                 ${this.isConfigLoading

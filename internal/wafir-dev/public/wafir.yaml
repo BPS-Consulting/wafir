@@ -122,3 +122,12 @@ forms:
           autofill: screenshot
         validations:
           required: false
+
+  - id: question
+    label: ❓Question
+    targets: [none]
+    body:
+      - id: info
+        type: markdown
+        attributes:
+          value: "Please ask your question in our GitHub Discussions forum: https://github.com/BPS-Consulting/wafir/discussions"
