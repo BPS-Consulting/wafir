@@ -88,6 +88,8 @@ export interface ProjectFieldResult {
 export interface ProjectFieldsResult {
   successCount: number;
   failures: Array<{ field: string; error: string }>;
+  /** Field IDs that were successfully mapped to project fields */
+  mappedFieldIds: string[];
 }
 
 /**
@@ -166,6 +168,10 @@ export class GitHubProjectService {
     title: string;
     body: string;
     issueNodeId?: string;
+    /** Pre-resolved project node ID (to avoid duplicate lookups) */
+    projectNodeId?: string;
+    /** Whether to use user token (when project node ID is pre-resolved) */
+    projectUseUserToken?: boolean;
     log: any;
   }): Promise<ProjectAddResult> {
     const {
@@ -179,19 +185,22 @@ export class GitHubProjectService {
       log,
     } = params;
 
-    const {
-      nodeId: projectId,
-      shouldUseUserToken,
-      error: lookupError,
-    } = await this.findProjectNodeId(
-      appOctokit,
-      userOctokit,
-      projectOwner,
-      projectNumber,
-      log,
-    );
+    // Use pre-resolved project node ID if available, otherwise look it up
+    let projectId = params.projectNodeId;
+    let shouldUseUserToken = params.projectUseUserToken ?? false;
 
-    if (!projectId) return { added: false, error: lookupError };
+    if (!projectId) {
+      const lookup = await this.findProjectNodeId(
+        appOctokit,
+        userOctokit,
+        projectOwner,
+        projectNumber,
+        log,
+      );
+      projectId = lookup.nodeId;
+      shouldUseUserToken = lookup.shouldUseUserToken;
+      if (!projectId) return { added: false, error: lookup.error };
+    }
 
     const client = shouldUseUserToken && userOctokit ? userOctokit : appOctokit;
 
@@ -321,6 +330,65 @@ export class GitHubProjectService {
   }
 
   /**
+   * Gets the set of form field IDs that can be mapped to project fields.
+   * This is used to determine which fields should be excluded from the issue body.
+   */
+  async getMappableFieldIds(params: {
+    octokit: any;
+    projectId: string;
+    formFields: Record<string, unknown>;
+    log: any;
+  }): Promise<Set<string>> {
+    const { octokit, projectId, formFields, log } = params;
+    const mappableIds = new Set<string>();
+
+    // Fields to skip (these are used elsewhere, not as project fields)
+    const skipFields = new Set(['title', 'body', 'description']);
+
+    try {
+      // Fetch all project fields
+      const fieldsResult: any = await octokit.graphql(
+        FIND_PROJECT_FIELDS_QUERY,
+        { projectId },
+      );
+
+      const projectFields = fieldsResult.node?.fields?.nodes || [];
+
+      // Normalize a field name for matching: lowercase and convert spaces to dashes
+      const normalizeFieldName = (name: string) => name.toLowerCase().replace(/\s+/g, '-');
+
+      // Create a set of normalized project field names
+      const projectFieldNames = new Set<string>();
+      for (const field of projectFields) {
+        if (field?.name) {
+          projectFieldNames.add(normalizeFieldName(field.name));
+        }
+      }
+
+      // Check each form field to see if it maps to a project field
+      for (const fieldId of Object.keys(formFields)) {
+        if (skipFields.has(fieldId.toLowerCase())) {
+          continue;
+        }
+        const value = formFields[fieldId];
+        if (value === undefined || value === null || value === '') {
+          continue;
+        }
+        if (projectFieldNames.has(normalizeFieldName(fieldId))) {
+          mappableIds.add(fieldId);
+        }
+      }
+
+      log.debug({ mappableIds: [...mappableIds] }, 'Found mappable project fields');
+    } catch (e: any) {
+      log.warn({ error: e.message }, 'Failed to fetch project fields for mapping check');
+      // Return empty set on error - all fields will be included in body
+    }
+
+    return mappableIds;
+  }
+
+  /**
    * Sets multiple project fields on a project item from form fields.
    * Fields are matched by field ID to project field name (case-insensitive).
    * Fields that don't match any project field are silently skipped.
@@ -333,7 +401,7 @@ export class GitHubProjectService {
     log: any;
   }): Promise<ProjectFieldsResult> {
     const { octokit, projectId, itemId, formFields, log } = params;
-    const result: ProjectFieldsResult = { successCount: 0, failures: [] };
+    const result: ProjectFieldsResult = { successCount: 0, failures: [], mappedFieldIds: [] };
 
     // Fields to skip (these are used elsewhere, not as project fields)
     const skipFields = new Set(['title', 'body', 'description']);
@@ -388,6 +456,7 @@ export class GitHubProjectService {
 
           if (updateResult.success) {
             result.successCount++;
+            result.mappedFieldIds.push(fieldId);
           } else if (updateResult.error) {
             result.failures.push({ field: fieldId, error: updateResult.error });
           }

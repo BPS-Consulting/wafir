@@ -50,11 +50,13 @@ export class SubmitService {
    * @param formFields - The form field values keyed by field ID
    * @param fieldOrder - Optional array of field IDs specifying display order
    * @param fieldLabels - Optional map of field IDs to their display labels
+   * @param excludeFields - Optional set of field IDs to exclude (e.g., fields written to project)
    */
   buildMarkdownFromFields(
     formFields: Record<string, unknown>,
     fieldOrder?: string[],
     fieldLabels?: Record<string, string>,
+    excludeFields?: Set<string>,
   ): string {
     const orderedKeys = fieldOrder?.length
       ? fieldOrder.filter((key) => key in formFields)
@@ -64,6 +66,7 @@ export class SubmitService {
 
     for (const key of orderedKeys) {
       if (EXCLUDED_FORM_KEYS.has(key)) continue;
+      if (excludeFields?.has(key)) continue;
 
       const value = formFields[key];
       if (value === undefined || value === null || value === "") continue;

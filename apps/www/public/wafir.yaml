@@ -1,6 +1,4 @@
-# WAFIR Configuration - Wafir GitHub Page
-# Configuration for the Wafir documentation website
-# Use this as a reference for the default behavior.
+# Wafir widget configuration for the public Wafir GitHub Pages site
 
 title: "Contact Us"
 
@@ -13,12 +11,6 @@ targets:
     type: github/project
     target: BPS-Consulting/9
     authRef: "105081464"
-
-# Note: telemetry section is deprecated, use autofill fields instead for user opt-in
-# telemetry:
-#   screenshot: true
-#   browserInfo: true
-#   consoleLog: false
 
 forms:
   - id: feedback
@@ -64,9 +56,35 @@ forms:
         type: textarea
         attributes:
           label: "Additional information:"
+          placeholder: "Please add some details to help us understand your suggestion better"
         validations:
           required: false
-
+      - id: value
+        type: dropdown
+        attributes:
+          label: "Business value"
+          options:
+            - label: "Low"
+              value: "Low"
+            - label: "Medium"
+              value: "Medium"
+            - label: "High"
+              value: "High"
+        validations:
+          required: false
+      - id: needed
+        type: dropdown
+        attributes:
+          label: "Needed"
+          options:
+            - label: "Later"
+              value: "Later"
+            - label: "Soon"
+              value: "Soon"
+            - label: "Now"
+              value: "Now"
+        validations:
+          required: false
   - id: issue
     label: Issue
     icon: bug

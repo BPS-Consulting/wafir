@@ -8,6 +8,7 @@ import {
   GithubSubmissionContext,
 } from "./github-issue-submission.js";
 import { RequestParserService } from "./request-parser.js";
+import { GitHubProjectService } from "./github-project-service.js";
 
 const submitRoute: FastifyPluginAsync = async (
   fastify,
@@ -19,6 +20,7 @@ const submitRoute: FastifyPluginAsync = async (
   const submitService = new SubmitService();
   const githubSubmission = new GithubIssueSubmission();
   const parserService = new RequestParserService();
+  const projectService = new GitHubProjectService();
 
   fastify.post(
     "/",
@@ -151,19 +153,57 @@ const submitRoute: FastifyPluginAsync = async (
         // Use form id as the issue type
         const issueType = form?.id;
 
-        // Build markdown body from validated form fields
-        let finalBody = submitService.buildMarkdownFromFields(
-          input.formFields || {},
-          input.fieldOrder,
-          input.fieldLabels,
-        );
-
         // Initialize Clients using config values
         const appOctokit = await fastify.getGitHubClient(installationId);
         const userToken = await fastify.tokenStore.getUserToken(installationId);
         const userOctokit = userToken
           ? fastify.getGitHubClientWithToken(userToken)
           : null;
+
+        // Determine which fields will be written to project (to exclude from issue body)
+        let excludeFieldsFromBody = new Set<string>();
+        let projectNodeId: string | undefined;
+        let projectUseUserToken = false;
+
+        if (hasProjectTarget && projectNumber !== undefined && input.formFields) {
+          try {
+            const { nodeId: projId, shouldUseUserToken } =
+              await projectService.findProjectNodeId(
+                appOctokit,
+                userOctokit,
+                projectOwner,
+                projectNumber,
+                request.log,
+              );
+
+            if (projId) {
+              projectNodeId = projId;
+              projectUseUserToken = shouldUseUserToken;
+
+              const client =
+                shouldUseUserToken && userOctokit ? userOctokit : appOctokit;
+              excludeFieldsFromBody = await projectService.getMappableFieldIds({
+                octokit: client,
+                projectId: projId,
+                formFields: input.formFields,
+                log: request.log,
+              });
+            }
+          } catch (e) {
+            request.log.warn(
+              { error: e instanceof Error ? e.message : "Unknown error" },
+              "Failed to determine mappable project fields, including all fields in body",
+            );
+          }
+        }
+
+        // Build markdown body from validated form fields, excluding project-mapped fields
+        let finalBody = submitService.buildMarkdownFromFields(
+          input.formFields || {},
+          input.fieldOrder,
+          input.fieldLabels,
+          excludeFieldsFromBody,
+        );
 
         // Handle Screenshot Upload
         if (input.screenshotBuffer && input.screenshotMime) {
@@ -197,6 +237,8 @@ const submitRoute: FastifyPluginAsync = async (
           userOctokit,
           projectOwner,
           projectNumber,
+          projectNodeId,
+          projectUseUserToken,
           storageType,
         } as GithubSubmissionContext);
 

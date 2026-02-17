@@ -1,13 +1,7 @@
-# WAFIR Configuration Example - Default
-# This example shows what the widget displays when no forms are specified.
-# Use this as a reference for the default behavior.
-# Host this file anywhere and point your widget to it via configUrl
+# Wafir config for internal testing.  Targets Wafir repo.
 
 title: "Contact Us"
 
-# Targets define where feedback gets sent. 
-# You can have multiple targets and specify which forms send to which targets.  
-# The first target will be used by default.
 targets:
   - id: default
     type: github/issues
@@ -17,12 +11,6 @@ targets:
     type: github/project
     target: BPS-Consulting/9
     authRef: "105081464"
-
-# Note: telemetry section is deprecated, use autofill fields instead for user opt-in
-# telemetry:
-#   screenshot: true
-#   browserInfo: true
-#   consoleLog: false
 
 forms:
   - id: feedback
@@ -58,6 +46,7 @@ forms:
         type: textarea
         attributes:
           label: "Additional information:"
+          placeholder: "Please add some details to help us understand your suggestion better"
         validations:
           required: false
       - id: value
@@ -86,6 +75,7 @@ forms:
               value: "Now"
         validations:
           required: false
+          
   - id: bug
     label: Issue
     icon: bug
