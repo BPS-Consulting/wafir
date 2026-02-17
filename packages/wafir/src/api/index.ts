@@ -256,6 +256,12 @@ export interface paths {
                                     type: "input" | "email" | "textarea" | "dropdown" | "checkboxes" | "markdown" | "rating" | "date";
                                     /** @description Unique identifier for the field (used as key in JSON output/issue body). */
                                     id?: string;
+                                    /**
+                                     * @description Controls field visibility. 'none' hides the field from the UI but still includes its value in submissions. Defaults to 'visible'.
+                                     * @default visible
+                                     * @enum {string}
+                                     */
+                                    display: "visible" | "none";
                                     /** @description Visual and behavioral attributes for the field. */
                                     attributes?: {
                                         /** @description Display label for the field. */

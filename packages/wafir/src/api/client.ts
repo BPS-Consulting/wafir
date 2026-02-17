@@ -19,8 +19,24 @@ const getClient = () => {
 export type WafirConfigBase =
   paths["/config/"]["get"]["responses"][200]["content"]["application/json"];
 
+// Canonical form and field types from API schema
+// Make display optional since it has a default value of "visible"
+type FieldConfigApiBase = NonNullable<
+  NonNullable<WafirConfigBase["forms"]>[number]["body"]
+>[number];
+export type FieldConfigApi = Omit<FieldConfigApiBase, "display"> & {
+  display?: FieldConfigApiBase["display"];
+};
+
+// FormConfigApi with body using the corrected FieldConfigApi type
+type FormConfigApiBase = NonNullable<WafirConfigBase["forms"]>[number];
+export type FormConfigApi = Omit<FormConfigApiBase, "body"> & {
+  body?: FieldConfigApi[];
+};
+
 // Extended WafirConfig type with targets array (required for user-hosted configs)
-export type WafirConfig = WafirConfigBase & {
+// and corrected forms array type
+export type WafirConfig = Omit<WafirConfigBase, "forms"> & {
   targets: Array<{
     /** Unique identifier for this target, referenced by forms to route submissions. */
     id: string;
@@ -31,11 +47,8 @@ export type WafirConfig = WafirConfigBase & {
     /** Authentication reference used to authorize communication with the target. For GitHub types, this is the installation ID. */
     authRef: string;
   }>;
+  forms?: FormConfigApi[];
 };
-
-// Canonical form and field types from API schema
-export type FormConfigApi = NonNullable<WafirConfig["forms"]>[number];
-export type FieldConfigApi = NonNullable<FormConfigApi["body"]>[number];
 
 export const checkBridgeHealth = async (
   bridgeUrl?: string,

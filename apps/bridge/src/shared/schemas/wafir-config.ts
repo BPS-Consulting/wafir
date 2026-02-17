@@ -22,6 +22,13 @@ const fieldSchema = {
       description:
         "Unique identifier for the field (used as key in JSON output/issue body).",
     },
+    display: {
+      type: "string",
+      enum: ["visible", "none"],
+      default: "visible",
+      description:
+        "Controls field visibility. 'none' hides the field from the UI but still includes its value in submissions. Defaults to 'visible'.",
+    },
     attributes: {
       type: "object",
       description: "Visual and behavioral attributes for the field.",

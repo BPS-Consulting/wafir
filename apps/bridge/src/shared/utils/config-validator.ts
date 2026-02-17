@@ -118,6 +118,7 @@ const DEFAULT_CONFIG: WafirConfig = {
 interface FieldConfig {
   type: string;
   id?: string;
+  display?: "visible" | "none";
   attributes?: {
     label?: string;
     options?: string[] | Array<{ label: string; required?: boolean }>;

@@ -30,6 +30,13 @@ forms:
           label: "What is the main reason for this rating?"
         validations:
           required: false
+      - id: submitted
+        type: date
+        display: none
+        attributes:
+          value: "today"
+        validations:
+          required: true
 
   - id: feature
     label: Suggestion

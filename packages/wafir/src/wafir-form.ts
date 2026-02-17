@@ -518,6 +518,10 @@ export class WafirForm extends LitElement {
           ? html`<h2 class="form-title">${this.formLabel}</h2>`
           : ""}
         ${this.fields.map((field) => {
+          // Skip rendering fields with display: none (value still submitted via willUpdate initialization)
+          if ((field as any).display === "none") {
+            return null;
+          }
           if (field.type === "checkboxes")
             return html`<div class="form-group">
               ${this._renderFieldInput(field)}
