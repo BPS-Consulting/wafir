@@ -329,6 +329,60 @@ forms:
       expect(createCall.body).toContain("⭐⭐⭐⭐");
     });
 
+    it("accepts zero rating and displays 'No rating' in body", async () => {
+      // Config with feedback form that has rating field
+      mockFetch.mockResolvedValue(
+        createMockConfigResponse(`
+targets:
+  - id: default
+    type: github/issues
+    target: testowner/testrepo
+    authRef: "123"
+forms:
+  - id: feedback
+    body:
+      - id: title
+        type: input
+      - id: rating
+        type: rating
+      - id: comment
+        type: textarea
+`),
+      );
+
+      mockOctokit.rest.issues.create.mockResolvedValue({
+        data: {
+          number: 46,
+          html_url: "https://github.com/testowner/testrepo/issues/46",
+          node_id: "I_abc127",
+        },
+      });
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/submit",
+        payload: {
+          configUrl: TEST_CONFIG_URL,
+          installationId: 123,
+          targetType: "github/issues",
+          target: "testowner/testrepo",
+          authRef: "123",
+          title: "Feedback with No Rating",
+          formId: "feedback",
+          formFields: {
+            title: "Feedback with No Rating",
+            rating: 0, // Zero rating should be accepted
+            comment: "No rating provided",
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(201);
+
+      const createCall = mockOctokit.rest.issues.create.mock.calls[0][0];
+      expect(createCall.body).toContain("No rating");
+    });
+
     it("includes browser info as form field in issue body when sent in formFields", async () => {
       // This tests the new autofill field approach where browser info
       // is included as a regular form field rather than a separate param
@@ -932,7 +986,7 @@ forms:
           formId: "feedback",
           formFields: {
             title: "Test Issue",
-            rating: 10, // Invalid: must be 1-5
+            rating: 10, // Invalid: must be 0-5
             message: "Test",
           },
         },

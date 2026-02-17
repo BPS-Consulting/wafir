@@ -255,7 +255,7 @@ describe("validateFormFields", () => {
 
     const formFields = {
       title: "Test Title",
-      rating: 10, // Invalid: must be 1-5
+      rating: 10, // Invalid: must be 0-5
     };
 
     const result = validateFormFields(formFields, config, "feedback");
@@ -264,6 +264,31 @@ describe("validateFormFields", () => {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0].code).toBe("INVALID_RATING");
     expect(result.errors[0].field).toBe("rating");
+  });
+
+  it("accepts zero as a valid rating value", () => {
+    const config: WafirConfig = {
+      ...minimalConfig,
+      forms: [
+        {
+          id: "feedback",
+          body: [
+            { id: "title", type: "input" },
+            { id: "rating", type: "rating" },
+          ],
+        },
+      ],
+    };
+
+    const formFields = {
+      title: "Test Title",
+      rating: 0, // Should be valid: 0 means no rating
+    };
+
+    const result = validateFormFields(formFields, config, "feedback");
+
+    expect(result.valid).toBe(true);
+    expect(result.errors).toHaveLength(0);
   });
 
   it("validates dropdown options", () => {

@@ -595,7 +595,12 @@ export class WafirWidget extends LitElement {
       const filteredFormData: Record<string, unknown> = {};
       for (const field of submitFields) {
         const id = String(field.id);
-        if (formData[id] !== undefined) filteredFormData[id] = formData[id];
+        if (formData[id] !== undefined) {
+          filteredFormData[id] = formData[id];
+        } else if (field.type === "rating") {
+          // Always send 0 for rating fields if not set
+          filteredFormData[id] = 0;
+        }
       }
 
       // Always send the resolved absolute URL to the backend

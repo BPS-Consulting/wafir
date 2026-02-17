@@ -203,6 +203,7 @@ const submitRoute: FastifyPluginAsync = async (
           input.fieldOrder,
           input.fieldLabels,
           excludeFieldsFromBody,
+          form?.body, // Pass field configs to properly handle rating fields
         );
 
         // Handle Screenshot Upload
