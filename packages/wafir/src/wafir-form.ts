@@ -47,6 +47,9 @@ export class WafirForm extends LitElement {
   @property({ type: Boolean })
   bridgeAvailable = true;
 
+  @property({ type: Boolean })
+  hasValidTarget = true;
+
   private _formDataController = new StoreController(this, formData);
   private _browserInfoController = new StoreController(this, browserInfo);
   private _consoleLogsController = new StoreController(this, consoleLogs);
@@ -572,7 +575,7 @@ export class WafirForm extends LitElement {
         <button
           class="submit-button"
           type="submit"
-          ?disabled="${this.loading || !this.bridgeAvailable}"
+          ?disabled="${this.loading || !this.bridgeAvailable || !this.hasValidTarget}"
         >
           ${this.loading
             ? html`<span class="spinner"></span> Submitting...`
