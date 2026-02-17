@@ -30,11 +30,11 @@ export class SubmitService {
    * @param icon - The icon character to repeat (defaults to ⭐)
    */
   ratingToIcons(rating: number, maxRating = 5, icon = "⭐"): string {
-    // Allow 0 to represent no rating (empty string)
-    if (rating === 0) {
+    const clampedRating = Math.min(Math.max(Math.round(rating), 0), maxRating);
+    // Allow 0 to represent no rating
+    if (clampedRating === 0) {
       return "No rating";
     }
-    const clampedRating = Math.min(Math.max(Math.round(rating), 0), maxRating);
     return icon.repeat(clampedRating);
   }
 
@@ -89,7 +89,8 @@ export class SubmitService {
       if (excludeFields?.has(key)) continue;
 
       const value = formFields[key];
-      // Skip undefined, null, or empty string, but allow 0 for numeric fields (e.g., ratings)
+      // Skip undefined, null, or empty string
+      // Note: 0 is allowed and will be included (e.g., ratings show "No rating" for 0)
       if (value === undefined || value === null || value === "") continue;
 
       // Use provided label if available, otherwise format from field ID
