@@ -25,7 +25,7 @@ const EXCLUDED_FORM_KEYS = new Set(["title"]);
 export class SubmitService {
   /**
    * Converts a numeric rating to repeated icon characters.
-   * @param rating - The rating value (0-based, where 0 means no rating)
+   * @param rating - The rating value (0 means no rating, 1-maxRating for actual ratings)
    * @param maxRating - Maximum rating value (defaults to 5)
    * @param icon - The icon character to repeat (defaults to ⭐)
    */
@@ -90,7 +90,7 @@ export class SubmitService {
 
       const value = formFields[key];
       // Skip undefined, null, or empty string
-      // Note: 0 is allowed and will be included (e.g., ratings show "No rating" for 0)
+      // Note: 0 will not be skipped by this check (e.g., ratings show "No rating" for 0)
       if (value === undefined || value === null || value === "") continue;
 
       // Use provided label if available, otherwise format from field ID
