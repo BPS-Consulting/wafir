@@ -1,21 +1,18 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background circle -->
-  <circle cx="256" cy="256" r="256" fill="#6366f1"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <!-- Background -->
+  <rect width="128" height="128" rx="16" fill="#6366f1"/>
   
-  <!-- Main icon - Modern feedback/message bubble with checkmark -->
-  <g transform="translate(106, 106)">
-    <!-- Message bubble -->
-    <path d="M50 50 L250 50 Q280 50 280 80 L280 220 Q280 250 250 250 L130 250 L80 290 L80 250 L50 250 Q20 250 20 220 L20 80 Q20 50 50 50 Z" 
-          fill="white" 
-          stroke="white" 
-          stroke-width="4"/>
-    
-    <!-- Checkmark inside bubble -->
-    <path d="M85 145 L125 185 L220 95" 
-          stroke="#6366f1" 
-          stroke-width="20" 
-          stroke-linecap="round" 
-          stroke-linejoin="round" 
+  <!-- Message bubble -->
+  <path d="M24 35 Q24 25 34 25 L94 25 Q104 25 104 35 L104 70 Q104 80 94 80 L54 80 L38 95 L38 80 L34 80 Q24 80 24 70 Z" 
+        fill="white"/>
+  
+  <!-- Thumbs up icon -->
+  <g transform="translate(42, 40)">
+    <path d="M 13.373895,7.8707208 12.88154,9.8992235 h 2.870429 a 0.98471004,0.98471004 0 0 1 0.945322,1.2604285 l -1.147188,3.938841 a 0.98471004,0.98471004 0 0 1 -0.945321,0.708991 H 7.9579893 a 0.98471004,0.98471004 0 0 1 -0.9847101,-0.98471 v -3.93884 A 0.98471004,0.98471004 0 0 1 7.9579893,9.8992235 H 9.3168891 A 0.98471004,0.98471004 0 0 0 10.198205,9.3527094 l 1.698624,-3.392326 a 1.5410712,1.5410712 0 0 1 1.477066,1.9103374 z"
+          fill="#6366f1"/>
+    <path d="M 9.4350543,9.8992235 V 15.807484"
+          stroke="#6366f1"
+          stroke-width="0.98471"
           fill="none"/>
   </g>
 </svg>
