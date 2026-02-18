@@ -1,4 +1,5 @@
 import * as yaml from "js-yaml";
+import { assertSafeUrl } from "./url-validator.js";
 
 /**
  * Default configuration used when no configUrl is provided.
@@ -221,6 +222,9 @@ async function fetchGitHubIssueTemplate(
       resolvedUrl = new URL(templateUrl, base).toString();
     }
 
+    // SSRF protection: validate URL before fetching
+    assertSafeUrl(resolvedUrl);
+
     const response = await fetch(resolvedUrl, {
       method: "GET",
       signal: AbortSignal.timeout(10000),
@@ -313,6 +317,9 @@ export async function fetchConfig(configUrl?: string): Promise<WafirConfig> {
   if (!configUrl) {
     return DEFAULT_CONFIG;
   }
+
+  // SSRF protection: validate URL before fetching
+  assertSafeUrl(configUrl);
 
   const response = await fetch(configUrl, {
     method: "GET",

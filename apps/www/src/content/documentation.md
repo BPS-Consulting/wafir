@@ -621,3 +621,20 @@ wafir-widget::part(button):hover {
 | `submit`   | The submit button            |
 
 ---
+
+## Security
+
+Wafir is designed to allow **anonymous users** of your application to submit feedback directly to your GitHub Issues or Projects. If you don't want anonymous submissions, Wafir is not the right tool for your use case.
+
+### How It Works
+
+- The **Wafir Bridge** uses standard [GitHub App](https://docs.github.com/en/apps) authentication to create issues and project items on your behalf, while conforming to browser CORS restrictions.
+- **GitHub's built-in rate limiting** protects your repositories from spam and abuse.
+- The **Installation ID** is not a secret—it only identifies your app installation. Access can be revoked anytime from GitHub Settings.
+- During installation, you can **restrict the GitHub App to specific repositories**, limiting which repos and associated projects can receive submissions.
+
+### Revoking Access
+
+To uninstall: **GitHub Settings → Applications → Installed GitHub Apps → Wafir → Uninstall**
+
+---
