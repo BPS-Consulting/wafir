@@ -242,11 +242,8 @@ export interface paths {
                                 id: string;
                                 /** @description Display label (defaults to capitalized id) */
                                 label?: string;
-                                /**
-                                 * @description Form icon (displayed in tab UI)
-                                 * @enum {string}
-                                 */
-                                icon?: "thumbsup" | "lightbulb" | "bug";
+                                /** @description Form icon (displayed in tab UI). Can be any unicode character or emoji. Examples: '👍', '💡', '🐞', '⭐', '😀'. */
+                                icon?: string;
                                 /** @description Form body (fields) for this form. If omitted, defaults are used for known form IDs. */
                                 body?: {
                                     /**

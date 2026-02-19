@@ -123,8 +123,8 @@ const formSchema = {
     },
     icon: {
       type: "string",
-      enum: ["thumbsup", "lightbulb", "bug"],
-      description: "Form icon (displayed in tab UI)",
+      description:
+        "Form icon (displayed in tab UI). Can be any unicode character or emoji. Examples: '👍', '💡', '🐞', '⭐', '😀'.",
     },
     body: {
       type: "array",

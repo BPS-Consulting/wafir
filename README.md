@@ -101,7 +101,7 @@ targets:
 forms:
   - id: feedback
     label: Feedback
-    icon: thumbsup
+    icon: 👍
     targets: [project] # Routes feedback to 'project' target
     fields:
       - id: rating
@@ -118,7 +118,7 @@ forms:
           required: false
   - id: issue
     label: Issue
-    icon: bug
+    icon: 🐞
     targets: [default] # Routes feedback to 'default' target
     fields:
       - id: title

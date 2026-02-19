@@ -59,7 +59,7 @@ Create `.github/wafir.yaml` in your test repository:
 forms:
   - id: bug
     label: Report Bug
-    icon: bug
+    icon: 🐞
     labels:
       - bug
       - needs-triage
