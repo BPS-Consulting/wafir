@@ -55,7 +55,7 @@ The widget will automatically display fields from your GitHub project. If you pr
 forms:
   - id: bug
     label: Report Bug
-    icon: bug
+    icon: 🐞
     labels:
       - bug
       - needs-triage

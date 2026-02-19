@@ -62,7 +62,7 @@ targets:
 forms:
   - id: feedback
     label: "Feedback"
-    icon: thumbsup
+    icon: 👍
     targets: [project]
     fields:
       - id: title
@@ -94,17 +94,17 @@ forms:
         type: textarea
         attributes:
           label: "Browser Info"
-          autofill: browserInfo  # Shows checkbox to include
+          autofill: browserInfo # Shows checkbox to include
       - id: screenshot
         type: textarea
         attributes:
           label: "Screenshot"
-          autofill: screenshot   # Shows capture button
+          autofill: screenshot # Shows capture button
       - id: console-logs
         type: textarea
         attributes:
           label: "Console Logs"
-          autofill: consoleLog   # Shows checkbox to include
+          autofill: consoleLog # Shows checkbox to include
 ```
 
 ### Form Fields
@@ -115,7 +115,7 @@ Field types: `input`, `textarea`, `email`, `dropdown`, `checkboxes`, `rating`, `
 forms:
   - id: feedback
     label: "Feedback"
-    icon: thumbsup # Options: thumbsup, lightbulb, bug
+    icon: 👍 # Can be any emoji or unicode character: 👍, 💡, 🐞, ⭐, 😀
     fields:
       - id: title
         type: input

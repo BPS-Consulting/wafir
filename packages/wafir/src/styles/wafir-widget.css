@@ -219,6 +219,22 @@ button[part="button"] svg {
   border-bottom-color: var(--wafir-primary-color, #2563eb);
 }
 
+.mode-tab .icon-char {
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button[part="button"] .icon-char {
+  font-size: var(--wafir-button-icon-size, 24px);
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .mode-tab svg {
   width: 18px;
   height: 18px;

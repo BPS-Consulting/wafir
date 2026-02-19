@@ -89,19 +89,19 @@ export const DEFAULT_FORMS: FormConfig[] = [
   {
     id: "feedback",
     label: "Feedback",
-    icon: "thumbsup",
+    icon: "👍",
     body: DEFAULT_FEEDBACK_FIELDS,
   },
   {
     id: "suggestion",
     label: "Suggestion",
-    icon: "lightbulb",
+    icon: "💡",
     body: DEFAULT_SUGGESTION_FIELDS,
   },
   {
     id: "issue",
     label: "Issue",
-    icon: "bug",
+    icon: "🐞",
     body: DEFAULT_ISSUE_FIELDS,
   },
 ];

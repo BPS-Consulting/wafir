@@ -57,7 +57,7 @@ targets:
 forms:
   - id: bug
     label: Report Bug
-    icon: bug
+    icon: 🐞
     targets: [default]
     body:
       - id: title
@@ -76,12 +76,12 @@ The `targets` key defines where feedback submissions are routed. Each target spe
 
 ### Target Properties
 
-| Property  | Type   | Description                                                |
-| --------- | ------ | ---------------------------------------------------------- |
-| `id`      | string | Unique identifier referenced by forms                      |
-| `type`    | string | `github/issues` or `github/project`                        |
+| Property  | Type   | Description                                                  |
+| --------- | ------ | ------------------------------------------------------------ |
+| `id`      | string | Unique identifier referenced by forms                        |
+| `type`    | string | `github/issues` or `github/project`                          |
 | `target`  | string | `owner/repo` for issues, `owner/project-number` for projects |
-| `authRef` | string | GitHub App installation ID                                 |
+| `authRef` | string | GitHub App installation ID                                   |
 
 ### Example
 
@@ -105,15 +105,15 @@ Forms define the structure of your feedback widget. Each form represents a disti
 
 ### Form Properties
 
-| Property      | Type      | Description                                                              |
-| ------------- | --------- | ------------------------------------------------------------------------ |
-| `id`          | string    | Unique identifier. Also used as GitHub issue type when creating issues.  |
-| `label`       | string    | Display label shown in the form tab                                      |
-| `icon`        | string?   | Icon name: `bug`, `lightbulb`, or `thumbsup`                             |
-| `labels`      | string[]? | GitHub labels to auto-apply to issues                                    |
-| `templateUrl` | string?   | URL to a GitHub issue form template YAML                                 |
+| Property      | Type      | Description                                                                                                                                  |
+| ------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`          | string    | Unique identifier. Also used as GitHub issue type when creating issues.                                                                      |
+| `label`       | string    | Display label shown in the form tab                                                                                                          |
+| `icon`        | string?   | Unicode character or emoji displayed in form tab. Examples: 👍, 💡, 🐞, ⭐                                                                   |
+| `labels`      | string[]? | GitHub labels to auto-apply to issues                                                                                                        |
+| `templateUrl` | string?   | URL to a GitHub issue form template YAML                                                                                                     |
 | `targets`     | array?    | Array of target IDs to route submissions to. Set to a non-existent ID (e.g., `[none]`) to disable the submit button for informational forms. |
-| `body`        | array     | Array of field definitions                                               |
+| `body`        | array     | Array of field definitions                                                                                                                   |
 
 ### Example
 
@@ -121,7 +121,7 @@ Forms define the structure of your feedback widget. Each form represents a disti
 forms:
   - id: Bug
     label: Report Bug
-    icon: bug
+    icon: 🐞
     labels:
       - bug
     targets: [default]
@@ -141,7 +141,7 @@ forms:
 
   - id: feedback
     label: Feedback
-    icon: thumbsup
+    icon: 👍
     targets: [project]
     body:
       - id: rating
@@ -166,7 +166,7 @@ Reference an existing GitHub issue form template by providing a `templateUrl`. T
 forms:
   - id: Bug
     label: Report Bug
-    icon: bug
+    icon: 🐞
     templateUrl: https://raw.githubusercontent.com/owner/repo/main/.github/ISSUE_TEMPLATE/bug_report.yml
     targets: [default]
 ```
@@ -179,7 +179,7 @@ If you only need one type of feedback, define a single form. The tab selector wi
 forms:
   - id: issue
     label: Report Issue
-    icon: bug
+    icon: 🐞
     body:
       - id: title
         type: input
@@ -197,36 +197,36 @@ Each field is defined using `id`, `type`, `attributes`, and `validations` subkey
 
 ### Field Types
 
-| Type         | Description                                           | Key Attributes                                                        |
-| ------------ | ----------------------------------------------------- | --------------------------------------------------------------------- |
-| `input`      | Single-line text input                                | label, description?, placeholder?, value?                             |
-| `email`      | Email input                                           | label, description?, placeholder?, value?                             |
-| `textarea`   | Multi-line text area                                  | label, description?, placeholder?, value?, render?                    |
-| `dropdown`   | Dropdown selection                                    | label, options, description?, multiple?                               |
-| `checkboxes` | Multiple checkbox options                             | label, options (array of objects with label, required?)               |
-| `markdown`   | Read-only Markdown display                            | value (required)                                                      |
-| `rating`     | Icon-based rating selector                            | label, options, description?, icon?                                   |
-| `date`       | Date picker input                                     | label, description?, value?                                           |
+| Type         | Description                | Key Attributes                                          |
+| ------------ | -------------------------- | ------------------------------------------------------- |
+| `input`      | Single-line text input     | label, description?, placeholder?, value?               |
+| `email`      | Email input                | label, description?, placeholder?, value?               |
+| `textarea`   | Multi-line text area       | label, description?, placeholder?, value?, render?      |
+| `dropdown`   | Dropdown selection         | label, options, description?, multiple?                 |
+| `checkboxes` | Multiple checkbox options  | label, options (array of objects with label, required?) |
+| `markdown`   | Read-only Markdown display | value (required)                                        |
+| `rating`     | Icon-based rating selector | label, options, description?, icon?                     |
+| `date`       | Date picker input          | label, description?, value?                             |
 
 ### Field Properties
 
-| Property     | Location     | Type         | Description                                              |
-| ------------ | ------------ | ------------ | -------------------------------------------------------- |
-| id           | field (root) | string       | Unique identifier for the field                          |
-| type         | field (root) | string       | Field input type (see above)                             |
-| display      | field (root) | string?      | Field visibility: `visible` (default) or `none` (hidden) |
-| attributes   | field (root) | object       | Display and options attributes                           |
-| validations  | field (root) | object       | Validation rules (e.g., required: true/false)            |
-| label        | attributes   | string       | Display label                                            |
-| description  | attributes   | string?      | Helper/description text                                  |
-| placeholder  | attributes   | string?      | Placeholder text                                         |
-| value        | attributes   | string?      | Default value or Markdown content                        |
-| render       | attributes   | string?      | Syntax highlighting for textarea (e.g. shell)            |
-| options      | attributes   | array        | Options for dropdowns, checkboxes, or rating fields      |
-| multiple     | attributes   | boolean?     | Allow multiple selections (dropdown only)                |
-| icon         | attributes   | string?      | Unicode character/emoji for rating icon (default: ⭐)    |
-| autofill     | attributes   | string?      | Auto-fill with telemetry data (see Opt-In Telemetry)     |
-| required     | validations  | boolean      | If the field is required                                 |
+| Property    | Location     | Type     | Description                                              |
+| ----------- | ------------ | -------- | -------------------------------------------------------- |
+| id          | field (root) | string   | Unique identifier for the field                          |
+| type        | field (root) | string   | Field input type (see above)                             |
+| display     | field (root) | string?  | Field visibility: `visible` (default) or `none` (hidden) |
+| attributes  | field (root) | object   | Display and options attributes                           |
+| validations | field (root) | object   | Validation rules (e.g., required: true/false)            |
+| label       | attributes   | string   | Display label                                            |
+| description | attributes   | string?  | Helper/description text                                  |
+| placeholder | attributes   | string?  | Placeholder text                                         |
+| value       | attributes   | string?  | Default value or Markdown content                        |
+| render      | attributes   | string?  | Syntax highlighting for textarea (e.g. shell)            |
+| options     | attributes   | array    | Options for dropdowns, checkboxes, or rating fields      |
+| multiple    | attributes   | boolean? | Allow multiple selections (dropdown only)                |
+| icon        | attributes   | string?  | Unicode character/emoji for rating icon (default: ⭐)    |
+| autofill    | attributes   | string?  | Auto-fill with telemetry data (see Opt-In Telemetry)     |
+| required    | validations  | boolean  | If the field is required                                 |
 
 ### Basic Field Example
 
@@ -274,12 +274,12 @@ Date fields render a native date picker with support for dynamic date tokens:
 
 #### Date Value Tokens
 
-| Token        | Example              | Description           |
-| ------------ | -------------------- | --------------------- |
-| `today`      | `value: "today"`     | Current date          |
-| `today+N`    | `value: "today+7"`   | N days in the future  |
-| `today-N`    | `value: "today-30"`  | N days in the past    |
-| `YYYY-MM-DD` | `value: "2026-03-01"`| Static ISO date       |
+| Token        | Example               | Description          |
+| ------------ | --------------------- | -------------------- |
+| `today`      | `value: "today"`      | Current date         |
+| `today+N`    | `value: "today+7"`    | N days in the future |
+| `today-N`    | `value: "today-30"`   | N days in the past   |
+| `YYYY-MM-DD` | `value: "2026-03-01"` | Static ISO date      |
 
 > **Note:** Date values are stored and submitted in ISO 8601 format (`YYYY-MM-DD`). When submitting to a GitHub Project, date fields automatically map to project Date fields with matching names.
 
@@ -292,7 +292,7 @@ Rating fields display a row of clickable icons for user satisfaction ratings. Th
   type: rating
   attributes:
     label: "How satisfied are you?"
-    icon: "⭐"  # Optional, defaults to ⭐
+    icon: "⭐" # Optional, defaults to ⭐
     options:
       - "Very Unsatisfied"
       - "Unsatisfied"
@@ -320,11 +320,11 @@ Wafir supports opt-in telemetry through **autofill fields**. These give users ex
 
 ### Available Autofill Types
 
-| Value        | Data Collected                                              | User Control                |
-| ------------ | ----------------------------------------------------------- | --------------------------- |
-| `screenshot` | DOM-to-canvas screenshot with optional element highlighting | Checkbox + capture          |
-| `browserInfo`| URL, user agent, viewport size, language                    | Checkbox to include         |
-| `consoleLog` | Recent console messages (errors, warnings)                  | Checkbox to include         |
+| Value         | Data Collected                                              | User Control        |
+| ------------- | ----------------------------------------------------------- | ------------------- |
+| `screenshot`  | DOM-to-canvas screenshot with optional element highlighting | Checkbox + capture  |
+| `browserInfo` | URL, user agent, viewport size, language                    | Checkbox to include |
+| `consoleLog`  | Recent console messages (errors, warnings)                  | Checkbox to include |
 
 ### How It Works
 
@@ -340,7 +340,7 @@ Wafir supports opt-in telemetry through **autofill fields**. These give users ex
 forms:
   - id: bug
     label: Report Bug
-    icon: bug
+    icon: 🐞
     body:
       - id: title
         type: input
@@ -424,8 +424,8 @@ window.wafirWidget.open({
 ```ts
 interface wafirWidget {
   open(options?: {
-    tab?: string;                    // Form ID from your config
-    prefill?: Record<string, any>;   // Field ID/value pairs
+    tab?: string; // Form ID from your config
+    prefill?: Record<string, any>; // Field ID/value pairs
   }): void;
 }
 ```
@@ -458,9 +458,11 @@ The Wafir GitHub App only has access to organization repositories and projects. 
 ### How to Connect
 
 1. **Find your Installation ID** from your GitHub App installation URL:
+
    ```
    github.com/settings/installations/12345678
    ```
+
    The number at the end is your Installation ID.
 
 2. **Visit the Connect Page** on the Wafir website or your self-hosted instance.
@@ -567,9 +569,9 @@ Override these variables on the `wafir-widget` element:
 
 #### Rating Variables
 
-| Variable                        | Default       | Description                  |
-| ------------------------------- | ------------- | ---------------------------- |
-| `--wafir-rating-icon-size`      | `28px`        | Rating icon size             |
+| Variable                   | Default | Description      |
+| -------------------------- | ------- | ---------------- |
+| `--wafir-rating-icon-size` | `28px`  | Rating icon size |
 
 #### Highlighter Variables
 
