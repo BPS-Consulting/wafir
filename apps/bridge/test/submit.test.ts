@@ -1370,7 +1370,7 @@ forms:
       const body = JSON.parse(response.body);
       expect(body.success).toBe(true);
       expect(body.projectAdded).toBe(false);
-      expect(body.warning).toContain("Could not find project");
+      expect(body.warning).toContain("repository or project was not found");
     });
   });
 
@@ -1442,7 +1442,7 @@ forms:
       expect(response.statusCode).toBe(500);
       const body = JSON.parse(response.body);
       expect(body.error).toBe("Submission Failed");
-      expect(body.message).toContain("GitHub API error");
+      expect(body.message).toContain("rate limit exceeded");
     });
   });
 

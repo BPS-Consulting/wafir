@@ -2,6 +2,7 @@
 import { FastifyPluginAsync } from "fastify";
 import { S3Client } from "@aws-sdk/client-s3";
 import { validateSubmission } from "../../shared/utils/config-validator.js";
+import { mapGitHubError } from "../../shared/utils/github-error-mapper.js";
 import { SubmitService } from "./service.js";
 import {
   GithubIssueSubmission,
@@ -154,11 +155,35 @@ const submitRoute: FastifyPluginAsync = async (
         const issueType = form?.id;
 
         // Initialize Clients using config values
-        const appOctokit = await fastify.getGitHubClient(installationId);
-        const userToken = await fastify.tokenStore.getUserToken(installationId);
-        const userOctokit = userToken
-          ? fastify.getGitHubClientWithToken(userToken)
-          : null;
+        let appOctokit: any;
+        let userOctokit: any = null;
+
+        try {
+          appOctokit = await fastify.getGitHubClient(installationId);
+        } catch (error: unknown) {
+          const mapped = mapGitHubError(error, { operation: "installation" });
+          request.log.error(
+            { error: mapped.message },
+            "Failed to get GitHub client",
+          );
+          return reply.code(mapped.statusCode).send({
+            error: "GitHub App Configuration Error",
+            message: mapped.message,
+          });
+        }
+
+        try {
+          const userToken =
+            await fastify.tokenStore.getUserToken(installationId);
+          userOctokit = userToken
+            ? fastify.getGitHubClientWithToken(userToken)
+            : null;
+        } catch (error: unknown) {
+          // User token is optional, so we just log and continue
+          request.log.warn(
+            "Failed to get user token, continuing with app token only",
+          );
+        }
 
         // Determine which fields will be written to project (to exclude from issue body)
         let excludeFieldsFromBody = new Set<string>();
@@ -258,6 +283,21 @@ const submitRoute: FastifyPluginAsync = async (
           warning: submissionResult.warning,
         });
       } catch (error: unknown) {
+        // Check if this is a GitHub API error
+        const githubError = error as any;
+        if (githubError.status || githubError.response?.status) {
+          const mapped = mapGitHubError(error, { operation: "repo" });
+          request.log.error(
+            { error: mapped.message },
+            "GitHub API error during submit",
+          );
+          return reply.code(mapped.statusCode).send({
+            error: "GitHub API Error",
+            message: mapped.message,
+          });
+        }
+
+        // Handle other errors
         const message =
           error instanceof Error ? error.message : "Unknown error";
         request.log.error({ error: message }, "Submit failed");
