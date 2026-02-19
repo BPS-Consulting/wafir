@@ -34,7 +34,8 @@
     "build": "vite build && tsc",
     "build:iife": "vite build --mode iife",
     "build:all": "pnpm run build && pnpm run build:iife",
-    "generate:api": "openapi-typescript ../../apps/bridge/swagger.json -o src/api/schema.d.ts"
+    "generate:api": "openapi-typescript ../../apps/bridge/swagger.json -o src/api/schema.d.ts",
+    "size": "pnpm run build:all && size-limit"
   },
   "dependencies": {
     "@nanostores/lit": "^0.2.3",
@@ -63,10 +64,26 @@
     "dist/**/*.js"
   ],
   "types": "dist/index.d.ts",
+  "size-limit": [
+    {
+      "name": "NPM ESM Bundle",
+      "path": "dist/wafir.js"
+    },
+    {
+      "name": "NPM CJS Bundle",
+      "path": "dist/wafir.cjs"
+    },
+    {
+      "name": "IIFE Browser Bundle",
+      "path": "dist/iife/wafir.js"
+    }
+  ],
   "devDependencies": {
+    "@size-limit/preset-app": "^12.0.0",
     "@types/js-yaml": "^4.0.9",
     "openapi-typescript": "^7.10.1",
     "rollup-plugin-visualizer": "^6.0.5",
+    "size-limit": "^12.0.0",
     "typescript": "~5.9.3",
     "vite": "^7.2.4"
   },
