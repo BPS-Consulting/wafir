@@ -80,9 +80,20 @@ const submitRoute: FastifyPluginAsync = async (
         const config = validationResult.config!;
 
         // Determine which targets to use for this submission
-        // 1. If a form is specified and it has targets, use those
-        // 2. Otherwise, use all targets from config
+        // 1. If a form is specified and targets is defined:
+        //    - If empty array ([]), this is a submissionless form - reject
+        //    - If non-empty array, use those specific targets
+        // 2. If targets is undefined/omitted, use all targets from config
         const form = config.forms?.find((f) => f.id === input.formId);
+
+        // Check if targets is explicitly set to empty array (submissionless form)
+        if (form && Array.isArray(form.targets) && form.targets.length === 0) {
+          return reply.code(400).send({
+            error:
+              "This form cannot be submitted as no targets are configured (submissionless form)",
+          });
+        }
+
         const targetIds =
           form?.targets && form.targets.length > 0
             ? form.targets

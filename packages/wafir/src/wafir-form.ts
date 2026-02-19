@@ -90,7 +90,11 @@ export class WafirForm extends LitElement {
   /**
    * Handles toggling of autofill checkbox for telemetry fields.
    */
-  private _handleAutofillToggle(fieldId: string, autofillType: string, checked: boolean) {
+  private _handleAutofillToggle(
+    fieldId: string,
+    autofillType: string,
+    checked: boolean,
+  ) {
     this._autofillEnabled[fieldId] = checked;
     const currentData = getTabFormData(this.tabId);
 
@@ -131,7 +135,9 @@ export class WafirForm extends LitElement {
     if (!isEnabled) {
       return html`
         <div class="screenshot-placeholder">
-          <span class="screenshot-hint">Enable the checkbox above to capture a screenshot</span>
+          <span class="screenshot-hint"
+            >Enable the checkbox above to capture a screenshot</span
+          >
         </div>
       `;
     }
@@ -195,7 +201,10 @@ export class WafirForm extends LitElement {
   /**
    * Returns a human-readable label for an autofill type.
    */
-  private _getAutofillLabel(autofillType: string, customLabel?: string): string {
+  private _getAutofillLabel(
+    autofillType: string,
+    customLabel?: string,
+  ): string {
     if (customLabel) return customLabel;
     switch (autofillType) {
       case "browserInfo":
@@ -293,8 +302,12 @@ export class WafirForm extends LitElement {
       }
       case "textarea": {
         const autofill = (field.attributes as any)?.autofill;
-        const isAutofillField = autofill === "browserInfo" || autofill === "consoleLog" || autofill === "screenshot";
-        const isAutofillEnabled = this._autofillEnabled[String(field.id)] ?? false;
+        const isAutofillField =
+          autofill === "browserInfo" ||
+          autofill === "consoleLog" ||
+          autofill === "screenshot";
+        const isAutofillEnabled =
+          this._autofillEnabled[String(field.id)] ?? false;
 
         // For screenshot autofill, render the screenshot capture UI
         if (autofill === "screenshot") {
@@ -316,20 +329,34 @@ export class WafirForm extends LitElement {
       case "dropdown": {
         // GitHub Issue Forms dropdown with multiple and default support
         const isMultiple = (field.attributes as any)?.multiple === true;
-        const defaultIndex = (field.attributes as any)?.default as number | undefined;
-        
+        const defaultIndex = (field.attributes as any)?.default as
+          | number
+          | undefined;
+
         // For multiple select, value is an array; for single select, it's a string
-        const selectedValues: string[] = isMultiple 
-          ? (Array.isArray(value) ? value : [])
-          : (value ? [value] : []);
+        const selectedValues: string[] = isMultiple
+          ? Array.isArray(value)
+            ? value
+            : []
+          : value
+            ? [value]
+            : [];
 
         // Get option labels for comparison
         const getOptionLabel = (opt: any): string => {
-          return typeof opt === 'object' && opt !== null ? opt.label : String(opt);
+          return typeof opt === "object" && opt !== null
+            ? opt.label
+            : String(opt);
         };
 
         // Initialize default value if not set and default index is provided
-        if (!value && defaultIndex !== undefined && opts && Array.isArray(opts) && opts[defaultIndex]) {
+        if (
+          !value &&
+          defaultIndex !== undefined &&
+          opts &&
+          Array.isArray(opts) &&
+          opts[defaultIndex]
+        ) {
           const defaultValue = getOptionLabel(opts[defaultIndex]);
           const currentData = getTabFormData(this.tabId);
           setTabFormData(this.tabId, {
@@ -347,7 +374,9 @@ export class WafirForm extends LitElement {
               ?required="${field.validations?.required}"
               @change="${(e: Event) => {
                 const select = e.target as HTMLSelectElement;
-                const selected = Array.from(select.selectedOptions).map(opt => opt.value);
+                const selected = Array.from(select.selectedOptions).map(
+                  (opt) => opt.value,
+                );
                 const currentData = getTabFormData(this.tabId);
                 setTabFormData(this.tabId, {
                   ...currentData,
@@ -358,17 +387,22 @@ export class WafirForm extends LitElement {
               ${opts && isOptionObjectArray(opts)
                 ? opts.map(
                     (opt) =>
-                      html`<option 
-                        value="${opt.label}" 
+                      html`<option
+                        value="${opt.label}"
                         ?selected="${selectedValues.includes(opt.label)}"
-                      >${opt.label}</option>`,
+                      >
+                        ${opt.label}
+                      </option>`,
                   )
                 : Array.isArray(opts)
                   ? opts.map(
-                      (opt) => html`<option 
-                        value="${opt}" 
-                        ?selected="${selectedValues.includes(String(opt))}"
-                      >${opt}</option>`,
+                      (opt) =>
+                        html`<option
+                          value="${opt}"
+                          ?selected="${selectedValues.includes(String(opt))}"
+                        >
+                          ${opt}
+                        </option>`,
                     )
                   : ""}
             </select>
@@ -384,21 +418,30 @@ export class WafirForm extends LitElement {
             @change="${(e: Event) =>
               this._handleInputChange(e, String(field.id))}"
           >
-            <option value="" disabled ?selected="${!value}">Select an option</option>
+            <option value="" disabled ?selected="${!value}">
+              Select an option
+            </option>
             ${opts && isOptionObjectArray(opts)
               ? opts.map(
                   (opt, index) =>
-                    html`<option 
-                      value="${opt.label}" 
-                      ?selected="${value === opt.label || (!value && defaultIndex === index)}"
-                    >${opt.label}</option>`,
+                    html`<option
+                      value="${opt.label}"
+                      ?selected="${value === opt.label ||
+                      (!value && defaultIndex === index)}"
+                    >
+                      ${opt.label}
+                    </option>`,
                 )
               : Array.isArray(opts)
                 ? opts.map(
-                    (opt, index) => html`<option 
-                      value="${opt}" 
-                      ?selected="${value === opt || (!value && defaultIndex === index)}"
-                    >${opt}</option>`,
+                    (opt, index) =>
+                      html`<option
+                        value="${opt}"
+                        ?selected="${value === opt ||
+                        (!value && defaultIndex === index)}"
+                      >
+                        ${opt}
+                      </option>`,
                   )
                 : ""}
           </select>
@@ -410,7 +453,7 @@ export class WafirForm extends LitElement {
             ${opts && isOptionObjectArray(opts)
               ? opts.map(
                   (opt) => html`
-                    <label class="${opt.required ? 'checkbox-required' : ''}">
+                    <label class="${opt.required ? "checkbox-required" : ""}">
                       <input
                         type="checkbox"
                         name="${String(field.id)}"
@@ -432,7 +475,9 @@ export class WafirForm extends LitElement {
                           });
                         }}"
                       />
-                      ${opt.label}${opt.required ? html`<span class="required-indicator">*</span>` : ''}
+                      ${opt.label}${opt.required
+                        ? html`<span class="required-indicator">*</span>`
+                        : ""}
                     </label>
                   `,
                 )
@@ -536,12 +581,19 @@ export class WafirForm extends LitElement {
 
           // Check for autofill attribute on textarea fields
           const autofill = (field.attributes as any)?.autofill;
-          const isAutofillField = field.type === "textarea" && 
-            (autofill === "browserInfo" || autofill === "consoleLog" || autofill === "screenshot");
-          const isAutofillEnabled = this._autofillEnabled[String(field.id)] ?? false;
+          const isAutofillField =
+            field.type === "textarea" &&
+            (autofill === "browserInfo" ||
+              autofill === "consoleLog" ||
+              autofill === "screenshot");
+          const isAutofillEnabled =
+            this._autofillEnabled[String(field.id)] ?? false;
 
           if (isAutofillField) {
-            const labelText = this._getAutofillLabel(autofill, field.attributes?.label);
+            const labelText = this._getAutofillLabel(
+              autofill,
+              field.attributes?.label,
+            );
             return html`
               <div class="form-group autofill-group">
                 <label class="autofill-label">
@@ -551,7 +603,11 @@ export class WafirForm extends LitElement {
                     .checked="${isAutofillEnabled}"
                     @change="${(e: Event) => {
                       const checked = (e.target as HTMLInputElement).checked;
-                      this._handleAutofillToggle(String(field.id), autofill, checked);
+                      this._handleAutofillToggle(
+                        String(field.id),
+                        autofill,
+                        checked,
+                      );
                     }}"
                   />
                   Include ${labelText}
@@ -571,18 +627,21 @@ export class WafirForm extends LitElement {
             </div>
           `;
         })}
-
-        <button
-          class="submit-button"
-          type="submit"
-          ?disabled="${this.loading || !this.bridgeAvailable || !this.hasValidTarget}"
-        >
-          ${this.loading
-            ? html`<span class="spinner"></span> Submitting...`
-            : !this.bridgeAvailable
-              ? "Service Unavailable"
-              : "Submit"}
-        </button>
+        ${this.hasValidTarget
+          ? html`
+              <button
+                class="submit-button"
+                type="submit"
+                ?disabled="${this.loading || !this.bridgeAvailable}"
+              >
+                ${this.loading
+                  ? html`<span class="spinner"></span> Submitting...`
+                  : !this.bridgeAvailable
+                    ? "Service Unavailable"
+                    : "Submit"}
+              </button>
+            `
+          : ""}
       </form>
     `;
   }

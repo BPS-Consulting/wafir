@@ -12,7 +12,9 @@
     "/auth/github": {
       "get": {
         "summary": "Initiate GitHub OAuth",
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "description": "Redirects to GitHub OAuth for user authorization",
         "parameters": [
           {
@@ -42,7 +44,9 @@
     "/auth/github/callback": {
       "get": {
         "summary": "GitHub OAuth Callback",
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "description": "Handles OAuth callback from GitHub",
         "parameters": [
           {
@@ -72,7 +76,9 @@
     "/auth/status/{installationId}": {
       "get": {
         "summary": "Check Auth Status",
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "description": "Check if user token exists for installation",
         "parameters": [
           {
@@ -109,7 +115,9 @@
     "/auth/{installationId}": {
       "delete": {
         "summary": "Disconnect Auth",
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "description": "Remove stored user token for installation",
         "parameters": [
           {
@@ -131,7 +139,9 @@
     "/config/": {
       "get": {
         "summary": "Get WAFIR Configuration (Deprecated)",
-        "tags": ["WAFIR"],
+        "tags": [
+          "WAFIR"
+        ],
         "description": "DEPRECATED: The widget now fetches config directly from a user-hosted URL. This endpoint is kept for backward compatibility but will be removed in a future version. Fetches and parses .github/wafir.yaml from the target repository.",
         "parameters": [
           {
@@ -167,7 +177,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["targets"],
+                  "required": [
+                    "targets"
+                  ],
                   "properties": {
                     "title": {
                       "type": "string",
@@ -180,7 +192,12 @@
                       "description": "Target destinations for form submissions. Each target defines where and how submissions are stored.",
                       "items": {
                         "type": "object",
-                        "required": ["id", "type", "target", "authRef"],
+                        "required": [
+                          "id",
+                          "type",
+                          "target",
+                          "authRef"
+                        ],
                         "properties": {
                           "id": {
                             "type": "string",
@@ -188,7 +205,10 @@
                           },
                           "type": {
                             "type": "string",
-                            "enum": ["github/issues", "github/project"],
+                            "enum": [
+                              "github/issues",
+                              "github/project"
+                            ],
                             "description": "Target type using MIME-type convention. Currently supported: github/issues, github/project."
                           },
                           "target": {
@@ -228,7 +248,9 @@
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "required": ["id"],
+                        "required": [
+                          "id"
+                        ],
                         "properties": {
                           "id": {
                             "type": "string",
@@ -240,14 +262,20 @@
                           },
                           "icon": {
                             "type": "string",
-                            "enum": ["thumbsup", "lightbulb", "bug"],
+                            "enum": [
+                              "thumbsup",
+                              "lightbulb",
+                              "bug"
+                            ],
                             "description": "Form icon (displayed in tab UI)"
                           },
                           "body": {
                             "type": "array",
                             "items": {
                               "type": "object",
-                              "required": ["type"],
+                              "required": [
+                                "type"
+                              ],
                               "properties": {
                                 "type": {
                                   "type": "string",
@@ -269,7 +297,10 @@
                                 },
                                 "display": {
                                   "type": "string",
-                                  "enum": ["visible", "none"],
+                                  "enum": [
+                                    "visible",
+                                    "none"
+                                  ],
                                   "default": "visible",
                                   "description": "Controls field visibility. 'none' hides the field from the UI but still includes its value in submissions. Defaults to 'visible'."
                                 },
@@ -318,7 +349,9 @@
                                           "type": "array",
                                           "items": {
                                             "type": "object",
-                                            "required": ["label"],
+                                            "required": [
+                                              "label"
+                                            ],
                                             "properties": {
                                               "label": {
                                                 "type": "string"
@@ -364,7 +397,7 @@
                             "items": {
                               "type": "string"
                             },
-                            "description": "IDs of target(s) for this form. If omitted or empty, all targets will be used. Each ID must reference a valid target from the top-level targets array."
+                            "description": "IDs of target(s) for this form. If omitted, all targets will be used. If an empty array ([]), no target is selectable and submissions will be disabled for this form (submissionless). Each ID must reference a valid target from the top-level targets array."
                           },
                           "labels": {
                             "type": "array",
@@ -430,14 +463,19 @@
     "/generate/": {
       "post": {
         "summary": "Generate Sample Config",
-        "tags": ["WAFIR"],
+        "tags": [
+          "WAFIR"
+        ],
         "description": "Generates a sample wafir.yaml configuration file based on GitHub repository labels and project fields. Provide your installation ID and an array of targets to analyze. Returns the config as plain text YAML.",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["installationId", "targets"],
+                "required": [
+                  "installationId",
+                  "targets"
+                ],
                 "properties": {
                   "installationId": {
                     "type": "number",
@@ -448,11 +486,17 @@
                     "description": "Array of targets to analyze",
                     "items": {
                       "type": "object",
-                      "required": ["type", "target"],
+                      "required": [
+                        "type",
+                        "target"
+                      ],
                       "properties": {
                         "type": {
                           "type": "string",
-                          "enum": ["github/issues", "github/project"],
+                          "enum": [
+                            "github/issues",
+                            "github/project"
+                          ],
                           "description": "Target type"
                         },
                         "target": {
@@ -523,7 +567,9 @@
     "/health/": {
       "get": {
         "summary": "Health Check",
-        "tags": ["Health"],
+        "tags": [
+          "Health"
+        ],
         "description": "Returns the health status of the bridge service",
         "responses": {
           "200": {
@@ -550,7 +596,9 @@
     "/notifications/": {
       "post": {
         "summary": "Store Notification",
-        "tags": ["WAFIR"],
+        "tags": [
+          "WAFIR"
+        ],
         "description": "Accepts a JSON payload and stores it in S3 in the notifications folder.",
         "requestBody": {
           "content": {
@@ -608,7 +656,9 @@
     "/submit/": {
       "post": {
         "summary": "Submit Feedback/Issue",
-        "tags": ["WAFIR"],
+        "tags": [
+          "WAFIR"
+        ],
         "description": "Creates a GitHub issue or project draft from form fields. Supports multipart/form-data.",
         "responses": {
           "200": {

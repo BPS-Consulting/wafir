@@ -296,7 +296,7 @@ export interface paths {
                                         required?: boolean;
                                     };
                                 }[];
-                                /** @description IDs of target(s) for this form. If omitted or empty, all targets will be used. Each ID must reference a valid target from the top-level targets array. */
+                                /** @description IDs of target(s) for this form. If omitted, all targets will be used. If an empty array ([]), no target is selectable and submissions will be disabled for this form (submissionless). Each ID must reference a valid target from the top-level targets array. */
                                 targets?: string[];
                                 /** @description Labels automatically added to issues created from this form. Similar to GitHub issue form templates. */
                                 labels?: string[];
