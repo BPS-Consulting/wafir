@@ -258,9 +258,6 @@ importers:
       dompurify:
         specifier: ^3.3.1
         version: 3.3.1
-      js-yaml:
-        specifier: ^4.1.1
-        version: 4.1.1
       lit:
         specifier: ^3.3.1
         version: 3.3.1
@@ -280,9 +277,6 @@ importers:
       '@size-limit/preset-app':
         specifier: ^12.0.0
         version: 12.0.0(size-limit@12.0.0(jiti@2.6.1))
-      '@types/js-yaml':
-        specifier: ^4.0.9
-        version: 4.0.9
       openapi-typescript:
         specifier: ^7.10.1
         version: 7.10.1(typescript@5.9.3)
