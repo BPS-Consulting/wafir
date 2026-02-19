@@ -269,3 +269,61 @@ button[part="button"] svg {
     transform: rotate(360deg);
   }
 }
+
+/* Error overlay */
+.error-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(2px);
+  border-radius: var(--wafir-modal-border-radius, 12px);
+}
+
+.error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+  max-width: 300px;
+}
+
+.error-icon {
+  color: var(--wafir-error-color, #dc2626);
+}
+
+.error-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--wafir-text-color, #111827);
+}
+
+.error-message {
+  font-size: 14px;
+  color: var(--wafir-text-secondary, #6b7280);
+}
+
+.retry-button {
+  margin-top: 8px;
+  padding: 10px 20px;
+  background: var(--wafir-primary-color, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.retry-button:hover {
+  background: var(--wafir-primary-hover, #1d4ed8);
+}

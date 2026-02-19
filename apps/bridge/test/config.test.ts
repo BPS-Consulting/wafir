@@ -1,40 +1,25 @@
 /**
  * Tests for the /config endpoint
- * Tests fetching and processing wafir.yaml configurations
+ * Tests fetching and parsing wafir configuration from URLs
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Fastify, { FastifyInstance } from "fastify";
-import fp from "fastify-plugin";
-import {
-  setupTestEnv,
-  createMockOctokit,
-  encodeYamlToBase64,
-  sampleConfigs,
-  MockOctokit,
-} from "./helper.js";
+import { setupTestEnv, sampleConfigs } from "./helper.js";
 
 // Import the config route
 import configRoute from "../src/modules/config/routes.js";
 
+// Mock global fetch
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
+
 describe("GET /config", () => {
   let app: FastifyInstance;
-  let mockOctokit: MockOctokit;
 
   beforeEach(async () => {
     setupTestEnv();
-    mockOctokit = createMockOctokit();
 
     app = Fastify({ logger: false });
-
-    // Register mock GitHub plugin
-    await app.register(
-      fp(async (fastify) => {
-        (fastify as any).decorate(
-          "getGitHubClient",
-          vi.fn().mockResolvedValue(mockOctokit),
-        );
-      }),
-    );
 
     // Register the config route
     await app.register(configRoute, { prefix: "/config" });
@@ -47,26 +32,18 @@ describe("GET /config", () => {
   });
 
   describe("successful config fetching", () => {
-    it("fetches and parses a minimal wafir.yaml config", async () => {
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(sampleConfigs.minimal),
-          encoding: "base64",
-        },
-      });
-
-      // Mock user lookup (for issue types check)
-      mockOctokit.rest.users.getByUsername.mockResolvedValue({
-        data: { type: "User" },
+    it("fetches and parses a YAML config from URL", async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "text/yaml" }),
+        text: () => Promise.resolve(sampleConfigs.minimal),
       });
 
       const response = await app.inject({
         method: "GET",
         url: "/config",
         query: {
-          installationId: "123",
-          owner: "testowner",
-          repo: "testrepo",
+          configUrl: "https://example.com/wafir.yaml",
         },
       });
 
@@ -75,62 +52,108 @@ describe("GET /config", () => {
       expect(body.title).toBe("Feedback");
       expect(body.targets).toHaveLength(1);
       expect(body.targets[0].type).toBe("github/issues");
-      expect(body.issueTypes).toEqual([]);
+
+      // Verify fetch was called with correct URL
+      expect(mockFetch).toHaveBeenCalledWith(
+        "https://example.com/wafir.yaml",
+        expect.objectContaining({
+          method: "GET",
+        }),
+      );
     });
 
-    it("fetches config with project target type", async () => {
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(sampleConfigs.withProject),
-          encoding: "base64",
-        },
-      });
+    it("fetches and parses a JSON config from URL", async () => {
+      const jsonConfig = {
+        title: "JSON Config",
+        targets: [
+          {
+            id: "default",
+            type: "github/issues",
+            target: "owner/repo",
+            authRef: "123",
+          },
+        ],
+        forms: [
+          {
+            id: "feedback",
+            label: "Feedback",
+            body: [{ id: "message", type: "textarea" }],
+          },
+        ],
+      };
 
-      mockOctokit.rest.users.getByUsername.mockResolvedValue({
-        data: { type: "User" },
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "application/json" }),
+        text: () => Promise.resolve(JSON.stringify(jsonConfig)),
       });
 
       const response = await app.inject({
         method: "GET",
         url: "/config",
         query: {
-          installationId: "123",
-          owner: "testowner",
-          repo: "testrepo",
+          configUrl: "https://example.com/wafir.json",
         },
       });
 
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
-      expect(body.targets).toHaveLength(2);
-      expect(
-        body.targets.find((t: any) => t.type === "github/project"),
-      ).toBeDefined();
-      const projectTarget = body.targets.find(
-        (t: any) => t.type === "github/project",
-      );
-      expect(projectTarget.target).toContain("/1"); // Should contain project number
+      expect(body.title).toBe("JSON Config");
+      expect(body.targets).toHaveLength(1);
     });
 
-    it("fetches full featured config with forms and telemetry", async () => {
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(sampleConfigs.full),
-          encoding: "base64",
-        },
-      });
-
-      mockOctokit.rest.users.getByUsername.mockResolvedValue({
-        data: { type: "User" },
+    it("infers YAML format from URL extension", async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "text/plain" }),
+        text: () => Promise.resolve(sampleConfigs.minimal),
       });
 
       const response = await app.inject({
         method: "GET",
         url: "/config",
         query: {
-          installationId: "123",
-          owner: "testowner",
-          repo: "testrepo",
+          configUrl: "https://example.com/path/to/wafir.yaml",
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.title).toBe("Feedback");
+    });
+
+    it("infers YAML format from .yml extension", async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "text/plain" }),
+        text: () => Promise.resolve(sampleConfigs.minimal),
+      });
+
+      const response = await app.inject({
+        method: "GET",
+        url: "/config",
+        query: {
+          configUrl: "https://example.com/config.yml",
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.title).toBe("Feedback");
+    });
+
+    it("fetches full featured config with forms", async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "text/yaml" }),
+        text: () => Promise.resolve(sampleConfigs.full),
+      });
+
+      const response = await app.inject({
+        method: "GET",
+        url: "/config",
+        query: {
+          configUrl: "https://example.com/wafir.yaml",
         },
       });
 
@@ -148,135 +171,70 @@ describe("GET /config", () => {
       expect(body.forms[0].id).toBe("issue");
       expect(body.forms[1].id).toBe("feedback");
     });
-
-    it("includes organization issue types when owner is an org", async () => {
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(sampleConfigs.minimal),
-          encoding: "base64",
-        },
-      });
-
-      mockOctokit.rest.users.getByUsername.mockResolvedValue({
-        data: { type: "Organization" },
-      });
-
-      mockOctokit.request.mockResolvedValue({
-        data: [
-          { id: 1, name: "Bug", color: "red" },
-          { id: 2, name: "Feature", color: "blue" },
-        ],
-      });
-
-      const response = await app.inject({
-        method: "GET",
-        url: "/config",
-        query: {
-          installationId: "123",
-          owner: "testorg",
-          repo: "testrepo",
-        },
-      });
-
-      expect(response.statusCode).toBe(200);
-      const body = JSON.parse(response.body);
-      expect(body.issueTypes).toHaveLength(2);
-      expect(body.issueTypes[0]).toEqual({ id: 1, name: "Bug", color: "red" });
-      expect(body.issueTypes[1]).toEqual({
-        id: 2,
-        name: "Feature",
-        color: "blue",
-      });
-    });
-
-    it("handles org without issue types support gracefully", async () => {
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(sampleConfigs.minimal),
-          encoding: "base64",
-        },
-      });
-
-      mockOctokit.rest.users.getByUsername.mockResolvedValue({
-        data: { type: "Organization" },
-      });
-
-      // Simulate 404 for issue types endpoint
-      mockOctokit.request.mockRejectedValue({ status: 404 });
-
-      const response = await app.inject({
-        method: "GET",
-        url: "/config",
-        query: {
-          installationId: "123",
-          owner: "testorg",
-          repo: "testrepo",
-        },
-      });
-
-      expect(response.statusCode).toBe(200);
-      const body = JSON.parse(response.body);
-      expect(body.issueTypes).toEqual([]);
-    });
   });
 
   describe("error handling", () => {
-    it("returns 404 when wafir.yaml does not exist", async () => {
-      mockOctokit.rest.repos.getContent.mockRejectedValue({ status: 404 });
+    it("returns 404 when config URL returns 404", async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 404,
+      });
 
       const response = await app.inject({
         method: "GET",
         url: "/config",
         query: {
-          installationId: "123",
-          owner: "testowner",
-          repo: "testrepo",
+          configUrl: "https://example.com/notfound.yaml",
         },
       });
 
       expect(response.statusCode).toBe(404);
       const body = JSON.parse(response.body);
       expect(body.error).toBe("Config Not Found");
-      expect(body.message).toBe("No .github/wafir.yaml found in repo");
     });
 
-    it("returns 500 on GitHub API error", async () => {
-      mockOctokit.rest.repos.getContent.mockRejectedValue({
+    it("returns 500 on fetch error", async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
         status: 500,
-        message: "GitHub API error",
       });
 
       const response = await app.inject({
         method: "GET",
         url: "/config",
         query: {
-          installationId: "123",
-          owner: "testowner",
-          repo: "testrepo",
+          configUrl: "https://example.com/wafir.yaml",
         },
       });
 
       expect(response.statusCode).toBe(500);
       const body = JSON.parse(response.body);
       expect(body.error).toBe("Internal Server Error");
-      expect(body.message).toBe("Failed to fetch config");
     });
 
-    it("returns error when content is a directory not a file", async () => {
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          type: "dir",
-          // No 'content' property for directories
+    it("returns 400 for invalid URL", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: "/config",
+        query: {
+          configUrl: "not-a-valid-url",
         },
       });
+
+      expect(response.statusCode).toBe(400);
+      // Fastify schema validation rejects invalid URIs before handler runs
+      const body = JSON.parse(response.body);
+      expect(body.error).toBe("Bad Request");
+    });
+
+    it("handles fetch network errors gracefully", async () => {
+      mockFetch.mockRejectedValue(new Error("Network error"));
 
       const response = await app.inject({
         method: "GET",
         url: "/config",
         query: {
-          installationId: "123",
-          owner: "testowner",
-          repo: "testrepo",
+          configUrl: "https://example.com/wafir.yaml",
         },
       });
 
@@ -287,40 +245,175 @@ describe("GET /config", () => {
   });
 
   describe("query parameter validation", () => {
-    it("requires installationId query parameter", async () => {
+    it("requires configUrl query parameter", async () => {
       const response = await app.inject({
         method: "GET",
         url: "/config",
-        query: {
-          owner: "testowner",
-          repo: "testrepo",
-        },
+        query: {},
       });
 
       expect(response.statusCode).toBe(400);
     });
+  });
+});
 
-    it("requires owner query parameter", async () => {
+describe("GET /config/template", () => {
+  let app: FastifyInstance;
+
+  beforeEach(async () => {
+    setupTestEnv();
+
+    app = Fastify({ logger: false });
+
+    // Register the config route
+    await app.register(configRoute, { prefix: "/config" });
+    await app.ready();
+  });
+
+  afterEach(async () => {
+    await app.close();
+    vi.clearAllMocks();
+  });
+
+  const sampleTemplate = `
+name: Bug Report
+description: Report a bug
+labels: ["bug", "triage"]
+body:
+  - type: input
+    id: title
+    attributes:
+      label: Bug Title
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+    validations:
+      required: true
+`;
+
+  describe("successful template fetching", () => {
+    it("fetches and parses a GitHub issue form template", async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "text/yaml" }),
+        text: () => Promise.resolve(sampleTemplate),
+      });
+
       const response = await app.inject({
         method: "GET",
-        url: "/config",
+        url: "/config/template",
         query: {
-          installationId: "123",
-          repo: "testrepo",
+          templateUrl: "https://example.com/template.yaml",
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.body).toHaveLength(2);
+      expect(body.body[0].type).toBe("input");
+      expect(body.body[0].id).toBe("title");
+      expect(body.labels).toEqual(["bug", "triage"]);
+    });
+
+    it("returns template without labels if not present", async () => {
+      const templateNoLabels = `
+name: Simple Template
+body:
+  - type: input
+    id: title
+`;
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "text/yaml" }),
+        text: () => Promise.resolve(templateNoLabels),
+      });
+
+      const response = await app.inject({
+        method: "GET",
+        url: "/config/template",
+        query: {
+          templateUrl: "https://example.com/template.yaml",
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.body).toHaveLength(1);
+      expect(body.labels).toBeUndefined();
+    });
+  });
+
+  describe("error handling", () => {
+    it("returns 400 for invalid template format (missing body)", async () => {
+      const invalidTemplate = `
+name: Invalid Template
+description: Has no body
+`;
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "text/yaml" }),
+        text: () => Promise.resolve(invalidTemplate),
+      });
+
+      const response = await app.inject({
+        method: "GET",
+        url: "/config/template",
+        query: {
+          templateUrl: "https://example.com/invalid.yaml",
         },
       });
 
       expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error).toBe("Invalid Template");
     });
 
-    it("requires repo query parameter", async () => {
+    it("returns 404 when template URL returns 404", async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 404,
+      });
+
       const response = await app.inject({
         method: "GET",
-        url: "/config",
+        url: "/config/template",
         query: {
-          installationId: "123",
-          owner: "testowner",
+          templateUrl: "https://example.com/notfound.yaml",
         },
+      });
+
+      expect(response.statusCode).toBe(404);
+      const body = JSON.parse(response.body);
+      expect(body.error).toBe("Template Not Found");
+    });
+
+    it("returns 400 for invalid URL", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: "/config/template",
+        query: {
+          templateUrl: "not-a-valid-url",
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      // Fastify schema validation rejects invalid URIs before handler runs
+      const body = JSON.parse(response.body);
+      expect(body.error).toBe("Bad Request");
+    });
+  });
+
+  describe("query parameter validation", () => {
+    it("requires templateUrl query parameter", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: "/config/template",
+        query: {},
       });
 
       expect(response.statusCode).toBe(400);

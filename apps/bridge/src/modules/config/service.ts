@@ -2,9 +2,23 @@
 import yaml from "js-yaml";
 
 export interface ConfigQuery {
-  installationId: number;
-  owner: string;
-  repo: string;
+  configUrl: string;
+}
+
+export interface TemplateQuery {
+  templateUrl: string;
+}
+
+/**
+ * Represents a GitHub Issue Form template structure.
+ */
+export interface GitHubIssueFormTemplate {
+  name?: string;
+  description?: string;
+  title?: string;
+  labels?: string[];
+  assignees?: string[];
+  body?: any[];
 }
 
 /**
@@ -12,56 +26,104 @@ export interface ConfigQuery {
  */
 export class ConfigService {
   /**
-   * Fetches and parses .github/wafir.yaml from the target repository
+   * Fetches and parses a wafir configuration file from a URL.
+   * Supports both YAML and JSON formats.
+   * @param configUrl - URL to the raw configuration file
+   * @returns Parsed configuration object
    */
-  async fetchWafirConfig(
-    octokit: any,
-    owner: string,
-    repo: string,
-  ): Promise<any> {
-    const { data } = await octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: ".github/wafir.yaml",
-    });
-
-    if (!("content" in data)) {
-      throw new Error("File not found or is a directory");
+  async fetchConfigFromUrl(configUrl: string): Promise<any> {
+    // Validate URL
+    let url: URL;
+    try {
+      url = new URL(configUrl);
+    } catch {
+      throw new Error("Invalid URL: " + configUrl);
     }
 
-    // Decode Base64 and parse YAML
-    const yamlContent = Buffer.from(data.content, "base64").toString("utf-8");
-    return yaml.load(yamlContent) as any;
+    // Fetch the config file
+    const response = await fetch(url.toString(), {
+      method: "GET",
+      headers: {
+        Accept: "text/plain, application/json, application/x-yaml, text/yaml",
+      },
+      signal: AbortSignal.timeout(10000), // 10 second timeout
+    });
+
+    if (!response.ok) {
+      const error = new Error(
+        `Failed to fetch config: HTTP ${response.status}`,
+      );
+      (error as any).status = response.status;
+      throw error;
+    }
+
+    const contentType = response.headers.get("content-type") || "";
+    const text = await response.text();
+
+    // Determine format based on content-type or URL extension
+    const isYaml =
+      contentType.includes("yaml") ||
+      contentType.includes("x-yaml") ||
+      configUrl.endsWith(".yaml") ||
+      configUrl.endsWith(".yml");
+
+    if (isYaml) {
+      return yaml.load(text) as any;
+    } else {
+      // Try JSON parsing
+      try {
+        return JSON.parse(text);
+      } catch {
+        // If JSON fails, try YAML as fallback (YAML is a superset of JSON)
+        return yaml.load(text) as any;
+      }
+    }
   }
 
   /**
-   * Fetches issue types from organization (if available)
+   * Fetches and parses a GitHub Issue Form template from a URL.
+   * Returns the body (fields) and labels from the template.
+   * @param templateUrl - URL to the raw template file
+   * @returns Parsed template with body and labels
    */
-  async fetchIssueTypes(
-    octokit: any,
-    owner: string,
-    log: any,
-  ): Promise<{ id: number; name: string; color: string }[]> {
+  async fetchTemplateFromUrl(
+    templateUrl: string,
+  ): Promise<{ body: any[]; labels?: string[] }> {
+    // Validate URL
+    let url: URL;
     try {
-      const { data: ownerData } = await octokit.rest.users.getByUsername({
-        username: owner,
-      });
-
-      if (ownerData.type === "Organization") {
-        const { data: orgTypes } = await octokit.request(
-          "GET /orgs/{org}/issue-types",
-          { org: owner },
-        );
-        return orgTypes.map((t: any) => ({
-          id: t.id,
-          name: t.name,
-          color: t.color,
-        }));
-      }
-    } catch (typeError: any) {
-      log.debug("Could not fetch issue types (org may not support them)");
+      url = new URL(templateUrl);
+    } catch {
+      throw new Error("Invalid URL: " + templateUrl);
     }
 
-    return [];
+    // Fetch the template file
+    const response = await fetch(url.toString(), {
+      method: "GET",
+      headers: {
+        Accept: "text/plain, application/json, application/x-yaml, text/yaml",
+      },
+      signal: AbortSignal.timeout(10000), // 10 second timeout
+    });
+
+    if (!response.ok) {
+      const error = new Error(
+        `Failed to fetch template: HTTP ${response.status}`,
+      );
+      (error as any).status = response.status;
+      throw error;
+    }
+
+    const text = await response.text();
+    const template = yaml.load(text) as GitHubIssueFormTemplate;
+
+    if (!template || !template.body || !Array.isArray(template.body)) {
+      throw new Error("Invalid template format: missing body array");
+    }
+
+    return {
+      body: template.body,
+      labels: template.labels,
+    };
   }
 }

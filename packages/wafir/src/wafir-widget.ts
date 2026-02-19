@@ -39,19 +39,6 @@ const FORM_ICONS: Record<string, string> = {
   bug: bugIcon,
 };
 
-/**
- * Represents a GitHub Issue Form template structure.
- * Wafir uses the same field schema as GitHub Issue Forms.
- */
-interface GitHubIssueFormTemplate {
-  name?: string;
-  description?: string;
-  title?: string;
-  labels?: string[];
-  assignees?: string[];
-  body?: FieldConfig[];
-}
-
 @customElement("wafir-widget")
 export class WafirWidget extends LitElement {
   @property({ type: String, attribute: "button-text" })
@@ -269,7 +256,7 @@ export class WafirWidget extends LitElement {
   }
 
   /**
-   * Fetches a GitHub issue form template from a URL and extracts fields.
+   * Fetches a GitHub issue form template from a URL via the backend.
    * @param templateUrl - URL to the template (can be relative)
    * @param baseUrl - Base URL to resolve relative URLs against
    * @returns Template fields and labels, or undefined if fetch fails
@@ -296,21 +283,12 @@ export class WafirWidget extends LitElement {
         resolvedUrl = new URL(templateUrl, window.location.origin).toString();
       }
 
-      const response = await fetch(resolvedUrl, {
-        method: "GET",
-        signal: AbortSignal.timeout(10000),
-      });
-
-      if (!response.ok) {
-        console.warn(
-          `Wafir: Failed to fetch template from ${resolvedUrl}: HTTP ${response.status}`,
-        );
-        return undefined;
-      }
-
-      const text = await response.text();
-      const yaml = await import("js-yaml");
-      const template = yaml.load(text) as GitHubIssueFormTemplate;
+      // Fetch and parse template via the backend
+      const { getTemplate } = await import("./api/client.js");
+      const template = await getTemplate(
+        resolvedUrl,
+        this.bridgeUrl || undefined,
+      );
 
       if (!template || !template.body || !Array.isArray(template.body)) {
         console.warn(
@@ -320,7 +298,7 @@ export class WafirWidget extends LitElement {
       }
 
       return {
-        body: template.body,
+        body: template.body as FieldConfig[],
         labels: template.labels,
       };
     } catch (error) {
@@ -414,31 +392,15 @@ export class WafirWidget extends LitElement {
       // Resolve relative URLs to same origin
       const resolvedUrl = this._resolveConfigUrl(this.configUrl);
 
-      const response = await fetch(resolvedUrl, {
-        method: "GET",
-        signal: AbortSignal.timeout(10000), // 10 second timeout
-      });
+      // Fetch and parse config via the backend
+      const { getWafirConfig } = await import("./api/client.js");
+      const config = await getWafirConfig(
+        resolvedUrl,
+        this.bridgeUrl || undefined,
+      );
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch config: ${response.status}`);
-      }
-
-      const contentType = response.headers.get("content-type") || "";
-      let config: WafirConfig;
-
-      if (
-        contentType.includes("yaml") ||
-        contentType.includes("x-yaml") ||
-        resolvedUrl.endsWith(".yaml") ||
-        resolvedUrl.endsWith(".yml")
-      ) {
-        // Parse YAML
-        const yamlText = await response.text();
-        const yaml = await import("js-yaml");
-        config = yaml.load(yamlText) as WafirConfig;
-      } else {
-        // Parse JSON
-        config = await response.json();
+      if (!config) {
+        throw new Error("No config returned from backend");
       }
 
       // Validate required fields
@@ -447,18 +409,22 @@ export class WafirWidget extends LitElement {
           "Wafir: Config missing required fields (targets), using defaults",
           config,
         );
+        this.configFetchError =
+          "Configuration missing required fields (targets)";
         this._config = getDefaultConfig();
         await this._applyConfig(this._config);
         return;
       }
 
-      this._config = config;
-      await this._applyConfig(config, resolvedUrl);
+      this._config = config as WafirConfig;
+      await this._applyConfig(config as WafirConfig, resolvedUrl);
     } catch (error) {
-      console.error("Wafir: Failed to fetch remote config, using defaults", {
+      console.error("Wafir: Failed to fetch remote config", {
         error,
         configUrl: this.configUrl,
       });
+      this.configFetchError =
+        error instanceof Error ? error.message : "Failed to load configuration";
       this._config = getDefaultConfig();
       await this._applyConfig(this._config);
     } finally {
@@ -502,6 +468,11 @@ export class WafirWidget extends LitElement {
 
   private _closeModal() {
     this.isModalOpen = false;
+  }
+
+  private async _retryFetchConfig() {
+    this.configFetchError = null;
+    await this._fetchConfig();
   }
 
   private _getActiveForm(): FormConfig | undefined {
@@ -779,6 +750,47 @@ export class WafirWidget extends LitElement {
                           <div class="loading-content">
                             <div class="spinner" aria-hidden="true"></div>
                             <span class="loading-text">Loading</span>
+                          </div>
+                        </div>
+                      `
+                    : ""}
+                  ${this.configFetchError && !this.isConfigLoading
+                    ? html`
+                        <div
+                          class="error-overlay"
+                          role="alert"
+                          aria-live="assertive"
+                        >
+                          <div class="error-content">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="48"
+                              height="48"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              class="error-icon"
+                              aria-hidden="true"
+                            >
+                              <circle cx="12" cy="12" r="10" />
+                              <line x1="12" y1="8" x2="12" y2="12" />
+                              <line x1="12" y1="16" x2="12.01" y2="16" />
+                            </svg>
+                            <span class="error-title"
+                              >Failed to load configuration</span
+                            >
+                            <span class="error-message"
+                              >${this.configFetchError}</span
+                            >
+                            <button
+                              class="retry-button"
+                              @click="${this._retryFetchConfig}"
+                            >
+                              Retry
+                            </button>
                           </div>
                         </div>
                       `
