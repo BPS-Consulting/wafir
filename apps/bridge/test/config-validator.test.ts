@@ -673,10 +673,10 @@ forms:
 
     // Should have fetched the template
     expect(mockFetch).toHaveBeenCalledTimes(2);
-    
+
     // Second call should be the resolved URL
     expect(mockFetch.mock.calls[1][0]).toBe(
-      "https://example.com/config/templates/bug.yaml"
+      "https://example.com/config/templates/bug.yaml",
     );
 
     expect(config.forms![0].body).toBeDefined();
@@ -712,7 +712,7 @@ forms:
 
     // Second call should resolve to sibling file
     expect(mockFetch.mock.calls[1][0]).toBe(
-      "https://example.com/public/bug-template.yaml"
+      "https://example.com/public/bug-template.yaml",
     );
   });
 
@@ -733,7 +733,7 @@ forms:
 
     // Absolute URL should be used as-is
     expect(mockFetch.mock.calls[1][0]).toBe(
-      "https://raw.githubusercontent.com/owner/repo/main/.github/ISSUE_TEMPLATE/bug_report.yml"
+      "https://raw.githubusercontent.com/owner/repo/main/.github/ISSUE_TEMPLATE/bug_report.yml",
     );
   });
 });
@@ -742,17 +742,17 @@ describe("resolveTemplateUrl", () => {
   it("returns absolute URLs unchanged", () => {
     const url = resolveTemplateUrl(
       "https://raw.githubusercontent.com/owner/repo/main/template.yaml",
-      "https://example.com/wafir.yaml"
+      "https://example.com/wafir.yaml",
     );
     expect(url).toBe(
-      "https://raw.githubusercontent.com/owner/repo/main/template.yaml"
+      "https://raw.githubusercontent.com/owner/repo/main/template.yaml",
     );
   });
 
   it("resolves relative URLs against base URL", () => {
     const url = resolveTemplateUrl(
       "templates/bug.yaml",
-      "https://example.com/config/wafir.yaml"
+      "https://example.com/config/wafir.yaml",
     );
     expect(url).toBe("https://example.com/config/templates/bug.yaml");
   });
@@ -760,7 +760,7 @@ describe("resolveTemplateUrl", () => {
   it("resolves sibling file URLs", () => {
     const url = resolveTemplateUrl(
       "subform.yaml",
-      "https://example.com/public/wafir.yaml"
+      "https://example.com/public/wafir.yaml",
     );
     expect(url).toBe("https://example.com/public/subform.yaml");
   });
@@ -768,7 +768,7 @@ describe("resolveTemplateUrl", () => {
   it("resolves parent directory URLs", () => {
     const url = resolveTemplateUrl(
       "../templates/bug.yaml",
-      "https://example.com/config/v1/wafir.yaml"
+      "https://example.com/config/v1/wafir.yaml",
     );
     expect(url).toBe("https://example.com/config/templates/bug.yaml");
   });
@@ -781,9 +781,8 @@ describe("resolveTemplateUrl", () => {
   it("handles http URLs as absolute", () => {
     const url = resolveTemplateUrl(
       "http://other-server.com/template.yaml",
-      "https://example.com/wafir.yaml"
+      "https://example.com/wafir.yaml",
     );
     expect(url).toBe("http://other-server.com/template.yaml");
   });
 });
-

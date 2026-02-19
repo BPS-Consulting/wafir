@@ -145,12 +145,12 @@ const submitRoute: FastifyPluginAsync = async (
 
         // Title and labels can come from form (validated above)
         const title = input.title;
-        
+
         // Merge labels: form config labels take priority, then input labels
         const formLabels = form?.labels || [];
         const inputLabels = input.labels || [];
         const labels = [...new Set([...formLabels, ...inputLabels])];
-        
+
         // Use form id as the issue type
         const issueType = form?.id;
 
@@ -190,7 +190,11 @@ const submitRoute: FastifyPluginAsync = async (
         let projectNodeId: string | undefined;
         let projectUseUserToken = false;
 
-        if (hasProjectTarget && projectNumber !== undefined && input.formFields) {
+        if (
+          hasProjectTarget &&
+          projectNumber !== undefined &&
+          input.formFields
+        ) {
           try {
             const { nodeId: projId, shouldUseUserToken } =
               await projectService.findProjectNodeId(

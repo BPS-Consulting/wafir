@@ -173,7 +173,15 @@ export class GenerateService {
       if (!field || !field.name) continue;
 
       // Skip built-in fields that can't be set via API
-      const builtInFields = ["Title", "Assignees", "Labels", "Linked pull requests", "Milestone", "Repository", "Reviewers"];
+      const builtInFields = [
+        "Title",
+        "Assignees",
+        "Labels",
+        "Linked pull requests",
+        "Milestone",
+        "Repository",
+        "Reviewers",
+      ];
       if (builtInFields.includes(field.name)) continue;
 
       const fieldInfo: ProjectField = {

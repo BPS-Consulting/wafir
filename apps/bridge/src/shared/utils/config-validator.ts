@@ -215,7 +215,11 @@ async function fetchGitHubIssueTemplate(
   try {
     // Resolve relative URLs against the base config URL
     let resolvedUrl = templateUrl;
-    if (baseUrl && !templateUrl.startsWith("http://") && !templateUrl.startsWith("https://")) {
+    if (
+      baseUrl &&
+      !templateUrl.startsWith("http://") &&
+      !templateUrl.startsWith("https://")
+    ) {
       // For relative URLs, resolve against the base URL's directory
       const base = new URL(baseUrl);
       resolvedUrl = new URL(templateUrl, base).toString();
@@ -258,8 +262,15 @@ async function fetchGitHubIssueTemplate(
  * @param baseUrl - The base URL to resolve against
  * @returns The resolved absolute URL
  */
-export function resolveTemplateUrl(templateUrl: string, baseUrl?: string): string {
-  if (!baseUrl || templateUrl.startsWith("http://") || templateUrl.startsWith("https://")) {
+export function resolveTemplateUrl(
+  templateUrl: string,
+  baseUrl?: string,
+): string {
+  if (
+    !baseUrl ||
+    templateUrl.startsWith("http://") ||
+    templateUrl.startsWith("https://")
+  ) {
     return templateUrl;
   }
   const base = new URL(baseUrl);
@@ -284,7 +295,10 @@ async function processFormTemplates(
     forms.map(async (form) => {
       // If form has templateUrl and no body defined, fetch from template
       if (form.templateUrl && (!form.body || form.body.length === 0)) {
-        const templateData = await fetchGitHubIssueTemplate(form.templateUrl, baseUrl);
+        const templateData = await fetchGitHubIssueTemplate(
+          form.templateUrl,
+          baseUrl,
+        );
         if (templateData) {
           return {
             ...form,
@@ -430,7 +444,10 @@ export async function fetchConfig(configUrl?: string): Promise<WafirConfig> {
 
   // Process forms with templateUrl - fetch and merge template fields
   if (cfg.forms && Array.isArray(cfg.forms)) {
-    cfg.forms = await processFormTemplates(cfg.forms as FormConfig[], configUrl);
+    cfg.forms = await processFormTemplates(
+      cfg.forms as FormConfig[],
+      configUrl,
+    );
   }
 
   return config as WafirConfig;
@@ -504,7 +521,10 @@ function getAllowedFieldIds(config: WafirConfig, formId?: string): Set<string> {
  * Gets required field IDs for a specific form from the config.
  * Only returns fields marked as required in the form configuration.
  */
-function getRequiredFieldIds(config: WafirConfig, formId?: string): Set<string> {
+function getRequiredFieldIds(
+  config: WafirConfig,
+  formId?: string,
+): Set<string> {
   const requiredFields = new Set<string>();
 
   // If no formId provided, cannot determine required fields
@@ -585,8 +605,11 @@ function validateFieldValue(
       if (value !== undefined && value !== null) {
         // Determine max rating from options array, default to 5
         const ratingOptions = fieldConfig.attributes?.options;
-        const maxRating = Array.isArray(ratingOptions) && ratingOptions.length > 0 ? ratingOptions.length : 5;
-        
+        const maxRating =
+          Array.isArray(ratingOptions) && ratingOptions.length > 0
+            ? ratingOptions.length
+            : 5;
+
         // Allow 0 to represent no rating selected
         if (typeof value !== "number" || value < 0 || value > maxRating) {
           return {

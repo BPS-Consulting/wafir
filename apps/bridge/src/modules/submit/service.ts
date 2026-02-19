@@ -62,11 +62,11 @@ export class SubmitService {
     fieldOrder?: string[],
     fieldLabels?: Record<string, string>,
     excludeFields?: Set<string>,
-    fieldConfigs?: Array<{ 
-      id?: string; 
-      type: string; 
-      attributes?: { 
-        icon?: string; 
+    fieldConfigs?: Array<{
+      id?: string;
+      type: string;
+      attributes?: {
+        icon?: string;
         options?: string[] | Array<{ label: string; required?: boolean }>;
       };
     }>,
@@ -76,9 +76,12 @@ export class SubmitService {
       : Object.keys(formFields);
 
     const lines: string[] = [];
-    
+
     // Build a map of field IDs to their types for quick lookup
-    const fieldTypeMap = new Map<string, { type: string; icon?: string; maxRating?: number }>();
+    const fieldTypeMap = new Map<
+      string,
+      { type: string; icon?: string; maxRating?: number }
+    >();
     if (fieldConfigs) {
       for (const config of fieldConfigs) {
         if (config.id) {
@@ -110,9 +113,12 @@ export class SubmitService {
       let displayValue: string;
 
       const fieldType = fieldTypeMap.get(key)?.type;
-      
+
       // Check if this is a rating field by type, or fallback to key name
-      if ((fieldType === "rating" || key === "rating") && typeof value === "number") {
+      if (
+        (fieldType === "rating" || key === "rating") &&
+        typeof value === "number"
+      ) {
         const icon = fieldTypeMap.get(key)?.icon || "⭐";
         const maxRating = fieldTypeMap.get(key)?.maxRating || 5;
         displayValue = this.ratingToIcons(value, maxRating, icon);
