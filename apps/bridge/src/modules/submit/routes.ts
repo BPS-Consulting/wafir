@@ -2,6 +2,7 @@
 import { FastifyPluginAsync } from "fastify";
 import { S3Client } from "@aws-sdk/client-s3";
 import { validateSubmission } from "../../shared/utils/config-validator.js";
+import { mapGitHubError } from "../../shared/utils/github-error-mapper.js";
 import { SubmitService } from "./service.js";
 import {
   GithubIssueSubmission,
@@ -79,9 +80,20 @@ const submitRoute: FastifyPluginAsync = async (
         const config = validationResult.config!;
 
         // Determine which targets to use for this submission
-        // 1. If a form is specified and it has targets, use those
-        // 2. Otherwise, use all targets from config
+        // 1. If a form is specified and targets is defined:
+        //    - If empty array ([]), this is a submissionless form - reject
+        //    - If non-empty array, use those specific targets
+        // 2. If targets is undefined/omitted, use all targets from config
         const form = config.forms?.find((f) => f.id === input.formId);
+
+        // Check if targets is explicitly set to empty array (submissionless form)
+        if (form && Array.isArray(form.targets) && form.targets.length === 0) {
+          return reply.code(400).send({
+            error:
+              "This form cannot be submitted as no targets are configured (submissionless form)",
+          });
+        }
+
         const targetIds =
           form?.targets && form.targets.length > 0
             ? form.targets
@@ -144,28 +156,56 @@ const submitRoute: FastifyPluginAsync = async (
 
         // Title and labels can come from form (validated above)
         const title = input.title;
-        
+
         // Merge labels: form config labels take priority, then input labels
         const formLabels = form?.labels || [];
         const inputLabels = input.labels || [];
         const labels = [...new Set([...formLabels, ...inputLabels])];
-        
+
         // Use form id as the issue type
         const issueType = form?.id;
 
         // Initialize Clients using config values
-        const appOctokit = await fastify.getGitHubClient(installationId);
-        const userToken = await fastify.tokenStore.getUserToken(installationId);
-        const userOctokit = userToken
-          ? fastify.getGitHubClientWithToken(userToken)
-          : null;
+        let appOctokit: any;
+        let userOctokit: any = null;
+
+        try {
+          appOctokit = await fastify.getGitHubClient(installationId);
+        } catch (error: unknown) {
+          const mapped = mapGitHubError(error, { operation: "installation" });
+          request.log.error(
+            { error: mapped.message },
+            "Failed to get GitHub client",
+          );
+          return reply.code(mapped.statusCode).send({
+            error: "GitHub App Configuration Error",
+            message: mapped.message,
+          });
+        }
+
+        try {
+          const userToken =
+            await fastify.tokenStore.getUserToken(installationId);
+          userOctokit = userToken
+            ? fastify.getGitHubClientWithToken(userToken)
+            : null;
+        } catch (error: unknown) {
+          // User token is optional, so we just log and continue
+          request.log.warn(
+            "Failed to get user token, continuing with app token only",
+          );
+        }
 
         // Determine which fields will be written to project (to exclude from issue body)
         let excludeFieldsFromBody = new Set<string>();
         let projectNodeId: string | undefined;
         let projectUseUserToken = false;
 
-        if (hasProjectTarget && projectNumber !== undefined && input.formFields) {
+        if (
+          hasProjectTarget &&
+          projectNumber !== undefined &&
+          input.formFields
+        ) {
           try {
             const { nodeId: projId, shouldUseUserToken } =
               await projectService.findProjectNodeId(
@@ -258,6 +298,21 @@ const submitRoute: FastifyPluginAsync = async (
           warning: submissionResult.warning,
         });
       } catch (error: unknown) {
+        // Check if this is a GitHub API error
+        const githubError = error as any;
+        if (githubError.status || githubError.response?.status) {
+          const mapped = mapGitHubError(error, { operation: "repo" });
+          request.log.error(
+            { error: mapped.message },
+            "GitHub API error during submit",
+          );
+          return reply.code(mapped.statusCode).send({
+            error: "GitHub API Error",
+            message: mapped.message,
+          });
+        }
+
+        // Handle other errors
         const message =
           error instanceof Error ? error.message : "Unknown error";
         request.log.error({ error: message }, "Submit failed");

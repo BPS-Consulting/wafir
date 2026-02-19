@@ -78,7 +78,9 @@ describe("POST /generate", () => {
 
       expect(response.statusCode).toBe(400);
       const body = JSON.parse(response.body);
-      expect(body.message).toContain("must be equal to one of the allowed values");
+      expect(body.message).toContain(
+        "must be equal to one of the allowed values",
+      );
     });
   });
 
@@ -151,16 +153,26 @@ describe("POST /generate", () => {
             fields: {
               nodes: [
                 { id: "F1", name: "Title", dataType: "TEXT" },
-                { id: "F2", name: "Status", dataType: "SINGLE_SELECT", options: [
-                  { id: "O1", name: "Todo" },
-                  { id: "O2", name: "In Progress" },
-                  { id: "O3", name: "Done" },
-                ]},
-                { id: "F3", name: "Priority", dataType: "SINGLE_SELECT", options: [
-                  { id: "P1", name: "Low" },
-                  { id: "P2", name: "Medium" },
-                  { id: "P3", name: "High" },
-                ]},
+                {
+                  id: "F2",
+                  name: "Status",
+                  dataType: "SINGLE_SELECT",
+                  options: [
+                    { id: "O1", name: "Todo" },
+                    { id: "O2", name: "In Progress" },
+                    { id: "O3", name: "Done" },
+                  ],
+                },
+                {
+                  id: "F3",
+                  name: "Priority",
+                  dataType: "SINGLE_SELECT",
+                  options: [
+                    { id: "P1", name: "Low" },
+                    { id: "P2", name: "Medium" },
+                    { id: "P3", name: "High" },
+                  ],
+                },
                 { id: "F4", name: "Due Date", dataType: "DATE" },
                 { id: "F5", name: "Notes", dataType: "TEXT" },
               ],
@@ -202,9 +214,7 @@ describe("POST /generate", () => {
           node: {
             title: "Personal Project",
             fields: {
-              nodes: [
-                { id: "F1", name: "Title", dataType: "TEXT" },
-              ],
+              nodes: [{ id: "F1", name: "Title", dataType: "TEXT" }],
             },
           },
         });
@@ -250,9 +260,7 @@ describe("POST /generate", () => {
     it("generates config with both issues and project targets", async () => {
       // Mock labels
       mockOctokit.rest.issues.listLabelsForRepo.mockResolvedValue({
-        data: [
-          { name: "bug", color: "d73a4a" },
-        ],
+        data: [{ name: "bug", color: "d73a4a" }],
       });
 
       // Mock project lookup and fields
@@ -267,10 +275,15 @@ describe("POST /generate", () => {
             title: "Feedback",
             fields: {
               nodes: [
-                { id: "F1", name: "Rating", dataType: "SINGLE_SELECT", options: [
-                  { id: "R1", name: "⭐" },
-                  { id: "R2", name: "⭐⭐" },
-                ]},
+                {
+                  id: "F1",
+                  name: "Rating",
+                  dataType: "SINGLE_SELECT",
+                  options: [
+                    { id: "R1", name: "⭐" },
+                    { id: "R2", name: "⭐⭐" },
+                  ],
+                },
               ],
             },
           },

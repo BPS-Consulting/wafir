@@ -81,7 +81,9 @@ const notificationsRoute: FastifyPluginAsync = async (
         return reply.code(500).send({
           error: "Storage Error",
           message:
-            error instanceof Error ? error.message : "Failed to store notification",
+            error instanceof Error
+              ? error.message
+              : "Failed to store notification",
         });
       }
     },

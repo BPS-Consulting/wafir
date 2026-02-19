@@ -165,7 +165,9 @@ export class WafirWidget extends LitElement {
       this._openModal(options?.prefill);
     } else if (options?.tab) {
       // Modal is already open, just switch tabs
-      const tabExists = this._forms.some((t: FormConfig) => t.id === options.tab);
+      const tabExists = this._forms.some(
+        (t: FormConfig) => t.id === options.tab,
+      );
       if (tabExists) {
         this._activeFormId = options.tab!;
         if (options?.prefill) {
@@ -192,7 +194,9 @@ export class WafirWidget extends LitElement {
     }
 
     // Get valid field IDs from the tab configuration
-    const validFieldIds = new Set(form.body.map((f: FieldConfig) => String(f.id)));
+    const validFieldIds = new Set(
+      form.body.map((f: FieldConfig) => String(f.id)),
+    );
 
     // Filter and warn about unknown fields
     const validPrefillData: Record<string, any> = {};
@@ -221,7 +225,9 @@ export class WafirWidget extends LitElement {
 
     // After config is loaded, apply requested tab and prefill
     if (this._requestedTabId) {
-      const tabExists = this._forms.some((t: FormConfig) => t.id === this._requestedTabId);
+      const tabExists = this._forms.some(
+        (t: FormConfig) => t.id === this._requestedTabId,
+      );
       if (tabExists) {
         this._activeFormId = this._requestedTabId;
       } else {
@@ -318,7 +324,10 @@ export class WafirWidget extends LitElement {
         labels: template.labels,
       };
     } catch (error) {
-      console.warn(`Wafir: Error fetching template from ${templateUrl}:`, error);
+      console.warn(
+        `Wafir: Error fetching template from ${templateUrl}:`,
+        error,
+      );
       return undefined;
     }
   }
@@ -337,7 +346,10 @@ export class WafirWidget extends LitElement {
       forms.map(async (form) => {
         // If form has templateUrl and no body defined, fetch from template
         if (form.templateUrl && (!form.body || form.body.length === 0)) {
-          const templateData = await this._fetchTemplate(form.templateUrl, baseUrl);
+          const templateData = await this._fetchTemplate(
+            form.templateUrl,
+            baseUrl,
+          );
           if (templateData) {
             return {
               ...form,
@@ -457,7 +469,10 @@ export class WafirWidget extends LitElement {
   private async _applyConfig(config: WafirConfig, configUrl?: string) {
     if (config.forms && Array.isArray(config.forms)) {
       // Process forms that have templateUrl to fetch their fields
-      const processedForms = await this._processFormTemplates(config.forms, configUrl);
+      const processedForms = await this._processFormTemplates(
+        config.forms,
+        configUrl,
+      );
 
       this._forms = processedForms.map((form: FormConfig) => ({
         id: form.id,
@@ -507,11 +522,20 @@ export class WafirWidget extends LitElement {
     if (!this._config?.targets?.length) return false;
     const activeForm = this._getActiveForm();
     const formTargets = activeForm?.targets;
+
+    // If targets is explicitly an empty array, this is a submissionless form
+    if (Array.isArray(formTargets) && formTargets.length === 0) {
+      return false;
+    }
+
+    // If targets has values, check if at least one is valid
     if (formTargets?.length) {
       return formTargets.some((id) =>
         this._config!.targets.some((t) => t.id === id),
       );
     }
+
+    // If targets is undefined/omitted, all targets are valid
     return true;
   }
 
@@ -664,107 +688,107 @@ export class WafirWidget extends LitElement {
     }
 
     return html`
-      <div style="${isCapturing ? 'display: none;' : ''}">
-      ${this._hasCustomTrigger
-        ? html`<div
-            class="trigger-container ${this.position}"
-            @click="${this._handleTriggerClick}"
-          >
-            <slot name="trigger"></slot>
-          </div>`
-        : html`
-            <div class="trigger-container ${this.position}">
-              <button
-                @click="${this._handleTriggerClick}"
-                part="button"
-                aria-label="${this.tooltipText}"
-              >
-                <span>${unsafeHTML(thumbsupIcon)}</span>
-              </button>
-              <div class="tooltip">${this.tooltipText}</div>
-            </div>
-          `}
-      ${this.isModalOpen
-        ? html`
-            <div
-              class="modal-backdrop"
-              @click="${this._closeModal}"
-              role="dialog"
-              aria-modal="true"
+      <div style="${isCapturing ? "display: none;" : ""}">
+        ${this._hasCustomTrigger
+          ? html`<div
+              class="trigger-container ${this.position}"
+              @click="${this._handleTriggerClick}"
             >
-              <div
-                class="modal-content"
-                @click="${(e: Event) => e.stopPropagation()}"
-              >
-                <div class="modal-header">
-                  <h3 id="modal-title">${this.modalTitle}</h3>
-                  <button
-                    class="close-button"
-                    @click="${this._closeModal}"
-                    aria-label="Close modal"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-x-icon lucide-x"
-                    >
-                      <path d="M18 6 6 18" />
-                      <path d="m6 6 12 12" />
-                    </svg>
-                  </button>
-                </div>
-
-                <div class="mode-tabs">
-                  ${(() => {
-                    return this._forms.map(
-                      (form) => html`
-                        <button
-                          class="mode-tab ${this._activeFormId === form.id
-                            ? "active"
-                            : ""}"
-                          @click="${() => this._switchForm(form.id)}"
-                        >
-                          ${this._renderFormIcon(form.icon)} ${form.label}
-                        </button>
-                      `,
-                    );
-                  })()}
-                </div>
-                <wafir-form
-                  .tabId="${this._activeFormId}"
-                  .fields="${this._getActiveFormConfig()}"
-                  .formLabel="${this._getActiveForm()?.label || ""}"
-                  .hasValidTarget="${this._formHasValidTarget()}"
-                  @form-submit="${this._handleSubmit}"
-                ></wafir-form>
-                ${this.isConfigLoading
-                  ? html`
-                      <div
-                        class="loading-overlay"
-                        role="status"
-                        aria-live="polite"
-                        aria-busy="true"
-                      >
-                        <div class="loading-content">
-                          <div class="spinner" aria-hidden="true"></div>
-                          <span class="loading-text">Loading</span>
-                        </div>
-                      </div>
-                    `
-                  : ""}
+              <slot name="trigger"></slot>
+            </div>`
+          : html`
+              <div class="trigger-container ${this.position}">
+                <button
+                  @click="${this._handleTriggerClick}"
+                  part="button"
+                  aria-label="${this.tooltipText}"
+                >
+                  <span>${unsafeHTML(thumbsupIcon)}</span>
+                </button>
+                <div class="tooltip">${this.tooltipText}</div>
               </div>
-            </div>
-          `
-        : ""}
+            `}
+        ${this.isModalOpen
+          ? html`
+              <div
+                class="modal-backdrop"
+                @click="${this._closeModal}"
+                role="dialog"
+                aria-modal="true"
+              >
+                <div
+                  class="modal-content"
+                  @click="${(e: Event) => e.stopPropagation()}"
+                >
+                  <div class="modal-header">
+                    <h3 id="modal-title">${this.modalTitle}</h3>
+                    <button
+                      class="close-button"
+                      @click="${this._closeModal}"
+                      aria-label="Close modal"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-x-icon lucide-x"
+                      >
+                        <path d="M18 6 6 18" />
+                        <path d="m6 6 12 12" />
+                      </svg>
+                    </button>
+                  </div>
 
-      <wafir-highlighter></wafir-highlighter>
+                  <div class="mode-tabs">
+                    ${(() => {
+                      return this._forms.map(
+                        (form) => html`
+                          <button
+                            class="mode-tab ${this._activeFormId === form.id
+                              ? "active"
+                              : ""}"
+                            @click="${() => this._switchForm(form.id)}"
+                          >
+                            ${this._renderFormIcon(form.icon)} ${form.label}
+                          </button>
+                        `,
+                      );
+                    })()}
+                  </div>
+                  <wafir-form
+                    .tabId="${this._activeFormId}"
+                    .fields="${this._getActiveFormConfig()}"
+                    .formLabel="${this._getActiveForm()?.label || ""}"
+                    .hasValidTarget="${this._formHasValidTarget()}"
+                    @form-submit="${this._handleSubmit}"
+                  ></wafir-form>
+                  ${this.isConfigLoading
+                    ? html`
+                        <div
+                          class="loading-overlay"
+                          role="status"
+                          aria-live="polite"
+                          aria-busy="true"
+                        >
+                          <div class="loading-content">
+                            <div class="spinner" aria-hidden="true"></div>
+                            <span class="loading-text">Loading</span>
+                          </div>
+                        </div>
+                      `
+                    : ""}
+                </div>
+              </div>
+            `
+          : ""}
+
+        <wafir-highlighter></wafir-highlighter>
       </div>
     `;
   }

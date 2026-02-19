@@ -1,4 +1,5 @@
 // Copyright (C) 2024 BPS-Consulting - Licensed under AGPLv3
+import { mapGitHubError } from "../../shared/utils/github-error-mapper.js";
 
 const ADD_TO_PROJECT_MUTATION = `
   mutation AddToProject($projectId: ID!, $contentId: ID!) {
@@ -119,7 +120,8 @@ export class GitHubProjectService {
         };
       }
     } catch (error: any) {
-      log.debug({ error: error.message }, "Org project lookup failed");
+      const mapped = mapGitHubError(error, { operation: "project" });
+      log.debug({ error: mapped.message }, "Org project lookup failed");
     }
 
     // Try with App Token - User project
@@ -132,7 +134,8 @@ export class GitHubProjectService {
         return { nodeId: result.user.projectV2.id, shouldUseUserToken: true };
       }
     } catch (error: any) {
-      log.debug({ error: error.message }, "User project lookup failed");
+      const mapped = mapGitHubError(error, { operation: "project" });
+      log.debug({ error: mapped.message }, "User project lookup failed");
     }
 
     // Retry with User Token
@@ -146,14 +149,18 @@ export class GitHubProjectService {
           return { nodeId: result.user.projectV2.id, shouldUseUserToken: true };
         }
       } catch (error: any) {
-        log.error({ error: error.message }, "User token project lookup failed");
+        const mapped = mapGitHubError(error, { operation: "project" });
+        log.error(
+          { error: mapped.message },
+          "User token project lookup failed",
+        );
       }
     }
 
     return {
       nodeId: undefined,
       shouldUseUserToken: false,
-      error: `Could not find project #${number} for owner ${owner}`,
+      error: `The repository or project was not found or is not accessible by this app.`,
     };
   }
 
@@ -227,7 +234,8 @@ export class GitHubProjectService {
         };
       }
     } catch (e: any) {
-      return { added: false, error: e.message };
+      const mapped = mapGitHubError(e, { operation: "project" });
+      return { added: false, error: mapped.message };
     }
   }
 
@@ -265,11 +273,11 @@ export class GitHubProjectService {
       const dataType = field.dataType;
       let value: Record<string, string | number>;
 
-      if (dataType === 'SINGLE_SELECT') {
+      if (dataType === "SINGLE_SELECT") {
         let matchingOption: any;
-        
+
         // If the value is a number, use it as a 1-based index into options
-        if (typeof fieldValue === 'number') {
+        if (typeof fieldValue === "number") {
           const index = fieldValue - 1; // Convert 1-based to 0-based index
           if (index >= 0 && index < (field.options?.length || 0)) {
             matchingOption = field.options[index];
@@ -290,19 +298,21 @@ export class GitHubProjectService {
         }
 
         value = { singleSelectOptionId: matchingOption.id };
-      } else if (dataType === 'TEXT') {
+      } else if (dataType === "TEXT") {
         value = { text: String(fieldValue) };
-      } else if (dataType === 'NUMBER') {
+      } else if (dataType === "NUMBER") {
         const numValue =
-          typeof fieldValue === 'number' ? fieldValue : parseFloat(String(fieldValue));
+          typeof fieldValue === "number"
+            ? fieldValue
+            : parseFloat(String(fieldValue));
         if (isNaN(numValue)) {
           return {
             success: false,
-            error: `Invalid number value "${fieldValue}" for field "${fieldName}"`
+            error: `Invalid number value "${fieldValue}" for field "${fieldName}"`,
           };
         }
         value = { number: numValue };
-      } else if (dataType === 'DATE') {
+      } else if (dataType === "DATE") {
         value = { date: String(fieldValue) };
       } else {
         return {
@@ -318,14 +328,15 @@ export class GitHubProjectService {
         value,
       });
 
-      log.info(
-        { fieldName, fieldValue, itemId },
-        'Set field on project item',
-      );
+      log.info({ fieldName, fieldValue, itemId }, "Set field on project item");
       return { success: true };
     } catch (e: any) {
-      log.error({ error: e.message }, `Failed to set field "${fieldName}"`);
-      return { success: false, error: e.message };
+      const mapped = mapGitHubError(e, { operation: "graphql" });
+      log.error(
+        { error: mapped.message },
+        `Failed to set field "${fieldName}"`,
+      );
+      return { success: false, error: mapped.message };
     }
   }
 
@@ -343,7 +354,7 @@ export class GitHubProjectService {
     const mappableIds = new Set<string>();
 
     // Fields to skip (these are used elsewhere, not as project fields)
-    const skipFields = new Set(['title', 'body', 'description']);
+    const skipFields = new Set(["title", "body", "description"]);
 
     try {
       // Fetch all project fields
@@ -355,7 +366,8 @@ export class GitHubProjectService {
       const projectFields = fieldsResult.node?.fields?.nodes || [];
 
       // Normalize a field name for matching: lowercase and convert spaces to dashes
-      const normalizeFieldName = (name: string) => name.toLowerCase().replace(/\s+/g, '-');
+      const normalizeFieldName = (name: string) =>
+        name.toLowerCase().replace(/\s+/g, "-");
 
       // Create a set of normalized project field names
       const projectFieldNames = new Set<string>();
@@ -371,7 +383,7 @@ export class GitHubProjectService {
           continue;
         }
         const value = formFields[fieldId];
-        if (value === undefined || value === null || value === '') {
+        if (value === undefined || value === null || value === "") {
           continue;
         }
         if (projectFieldNames.has(normalizeFieldName(fieldId))) {
@@ -379,9 +391,15 @@ export class GitHubProjectService {
         }
       }
 
-      log.debug({ mappableIds: [...mappableIds] }, 'Found mappable project fields');
+      log.debug(
+        { mappableIds: [...mappableIds] },
+        "Found mappable project fields",
+      );
     } catch (e: any) {
-      log.warn({ error: e.message }, 'Failed to fetch project fields for mapping check');
+      log.warn(
+        { error: e.message },
+        "Failed to fetch project fields for mapping check",
+      );
       // Return empty set on error - all fields will be included in body
     }
 
@@ -401,10 +419,14 @@ export class GitHubProjectService {
     log: any;
   }): Promise<ProjectFieldsResult> {
     const { octokit, projectId, itemId, formFields, log } = params;
-    const result: ProjectFieldsResult = { successCount: 0, failures: [], mappedFieldIds: [] };
+    const result: ProjectFieldsResult = {
+      successCount: 0,
+      failures: [],
+      mappedFieldIds: [],
+    };
 
     // Fields to skip (these are used elsewhere, not as project fields)
-    const skipFields = new Set(['title', 'body', 'description']);
+    const skipFields = new Set(["title", "body", "description"]);
 
     try {
       // Fetch all project fields once
@@ -417,7 +439,8 @@ export class GitHubProjectService {
 
       // Normalize a field name for matching: lowercase and convert spaces to dashes
       // This matches how generate service creates form field IDs from project field names
-      const normalizeFieldName = (name: string) => name.toLowerCase().replace(/\s+/g, '-');
+      const normalizeFieldName = (name: string) =>
+        name.toLowerCase().replace(/\s+/g, "-");
 
       // Create a map for normalized field lookup
       const fieldMap = new Map<string, any>();
@@ -433,14 +456,18 @@ export class GitHubProjectService {
         if (skipFields.has(fieldId.toLowerCase())) {
           continue;
         }
-        if (fieldValue === undefined || fieldValue === null || fieldValue === '') {
+        if (
+          fieldValue === undefined ||
+          fieldValue === null ||
+          fieldValue === ""
+        ) {
           continue;
         }
 
         // Find matching project field (normalize both names for comparison)
         const projectField = fieldMap.get(normalizeFieldName(fieldId));
         if (!projectField) {
-          log.debug({ fieldId }, 'No matching project field found, skipping');
+          log.debug({ fieldId }, "No matching project field found, skipping");
           continue;
         }
 
@@ -465,14 +492,21 @@ export class GitHubProjectService {
         }
       }
     } catch (e: any) {
-      log.error({ error: e.message }, 'Failed to fetch project fields');
-      result.failures.push({ field: '_all', error: `Failed to fetch project fields: ${e.message}` });
+      const mapped = mapGitHubError(e, { operation: "graphql" });
+      log.error({ error: mapped.message }, "Failed to fetch project fields");
+      result.failures.push({
+        field: "_all",
+        error: `Failed to fetch project fields: ${mapped.message}`,
+      });
     }
 
     if (result.successCount > 0) {
       log.info(
-        { successCount: result.successCount, failureCount: result.failures.length },
-        'Set project fields on item',
+        {
+          successCount: result.successCount,
+          failureCount: result.failures.length,
+        },
+        "Set project fields on item",
       );
     }
 
@@ -495,11 +529,11 @@ export class GitHubProjectService {
     const dataType = field.dataType;
     let value: Record<string, string | number>;
 
-    if (dataType === 'SINGLE_SELECT') {
+    if (dataType === "SINGLE_SELECT") {
       let matchingOption: any;
-      
+
       // If the value is a number, use it as a 1-based index into options
-      if (typeof fieldValue === 'number') {
+      if (typeof fieldValue === "number") {
         const index = fieldValue - 1; // Convert 1-based to 0-based index
         if (index >= 0 && index < (field.options?.length || 0)) {
           matchingOption = field.options[index];
@@ -520,15 +554,17 @@ export class GitHubProjectService {
       }
 
       value = { singleSelectOptionId: matchingOption.id };
-    } else if (dataType === 'TEXT') {
+    } else if (dataType === "TEXT") {
       // Handle arrays (e.g., checkboxes) by joining with comma
       const textValue = Array.isArray(fieldValue)
-        ? fieldValue.join(', ')
+        ? fieldValue.join(", ")
         : String(fieldValue);
       value = { text: textValue };
-    } else if (dataType === 'NUMBER') {
+    } else if (dataType === "NUMBER") {
       const numValue =
-        typeof fieldValue === 'number' ? fieldValue : parseFloat(String(fieldValue));
+        typeof fieldValue === "number"
+          ? fieldValue
+          : parseFloat(String(fieldValue));
       if (isNaN(numValue)) {
         return {
           success: false,
@@ -536,7 +572,7 @@ export class GitHubProjectService {
         };
       }
       value = { number: numValue };
-    } else if (dataType === 'DATE') {
+    } else if (dataType === "DATE") {
       value = { date: String(fieldValue) };
     } else {
       return {
@@ -552,7 +588,10 @@ export class GitHubProjectService {
       value,
     });
 
-    log.debug({ fieldName: field.name, fieldValue, itemId }, 'Set field on project item');
+    log.debug(
+      { fieldName: field.name, fieldValue, itemId },
+      "Set field on project item",
+    );
     return { success: true };
   }
 }

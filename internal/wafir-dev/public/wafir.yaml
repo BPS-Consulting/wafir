@@ -125,7 +125,7 @@ forms:
 
   - id: question
     label: ❓Question
-    targets: [none]
+    targets: []
     body:
       - id: info
         type: markdown

@@ -1370,7 +1370,7 @@ forms:
       const body = JSON.parse(response.body);
       expect(body.success).toBe(true);
       expect(body.projectAdded).toBe(false);
-      expect(body.warning).toContain("Could not find project");
+      expect(body.warning).toContain("repository or project was not found");
     });
   });
 
@@ -1442,7 +1442,7 @@ forms:
       expect(response.statusCode).toBe(500);
       const body = JSON.parse(response.body);
       expect(body.error).toBe("Submission Failed");
-      expect(body.message).toContain("GitHub API error");
+      expect(body.message).toContain("rate limit exceeded");
     });
   });
 
@@ -1733,8 +1733,8 @@ forms:
       expect(mockOctokit.graphql).toHaveBeenCalled();
     });
 
-    it("routes to all targets when form.targets is empty array", async () => {
-      // Config with form specifying empty targets array
+    it("rejects submission when form.targets is empty array (submissionless form)", async () => {
+      // Config with form specifying empty targets array (submissionless)
       mockFetch.mockResolvedValue(
         createMockConfigResponse(`
 targets:
@@ -1761,31 +1761,6 @@ forms:
 `),
       );
 
-      mockOctokit.rest.issues.create.mockResolvedValue({
-        data: {
-          number: 103,
-          html_url: "https://github.com/testowner/testrepo/issues/103",
-          node_id: "I_empty_targets",
-        },
-      });
-
-      // Mock finding the project
-      mockOctokit.graphql.mockResolvedValueOnce({
-        organization: { projectV2: { id: "PVT_empty123" } },
-      });
-
-      // Mock fetching project fields (for getMappableFieldIds)
-      mockOctokit.graphql.mockResolvedValueOnce({
-        node: { fields: { nodes: [] } },
-      });
-
-      // Mock adding issue to project
-      mockOctokit.graphql.mockResolvedValueOnce({
-        addProjectV2ItemById: {
-          item: { id: "PVTI_empty_item123" },
-        },
-      });
-
       const response = await app.inject({
         method: "POST",
         url: "/submit",
@@ -1798,20 +1773,19 @@ forms:
           formId: "feedback",
           formFields: {
             title: "Empty Targets",
-            message: "Empty array means all targets",
+            message: "Empty array means submissionless",
           },
         },
       });
 
-      expect(response.statusCode).toBe(201);
+      expect(response.statusCode).toBe(400);
       const body = JSON.parse(response.body);
-      expect(body.success).toBe(true);
-      expect(body.issueNumber).toBe(103);
-      expect(body.projectAdded).toBe(true);
+      expect(body.error).toContain("cannot be submitted");
+      expect(body.error).toContain("submissionless");
 
-      // Both issue and project should be used
-      expect(mockOctokit.rest.issues.create).toHaveBeenCalled();
-      expect(mockOctokit.graphql).toHaveBeenCalled();
+      // No GitHub API calls should be made
+      expect(mockOctokit.rest.issues.create).not.toHaveBeenCalled();
+      expect(mockOctokit.graphql).not.toHaveBeenCalled();
     });
 
     it("routes to only project when form.targets specifies only project", async () => {
@@ -2007,6 +1981,3 @@ forms:
     });
   });
 });
-
-
-

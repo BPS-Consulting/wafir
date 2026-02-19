@@ -5,6 +5,7 @@ import {
   SubmissionResult,
 } from "./submission-base.js";
 import { GitHubProjectService } from "./github-project-service.js";
+import { mapGitHubError } from "../../shared/utils/github-error-mapper.js";
 
 /**
  * GitHub-specific submission context
@@ -21,6 +22,10 @@ export interface GithubSubmissionContext extends SubmissionContext {
   /** Whether to use user token for project operations */
   projectUseUserToken?: boolean;
   storageType: "issue" | "project" | "both";
+  /** Issue type (e.g., "bug", "feature") - requires repository to have issue types enabled */
+  issueType?: string;
+  /** Form fields to be mapped to project fields */
+  formFields?: Record<string, unknown>;
 }
 
 /**
@@ -121,37 +126,42 @@ export class GithubIssueSubmission extends SubmissionBase {
 
     // Create GitHub Issue
     if (shouldCreateIssue) {
-      const createParams: {
-        owner: string;
-        repo: string;
-        title: string;
-        body: string;
-        labels: string[];
-        type?: string;
-      } = {
-        owner: context.owner,
-        repo: context.repo,
-        title: context.title,
-        body: context.body,
-        // Use provided labels, or default to ["wafir-feedback"] if no labels specified
-        labels:
-          context.labels && context.labels.length > 0
-            ? context.labels
-            : ["wafir-feedback"],
-      };
+      try {
+        const createParams: {
+          owner: string;
+          repo: string;
+          title: string;
+          body: string;
+          labels: string[];
+          type?: string;
+        } = {
+          owner: context.owner,
+          repo: context.repo,
+          title: context.title,
+          body: context.body,
+          // Use provided labels, or default to ["wafir-feedback"] if no labels specified
+          labels:
+            context.labels && context.labels.length > 0
+              ? context.labels
+              : ["wafir-feedback"],
+        };
 
-      // Add issue type if specified (requires repository to have issue types enabled)
-      if (context.issueType) {
-        createParams.type = context.issueType;
+        // Add issue type if specified (requires repository to have issue types enabled)
+        if (context.issueType) {
+          createParams.type = context.issueType;
+        }
+
+        const issue = await context.appOctokit.rest.issues.create(createParams);
+        issueData = {
+          number: issue.data.number,
+          url: issue.data.html_url,
+          nodeId: issue.data.node_id,
+        };
+        context.log?.info({ issueNumber: issueData.number }, "Issue created");
+      } catch (error: unknown) {
+        const mapped = mapGitHubError(error, { operation: "issue" });
+        throw new Error(mapped.message);
       }
-
-      const issue = await context.appOctokit.rest.issues.create(createParams);
-      issueData = {
-        number: issue.data.number,
-        url: issue.data.html_url,
-        nodeId: issue.data.node_id,
-      };
-      context.log?.info({ issueNumber: issueData.number }, "Issue created");
     }
 
     // Add to project (as draft if project-only, or link existing issue if both)
