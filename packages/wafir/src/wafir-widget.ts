@@ -13,6 +13,8 @@ import {
   setTabFormData,
   setBrowserInfo,
   setConsoleLogs,
+  setCurrentFormId,
+  getFormScreenshot,
 } from "./store.js";
 import { StoreController } from "@nanostores/lit";
 import type {
@@ -30,6 +32,9 @@ import {
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
 type WidgetPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
+
+// Module-level in-memory storage for last active tab (session only, not persisted across reloads)
+let lastActiveTabId: string | null = null;
 
 @customElement("wafir-widget")
 export class WafirWidget extends LitElement {
@@ -59,7 +64,6 @@ export class WafirWidget extends LitElement {
 
   private _isSelectingController = new StoreController(this, isSelecting);
   private _isCapturingController = new StoreController(this, isCapturing);
-  private _capturedImageController = new StoreController(this, capturedImage);
 
   @state()
   isModalOpen = false;
@@ -108,6 +112,7 @@ export class WafirWidget extends LitElement {
       }));
       if (this._forms.length > 0) {
         this._activeFormId = this._forms[0].id;
+        setCurrentFormId(this._forms[0].id);
       }
     }
   }
@@ -215,6 +220,15 @@ export class WafirWidget extends LitElement {
         );
       }
       this._requestedTabId = null; // Clear after applying
+    } else if (lastActiveTabId) {
+      // Restore last active tab from in-memory storage if no requested tab
+      const tabExists = this._forms.some(
+        (t: FormConfig) => t.id === lastActiveTabId,
+      );
+      if (tabExists) {
+        this._activeFormId = lastActiveTabId;
+      }
+      // If the tab no longer exists, fall back to default (first tab)
     }
 
     // Apply prefill data after config and tab are set
@@ -444,6 +458,7 @@ export class WafirWidget extends LitElement {
       }));
       if (this._forms.length > 0) {
         this._activeFormId = this._forms[0].id;
+        setCurrentFormId(this._forms[0].id);
       }
     } else {
       console.warn("Wafir: No forms in config or forms is not an array");
@@ -479,6 +494,9 @@ export class WafirWidget extends LitElement {
 
   private _switchForm(formId: string) {
     this._activeFormId = formId;
+    setCurrentFormId(formId);
+    // Save the active tab to in-memory storage for session persistence
+    lastActiveTabId = formId;
   }
 
   private _formHasValidTarget(): boolean {
@@ -571,15 +589,21 @@ export class WafirWidget extends LitElement {
 
       const { submitIssue } = await import("./api/client.js");
 
-      const screenshotDataUrl = this._capturedImageController.value;
-      const screenshotBlob = screenshotDataUrl
-        ? dataURLtoBlob(screenshotDataUrl)
-        : undefined;
-
       // Filter out markdown fields before submission
       const activeFields = this._getActiveFormConfig();
       const submitFields = activeFields.filter((f) => f.type !== "markdown");
       const fieldOrder = submitFields.map((f) => String(f.id));
+
+      // Get screenshot for current form only (no fallback to global)
+      // Only include screenshot if the form has a screenshot field
+      const hasScreenshotField = activeFields.some(
+        (f) => (f.attributes as any)?.autofill === "screenshot",
+      );
+      const formScreenshot = getFormScreenshot(this._activeFormId);
+      const screenshotDataUrl = hasScreenshotField ? formScreenshot : null;
+      const screenshotBlob = screenshotDataUrl
+        ? dataURLtoBlob(screenshotDataUrl)
+        : undefined;
 
       // Build field labels map from config
       const fieldLabels: Record<string, string> = {};
