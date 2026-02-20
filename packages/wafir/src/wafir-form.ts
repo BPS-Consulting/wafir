@@ -14,6 +14,11 @@ import {
   consoleLogs,
   capturedImage,
   setCapturedImage,
+  setFormScreenshot,
+  setFormAutofillEnabled,
+  formScreenshots,
+  formAutofillEnabled,
+  isCapturing,
 } from "./store";
 import { takeFullPageScreenshot } from "./utils/screenshot";
 import { resolveDateValue, isDateToken } from "./utils/date";
@@ -54,9 +59,15 @@ export class WafirForm extends LitElement {
   private _browserInfoController = new StoreController(this, browserInfo);
   private _consoleLogsController = new StoreController(this, consoleLogs);
   private _capturedImageController = new StoreController(this, capturedImage);
-
-  // Track which autofill fields are enabled (checked)
-  private _autofillEnabled: Record<string, boolean> = {};
+  private _formScreenshotsController = new StoreController(
+    this,
+    formScreenshots,
+  );
+  private _formAutofillEnabledController = new StoreController(
+    this,
+    formAutofillEnabled,
+  );
+  private _isCapturingController = new StoreController(this, isCapturing);
 
   static styles = [unsafeCSS(formStyles)];
 
@@ -95,7 +106,8 @@ export class WafirForm extends LitElement {
     autofillType: string,
     checked: boolean,
   ) {
-    this._autofillEnabled[fieldId] = checked;
+    // Store autofill checkbox state in nanostore per form
+    setFormAutofillEnabled(this.tabId, fieldId, checked);
     const currentData = getTabFormData(this.tabId);
 
     if (checked) {
@@ -120,6 +132,7 @@ export class WafirForm extends LitElement {
       // Clear the field and screenshot if applicable
       if (autofillType === "screenshot") {
         setCapturedImage(null);
+        setFormScreenshot(this.tabId, null);
       }
       setTabFormData(this.tabId, { ...currentData, [fieldId]: "" });
     }
@@ -130,7 +143,13 @@ export class WafirForm extends LitElement {
    * Renders the screenshot field with opt-in checkbox and capture controls.
    */
   private _renderScreenshotField(_field: FieldConfig, isEnabled: boolean) {
-    const hasScreenshot = !!this._capturedImageController.value;
+    // Get screenshot for current form (prefer per-form screenshot)
+    const formScreenshot =
+      this._formScreenshotsController.value[this.tabId] || null;
+    const hasScreenshot =
+      !!formScreenshot || !!this._capturedImageController.value;
+    const screenshotDataUrl =
+      formScreenshot || this._capturedImageController.value;
 
     if (!isEnabled) {
       return html`
@@ -142,19 +161,61 @@ export class WafirForm extends LitElement {
       `;
     }
 
+    // Show loading state during capture
+    if (this._isCapturingController.value) {
+      return html`
+        <div class="screenshot-container">
+          <div class="screenshot-placeholder">
+            <span class="screenshot-hint">Capturing screenshot...</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // Show error feedback if screenshot failed to load
+    if (!hasScreenshot && !screenshotDataUrl) {
+      return html`
+        <div class="screenshot-container">
+          <div class="screenshot-placeholder">
+            <span class="screenshot-hint"
+              >No screenshot captured. Click button below to capture.</span
+            >
+          </div>
+          <div class="screenshot-actions">
+            <button type="button" @click="${() => takeFullPageScreenshot()}">
+              Capture Screenshot
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
     return html`
       <div class="screenshot-container">
         ${hasScreenshot
           ? html`
               <div class="screenshot-preview">
                 <img
-                  src="${this._capturedImageController.value}"
+                  src="${screenshotDataUrl}"
                   alt="Captured screenshot"
+                  @error="${() => {
+                    console.error(
+                      "Wafir: Failed to load screenshot for form:",
+                      this.tabId,
+                    );
+                    // Clear invalid screenshot
+                    setCapturedImage(null);
+                    setFormScreenshot(this.tabId, null);
+                    this.requestUpdate();
+                  }}"
                 />
                 <button
                   type="button"
                   class="screenshot-clear"
-                  @click="${() => setCapturedImage(null)}"
+                  @click="${() => {
+                    setCapturedImage(null);
+                    setFormScreenshot(this.tabId, null);
+                  }}"
                 >
                   &times;
                 </button>
@@ -191,7 +252,7 @@ export class WafirForm extends LitElement {
             `
           : html`
               <div class="screenshot-placeholder">
-                <span class="screenshot-hint">Capturing screenshot...</span>
+                <span class="screenshot-hint">Screenshot unavailable</span>
               </div>
             `}
       </div>
@@ -306,8 +367,10 @@ export class WafirForm extends LitElement {
           autofill === "browserInfo" ||
           autofill === "consoleLog" ||
           autofill === "screenshot";
-        const isAutofillEnabled =
-          this._autofillEnabled[String(field.id)] ?? false;
+        // Get autofill enabled state from nanostore
+        const formAutofillState =
+          this._formAutofillEnabledController.value[this.tabId] || {};
+        const isAutofillEnabled = formAutofillState[String(field.id)] ?? false;
 
         // For screenshot autofill, render the screenshot capture UI
         if (autofill === "screenshot") {
@@ -586,8 +649,11 @@ export class WafirForm extends LitElement {
             (autofill === "browserInfo" ||
               autofill === "consoleLog" ||
               autofill === "screenshot");
+          // Get autofill enabled state from nanostore
+          const formAutofillState =
+            this._formAutofillEnabledController.value[this.tabId] || {};
           const isAutofillEnabled =
-            this._autofillEnabled[String(field.id)] ?? false;
+            formAutofillState[String(field.id)] ?? false;
 
           if (isAutofillField) {
             const labelText = this._getAutofillLabel(
