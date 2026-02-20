@@ -12,7 +12,6 @@ import {
   setTabFormData,
   browserInfo,
   consoleLogs,
-  capturedImage,
   setCapturedImage,
   setFormScreenshot,
   setFormAutofillEnabled,
@@ -58,7 +57,6 @@ export class WafirForm extends LitElement {
   private _formDataController = new StoreController(this, formData);
   private _browserInfoController = new StoreController(this, browserInfo);
   private _consoleLogsController = new StoreController(this, consoleLogs);
-  private _capturedImageController = new StoreController(this, capturedImage);
   private _formScreenshotsController = new StoreController(
     this,
     formScreenshots,
@@ -143,13 +141,11 @@ export class WafirForm extends LitElement {
    * Renders the screenshot field with opt-in checkbox and capture controls.
    */
   private _renderScreenshotField(_field: FieldConfig, isEnabled: boolean) {
-    // Get screenshot for current form (prefer per-form screenshot)
+    // Get screenshot for current form only (no fallback to global)
     const formScreenshot =
       this._formScreenshotsController.value[this.tabId] || null;
-    const hasScreenshot =
-      !!formScreenshot || !!this._capturedImageController.value;
-    const screenshotDataUrl =
-      formScreenshot || this._capturedImageController.value;
+    const hasScreenshot = !!formScreenshot;
+    const screenshotDataUrl = formScreenshot;
 
     if (!isEnabled) {
       return html`
