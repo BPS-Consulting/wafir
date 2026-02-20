@@ -77,7 +77,6 @@ export class WafirWidget extends LitElement {
 
   private _isSelectingController = new StoreController(this, isSelecting);
   private _isCapturingController = new StoreController(this, isCapturing);
-  private _capturedImageController = new StoreController(this, capturedImage);
 
   @state()
   isModalOpen = false;
@@ -619,18 +618,21 @@ export class WafirWidget extends LitElement {
 
       const { submitIssue } = await import("./api/client.js");
 
-      // Get screenshot for current form (prefer per-form screenshot)
-      const formScreenshot = getFormScreenshot(this._activeFormId);
-      const screenshotDataUrl =
-        formScreenshot || this._capturedImageController.value;
-      const screenshotBlob = screenshotDataUrl
-        ? dataURLtoBlob(screenshotDataUrl)
-        : undefined;
-
       // Filter out markdown fields before submission
       const activeFields = this._getActiveFormConfig();
       const submitFields = activeFields.filter((f) => f.type !== "markdown");
       const fieldOrder = submitFields.map((f) => String(f.id));
+
+      // Get screenshot for current form only (no fallback to global)
+      // Only include screenshot if the form has a screenshot field
+      const hasScreenshotField = activeFields.some(
+        (f) => (f.attributes as any)?.autofill === "screenshot",
+      );
+      const formScreenshot = getFormScreenshot(this._activeFormId);
+      const screenshotDataUrl = hasScreenshotField ? formScreenshot : null;
+      const screenshotBlob = screenshotDataUrl
+        ? dataURLtoBlob(screenshotDataUrl)
+        : undefined;
 
       // Build field labels map from config
       const fieldLabels: Record<string, string> = {};
