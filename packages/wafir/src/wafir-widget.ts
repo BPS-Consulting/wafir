@@ -13,6 +13,8 @@ import {
   setTabFormData,
   setBrowserInfo,
   setConsoleLogs,
+  setCurrentFormId,
+  getFormScreenshot,
 } from "./store.js";
 import { StoreController } from "@nanostores/lit";
 import type {
@@ -121,6 +123,7 @@ export class WafirWidget extends LitElement {
       }));
       if (this._forms.length > 0) {
         this._activeFormId = this._forms[0].id;
+        setCurrentFormId(this._forms[0].id);
       }
     }
   }
@@ -478,6 +481,7 @@ export class WafirWidget extends LitElement {
       }));
       if (this._forms.length > 0) {
         this._activeFormId = this._forms[0].id;
+        setCurrentFormId(this._forms[0].id);
       }
     } else {
       console.warn("Wafir: No forms in config or forms is not an array");
@@ -508,6 +512,7 @@ export class WafirWidget extends LitElement {
 
   private _switchForm(formId: string) {
     this._activeFormId = formId;
+    setCurrentFormId(formId);
   }
 
   private _formHasValidTarget(): boolean {
@@ -600,7 +605,10 @@ export class WafirWidget extends LitElement {
 
       const { submitIssue } = await import("./api/client.js");
 
-      const screenshotDataUrl = this._capturedImageController.value;
+      // Get screenshot for current form (prefer per-form screenshot)
+      const formScreenshot = getFormScreenshot(this._activeFormId);
+      const screenshotDataUrl =
+        formScreenshot || this._capturedImageController.value;
       const screenshotBlob = screenshotDataUrl
         ? dataURLtoBlob(screenshotDataUrl)
         : undefined;
