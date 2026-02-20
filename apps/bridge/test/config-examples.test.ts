@@ -4,19 +4,17 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Fastify, { FastifyInstance } from "fastify";
-import fp from "fastify-plugin";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  setupTestEnv,
-  createMockOctokit,
-  encodeYamlToBase64,
-  MockOctokit,
-} from "./helper.js";
+import { setupTestEnv } from "./helper.js";
 
 // Import the config route
 import configRoute from "../src/modules/config/routes.js";
+
+// Mock global fetch
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,32 +40,15 @@ function getExampleConfigs(): { name: string; content: string }[] {
 
 describe("Example Configurations", () => {
   let app: FastifyInstance;
-  let mockOctokit: MockOctokit;
 
   beforeEach(async () => {
     setupTestEnv();
-    mockOctokit = createMockOctokit();
 
     app = Fastify({ logger: false });
-
-    // Register mock GitHub plugin
-    await app.register(
-      fp(async (fastify) => {
-        (fastify as any).decorate(
-          "getGitHubClient",
-          vi.fn().mockResolvedValue(mockOctokit),
-        );
-      }),
-    );
 
     // Register the config route
     await app.register(configRoute, { prefix: "/config" });
     await app.ready();
-
-    // Default mock for user lookup
-    mockOctokit.rest.users.getByUsername.mockResolvedValue({
-      data: { type: "User" },
-    });
   });
 
   afterEach(async () => {
@@ -81,20 +62,17 @@ describe("Example Configurations", () => {
     it.each(exampleConfigs)(
       'loads "$name" config successfully',
       async ({ name, content }) => {
-        mockOctokit.rest.repos.getContent.mockResolvedValue({
-          data: {
-            content: encodeYamlToBase64(content),
-            encoding: "base64",
-          },
+        mockFetch.mockResolvedValue({
+          ok: true,
+          headers: new Headers({ "content-type": "text/yaml" }),
+          text: () => Promise.resolve(content),
         });
 
         const response = await app.inject({
           method: "GET",
           url: "/config",
           query: {
-            installationId: "123",
-            owner: "testowner",
-            repo: "testrepo",
+            configUrl: `https://example.com/${name}/wafir.yaml`,
           },
         });
 
@@ -113,10 +91,6 @@ describe("Example Configurations", () => {
             body.targets[0].type,
           );
         }
-
-        // issueTypes should always be present (possibly empty array)
-        expect(body.issueTypes).toBeDefined();
-        expect(Array.isArray(body.issueTypes)).toBe(true);
       },
     );
   });
@@ -126,20 +100,17 @@ describe("Example Configurations", () => {
       const minimalConfig = exampleConfigs.find((c) => c.name === "minimal");
       expect(minimalConfig).toBeDefined();
 
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(minimalConfig!.content),
-          encoding: "base64",
-        },
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "text/yaml" }),
+        text: () => Promise.resolve(minimalConfig!.content),
       });
 
       const response = await app.inject({
         method: "GET",
         url: "/config",
         query: {
-          installationId: "123",
-          owner: "testowner",
-          repo: "testrepo",
+          configUrl: "https://example.com/minimal/wafir.yaml",
         },
       });
 
@@ -159,20 +130,17 @@ describe("Example Configurations", () => {
       const fullConfig = exampleConfigs.find((c) => c.name === "full-featured");
       expect(fullConfig).toBeDefined();
 
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(fullConfig!.content),
-          encoding: "base64",
-        },
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "text/yaml" }),
+        text: () => Promise.resolve(fullConfig!.content),
       });
 
       const response = await app.inject({
         method: "GET",
         url: "/config",
         query: {
-          installationId: "123",
-          owner: "testowner",
-          repo: "testrepo",
+          configUrl: "https://example.com/full-featured/wafir.yaml",
         },
       });
 
@@ -212,20 +180,17 @@ describe("Example Configurations", () => {
       );
       expect(projectConfig).toBeDefined();
 
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(projectConfig!.content),
-          encoding: "base64",
-        },
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "text/yaml" }),
+        text: () => Promise.resolve(projectConfig!.content),
       });
 
       const response = await app.inject({
         method: "GET",
         url: "/config",
         query: {
-          installationId: "123",
-          owner: "testowner",
-          repo: "testrepo",
+          configUrl: "https://example.com/project-based/wafir.yaml",
         },
       });
 
@@ -247,20 +212,17 @@ describe("Example Configurations", () => {
       );
       expect(feedbackConfig).toBeDefined();
 
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(feedbackConfig!.content),
-          encoding: "base64",
-        },
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "text/yaml" }),
+        text: () => Promise.resolve(feedbackConfig!.content),
       });
 
       const response = await app.inject({
         method: "GET",
         url: "/config",
         query: {
-          installationId: "123",
-          owner: "testowner",
-          repo: "testrepo",
+          configUrl: "https://example.com/feedback-focused/wafir.yaml",
         },
       });
 
@@ -285,20 +247,17 @@ describe("Example Configurations", () => {
       );
       expect(privacyConfig).toBeDefined();
 
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(privacyConfig!.content),
-          encoding: "base64",
-        },
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "text/yaml" }),
+        text: () => Promise.resolve(privacyConfig!.content),
       });
 
       const response = await app.inject({
         method: "GET",
         url: "/config",
         query: {
-          installationId: "123",
-          owner: "testowner",
-          repo: "testrepo",
+          configUrl: "https://example.com/privacy-focused/wafir.yaml",
         },
       });
 
@@ -316,20 +275,17 @@ describe("Example Configurations", () => {
       const fullConfig = exampleConfigs.find((c) => c.name === "full-featured");
       expect(fullConfig).toBeDefined();
 
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(fullConfig!.content),
-          encoding: "base64",
-        },
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "text/yaml" }),
+        text: () => Promise.resolve(fullConfig!.content),
       });
 
       const response = await app.inject({
         method: "GET",
         url: "/config",
         query: {
-          installationId: "123",
-          owner: "testowner",
-          repo: "testrepo",
+          configUrl: "https://example.com/full-featured/wafir.yaml",
         },
       });
 

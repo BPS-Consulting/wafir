@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import { resolve } from "path";
 import { copyFileSync, mkdirSync, existsSync, readdirSync } from "fs";
+import { visualizer } from "rollup-plugin-visualizer";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -51,6 +52,7 @@ export default defineConfig(({ mode }) => {
           return "wafir.js";
         },
       },
+      target: "es2020",
       rollupOptions: {
         // IIFE: bundle everything; NPM: externalize lit
         external: isIIFE ? [] : /^lit/,
@@ -61,15 +63,50 @@ export default defineConfig(({ mode }) => {
               // Ensure single file output (no code splitting)
               inlineDynamicImports: true,
             }
-          : {},
+          : {
+              // For NPM builds, allow code splitting for lazy-loaded modules
+              manualChunks: (id) => {
+                // Split modern-screenshot into its own chunk for lazy loading
+                if (id.includes("modern-screenshot")) {
+                  return "modern-screenshot";
+                }
+              },
+            },
+        treeshake: {
+          preset: "recommended",
+          moduleSideEffects: false,
+        },
       },
       outDir: isIIFE ? "dist/iife" : "dist",
       emptyOutDir: isIIFE ? false : true,
-      minify: isIIFE ? "terser" : false,
+      minify: "terser",
+      terserOptions: {
+        compress: {
+          passes: 2,
+          pure_funcs: ["console.debug"],
+          drop_console: false,
+          drop_debugger: true,
+          ecma: 2020,
+          module: true,
+        },
+        mangle: {
+          safari10: true,
+        },
+        format: {
+          comments: false,
+        },
+      },
       // Disable CSS code splitting - inline everything for IIFE
       cssCodeSplit: false,
     },
     plugins: [
+      // Bundle visualizer for size analysis
+      visualizer({
+        filename: isIIFE ? "dist/iife/stats.html" : "dist/stats.html",
+        open: false,
+        gzipSize: true,
+        brotliSize: true,
+      }),
       // Only copy CSS files for NPM build (not needed for IIFE since CSS is inlined)
       !isIIFE && {
         name: "copy-css-files",

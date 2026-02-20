@@ -138,38 +138,23 @@
     },
     "/config/": {
       "get": {
-        "summary": "Get WAFIR Configuration (Deprecated)",
+        "summary": "Get WAFIR Configuration",
         "tags": [
           "WAFIR"
         ],
-        "description": "DEPRECATED: The widget now fetches config directly from a user-hosted URL. This endpoint is kept for backward compatibility but will be removed in a future version. Fetches and parses .github/wafir.yaml from the target repository.",
+        "description": "Fetches and parses a wafir configuration file from a user-provided URL. The URL should point to a raw YAML or JSON configuration file.",
         "parameters": [
           {
             "schema": {
-              "type": "number"
+              "type": "string",
+              "format": "uri"
             },
             "in": "query",
-            "name": "installationId",
-            "required": true
-          },
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "query",
-            "name": "owner",
-            "required": true
-          },
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "query",
-            "name": "repo",
-            "required": true
+            "name": "configUrl",
+            "required": true,
+            "description": "URL to the raw configuration file (YAML or JSON format)"
           }
         ],
-        "deprecated": true,
         "responses": {
           "200": {
             "description": "Default Response",
@@ -430,6 +415,113 @@
                     }
                   },
                   "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/config/template": {
+      "get": {
+        "summary": "Get GitHub Issue Form Template",
+        "tags": [
+          "WAFIR"
+        ],
+        "description": "Fetches and parses a GitHub Issue Form template from a user-provided URL. Returns the body (fields) and labels from the template.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            },
+            "in": "query",
+            "name": "templateUrl",
+            "required": true,
+            "description": "URL to the raw template file (YAML format)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "body": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      "description": "Array of form fields from the template"
+                    },
+                    "labels": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Labels from the template"
+                    }
+                  },
+                  "required": [
+                    "body"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
                 }
               }
             }

@@ -68,13 +68,14 @@ export const checkBridgeHealth = async (
 };
 
 /**
- * @deprecated The widget now fetches config directly from a user-hosted URL.
- * This function is kept for backward compatibility but will be removed in a future version.
+ * Fetches and parses a wafir configuration file from a URL via the backend.
+ * The backend handles YAML/JSON parsing and returns a typed config object.
+ * @param configUrl - URL to the raw configuration file (YAML or JSON format)
+ * @param bridgeUrl - Optional custom bridge URL
+ * @returns Parsed configuration object
  */
 export const getWafirConfig = async (
-  installationId: number,
-  owner: string,
-  repo: string,
+  configUrl: string,
   bridgeUrl?: string,
 ): Promise<WafirConfigBase | undefined> => {
   if (bridgeUrl) {
@@ -84,15 +85,49 @@ export const getWafirConfig = async (
   const { data, error } = await getClient().GET("/config/", {
     params: {
       query: {
-        installationId,
-        owner,
-        repo,
+        configUrl,
       },
     },
   });
 
   if (error) {
     throw new Error("Failed to fetch config");
+  }
+
+  return data;
+};
+
+/**
+ * Template response type from the API
+ */
+export type TemplateResponse =
+  paths["/config/template"]["get"]["responses"][200]["content"]["application/json"];
+
+/**
+ * Fetches and parses a GitHub Issue Form template from a URL via the backend.
+ * The backend handles YAML parsing and returns the body (fields) and labels.
+ * @param templateUrl - URL to the raw template file (YAML format)
+ * @param bridgeUrl - Optional custom bridge URL
+ * @returns Parsed template with body and labels
+ */
+export const getTemplate = async (
+  templateUrl: string,
+  bridgeUrl?: string,
+): Promise<TemplateResponse | undefined> => {
+  if (bridgeUrl) {
+    setBridgeUrl(bridgeUrl);
+  }
+
+  const { data, error } = await getClient().GET("/config/template", {
+    params: {
+      query: {
+        templateUrl,
+      },
+    },
+  });
+
+  if (error) {
+    throw new Error("Failed to fetch template");
   }
 
   return data;

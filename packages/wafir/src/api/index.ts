@@ -175,16 +175,14 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get WAFIR Configuration (Deprecated)
-         * @deprecated
-         * @description DEPRECATED: The widget now fetches config directly from a user-hosted URL. This endpoint is kept for backward compatibility but will be removed in a future version. Fetches and parses .github/wafir.yaml from the target repository.
+         * Get WAFIR Configuration
+         * @description Fetches and parses a wafir configuration file from a user-provided URL. The URL should point to a raw YAML or JSON configuration file.
          */
         get: {
             parameters: {
                 query: {
-                    installationId: number;
-                    owner: string;
-                    repo: string;
+                    /** @description URL to the raw configuration file (YAML or JSON format) */
+                    configUrl: string;
                 };
                 header?: never;
                 path?: never;
@@ -309,6 +307,91 @@ export interface paths {
                                 name?: string;
                                 color?: string;
                             }[];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                            message?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/config/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get GitHub Issue Form Template
+         * @description Fetches and parses a GitHub Issue Form template from a user-provided URL. Returns the body (fields) and labels from the template.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description URL to the raw template file (YAML format) */
+                    templateUrl: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Array of form fields from the template */
+                            body: {
+                                [key: string]: unknown;
+                            }[];
+                            /** @description Labels from the template */
+                            labels?: string[];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                            message?: string;
                         };
                     };
                 };

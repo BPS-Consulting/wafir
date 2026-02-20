@@ -23,8 +23,7 @@ import { takeFullPageScreenshot } from "./utils/screenshot";
 import { resolveDateValue, isDateToken } from "./utils/date";
 import type { FieldConfigApi as FieldConfig } from "./api/client";
 import type { BrowserInfo, ConsoleLog } from "./utils/telemetry";
-import { marked } from "marked";
-import DOMPurify from "dompurify";
+import { parseMarkdown } from "./utils/markdown.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
 @customElement("wafir-form")
@@ -354,7 +353,7 @@ export class WafirForm extends LitElement {
       case "markdown": {
         const markdown =
           field.attributes?.value || field.attributes?.label || "";
-        const htmlString = DOMPurify.sanitize(marked.parse(markdown) as string);
+        const htmlString = parseMarkdown(markdown);
         return html`<div class="form-markdown">${unsafeHTML(htmlString)}</div>`;
       }
       case "textarea": {
