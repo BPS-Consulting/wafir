@@ -1,12 +1,9 @@
 import { LitElement, html, unsafeCSS } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import widgetStyles from "./styles/wafir-widget.css?inline";
-import bugIcon from "./assets/bug.svg?raw";
-import thumbsupIcon from "./assets/thumbsup.svg?raw";
-import lightbulbIcon from "./assets/lightbulb.svg?raw";
 import "./wafir-form";
 import "./wafir-highlighter";
+import wafirLogo from "./assets/wafir-logo.svg?raw";
 import {
   isSelecting,
   isCapturing,
@@ -30,14 +27,9 @@ import {
   getDefaultFields,
   getDefaultConfig,
 } from "./default-config.js";
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
 type WidgetPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
-
-const FORM_ICONS: Record<string, string> = {
-  thumbsup: thumbsupIcon,
-  lightbulb: lightbulbIcon,
-  bug: bugIcon,
-};
 
 @customElement("wafir-widget")
 export class WafirWidget extends LitElement {
@@ -644,9 +636,9 @@ export class WafirWidget extends LitElement {
     }
   }
 
-  private _renderFormIcon(iconName: string | undefined) {
-    if (!iconName) return "";
-    return unsafeHTML(FORM_ICONS[iconName] || "");
+  private _renderFormIcon(icon: string | undefined) {
+    if (!icon) return "";
+    return html`<span class="icon-char">${icon}</span>`;
   }
 
   render() {
@@ -674,7 +666,7 @@ export class WafirWidget extends LitElement {
                   part="button"
                   aria-label="${this.tooltipText}"
                 >
-                  <span>${unsafeHTML(thumbsupIcon)}</span>
+                  <span>${unsafeHTML(wafirLogo)}</span>
                 </button>
                 <div class="tooltip">${this.tooltipText}</div>
               </div>

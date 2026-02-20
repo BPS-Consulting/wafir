@@ -76,7 +76,7 @@ targets:
 forms:
   - id: feedback
     label: "Feedback"
-    icon: thumbsup
+    icon: 👍
     body:
       - id: title
         type: input
@@ -96,16 +96,16 @@ forms:
 
 ## Widget Attributes
 
-| Attribute      | Type   | Required | Description                                            |
-| -------------- | ------ | -------- | ------------------------------------------------------ |
-| `config-url`   | string | No       | URL to your wafir.yaml config file                     |
-| `bridge-url`   | string | No       | Custom bridge server URL (default: hosted service)     |
-| `target-type`  | string | No       | `github/issues` or `github/project`                    |
-| `target`       | string | No       | Target identifier (e.g., `owner/repo`)                 |
-| `auth-ref`     | string | No       | GitHub App installation ID for authentication          |
-| `position`     | string | No       | `bottom-right` (default) or `bottom-left`              |
-| `modal-title`  | string | No       | Custom title for the feedback modal                    |
-| `tooltip-text` | string | No       | Tooltip text shown on trigger button hover             |
+| Attribute      | Type   | Required | Description                                        |
+| -------------- | ------ | -------- | -------------------------------------------------- |
+| `config-url`   | string | No       | URL to your wafir.yaml config file                 |
+| `bridge-url`   | string | No       | Custom bridge server URL (default: hosted service) |
+| `target-type`  | string | No       | `github/issues` or `github/project`                |
+| `target`       | string | No       | Target identifier (e.g., `owner/repo`)             |
+| `auth-ref`     | string | No       | GitHub App installation ID for authentication      |
+| `position`     | string | No       | `bottom-right` (default) or `bottom-left`          |
+| `modal-title`  | string | No       | Custom title for the feedback modal                |
+| `tooltip-text` | string | No       | Tooltip text shown on trigger button hover         |
 
 ---
 

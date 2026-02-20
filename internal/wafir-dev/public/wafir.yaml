@@ -15,7 +15,7 @@ targets:
 forms:
   - id: feedback
     label: Feedback
-    icon: thumbsup
+    icon: 👍
     targets: [project]
     body:
       - id: rating
@@ -40,7 +40,7 @@ forms:
 
   - id: feature
     label: Suggestion
-    icon: lightbulb
+    icon: 💡
     targets: [project]
     body:
       - id: title
@@ -85,7 +85,7 @@ forms:
           
   - id: bug
     label: Issue
-    icon: bug
+    icon: 🐛
     targets: [default]
     body:
       - id: title

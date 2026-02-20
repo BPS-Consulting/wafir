@@ -1,4 +1,3 @@
-import { domToDataUrl } from "modern-screenshot";
 import { isCapturing, setCapturedImage } from "../store";
 
 export async function takeFullPageScreenshot(
@@ -51,6 +50,9 @@ export async function takeFullPageScreenshot(
       bgColor === "rgba(0, 0, 0, 0)" || bgColor === "transparent"
         ? "#ffffff"
         : bgColor;
+
+    // Lazy load modern-screenshot only when actually taking a screenshot
+    const { domToDataUrl } = await import("modern-screenshot");
 
     const dataUrl = await domToDataUrl(document.documentElement, {
       width,

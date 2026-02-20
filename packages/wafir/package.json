@@ -39,9 +39,7 @@
   },
   "dependencies": {
     "@nanostores/lit": "^0.2.3",
-    "dompurify": "^3.3.1",
     "lit": "^3.3.1",
-    "marked": "^17.0.1",
     "modern-screenshot": "^4.6.7",
     "nanostores": "^1.1.0",
     "openapi-fetch": "^0.15.0"
