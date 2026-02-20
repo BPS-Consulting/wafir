@@ -33,6 +33,9 @@ import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
 type WidgetPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 
+// Module-level in-memory storage for last active tab (session only, not persisted across reloads)
+let lastActiveTabId: string | null = null;
+
 /**
  * Represents a GitHub Issue Form template structure.
  * Wafir uses the same field schema as GitHub Issue Forms.
@@ -231,6 +234,15 @@ export class WafirWidget extends LitElement {
         );
       }
       this._requestedTabId = null; // Clear after applying
+    } else if (lastActiveTabId) {
+      // Restore last active tab from in-memory storage if no requested tab
+      const tabExists = this._forms.some(
+        (t: FormConfig) => t.id === lastActiveTabId,
+      );
+      if (tabExists) {
+        this._activeFormId = lastActiveTabId;
+      }
+      // If the tab no longer exists, fall back to default (first tab)
     }
 
     // Apply prefill data after config and tab are set
@@ -513,6 +525,8 @@ export class WafirWidget extends LitElement {
   private _switchForm(formId: string) {
     this._activeFormId = formId;
     setCurrentFormId(formId);
+    // Save the active tab to in-memory storage for session persistence
+    lastActiveTabId = formId;
   }
 
   private _formHasValidTarget(): boolean {
