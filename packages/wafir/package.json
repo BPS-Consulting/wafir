@@ -35,7 +35,10 @@
     "build:iife": "vite build --mode iife",
     "build:all": "pnpm run build && pnpm run build:iife",
     "generate:api": "openapi-typescript ../../apps/bridge/swagger.json -o src/api/schema.d.ts",
-    "size": "pnpm run build:all && size-limit"
+    "size": "pnpm run build:all && size-limit",
+    "check-types": "tsc --noEmit",
+    "format": "prettier --check \"src/**/*.{js,jsx,ts,tsx}\"",
+    "test": "echo 'No tests configured for wafir package'"
   },
   "dependencies": {
     "@nanostores/lit": "^0.2.3",

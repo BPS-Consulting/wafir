@@ -4,13 +4,14 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "format": "prettier --check \"**/*.{js,jsx,ts,tsx,md,json,yml,yaml}\"",
     "check-types": "turbo run check-types",
     "generate": "turbo run generate:api",
-    "generate:schema": "pnpm --filter bridge run generate:schema"
+    "generate:schema": "pnpm --filter bridge run generate:schema",
+    "test": "turbo run test"
   },
   "devDependencies": {
+    "eslint": "^9.18.0",
     "prettier": "^3.6.2",
     "turbo": "^2.6.1",
     "typescript": "5.9.2"

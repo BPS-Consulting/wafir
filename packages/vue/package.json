@@ -16,7 +16,10 @@
   "scripts": {
     "dev": "vite build --watch",
     "build": "vue-tsc --noEmit && vite build",
-    "typecheck": "vue-tsc --noEmit"
+    "typecheck": "vue-tsc --noEmit",
+    "check-types": "vue-tsc --noEmit",
+    "format": "prettier --check \"src/**/*.{js,jsx,ts,tsx,vue}\"",
+    "test": "echo 'No tests configured for vue package'"
   },
   "dependencies": {
     "wafir": "workspace:*"
