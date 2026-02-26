@@ -14,17 +14,20 @@
 
 ### 🎯 Benefits
 
-| For Teams | For Users |
-|-----------|-----------|
-| Debug faster with full context | Report issues in seconds |
-| Keep feedback organized in GitHub | No signup or external tools |
+| For Teams                                        | For Users                       |
+| ------------------------------------------------ | ------------------------------- |
+| Debug faster with full context                   | Report issues in seconds        |
+| Keep feedback organized in GitHub                | No signup or external tools     |
 | Triage in Projects, convert to Issues when ready | See exactly what gets submitted |
-| Self-host or use managed service | Lightweight, non-intrusive |
+| Self-host or use managed service                 | Lightweight, non-intrusive      |
 
 ### 📦 Get Started in Minutes
 
 ```html
-<script type="module" src="https://wafir-all.s3.us-east-2.amazonaws.com/wafir/latest/wafir.js"></script>
+<script
+  type="module"
+  src="https://wafir-all.s3.us-east-2.amazonaws.com/wafir/latest/wafir.js"
+></script>
 <wafir-widget config-url="/wafir.yaml"></wafir-widget>
 ```
 
