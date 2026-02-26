@@ -19,7 +19,8 @@
     "watch:ts": "tsc -w",
     "dev": "pnpm run build:ts && concurrently -k -p \"[{name}]\" -n \"TypeScript,App\" -c \"yellow.bold,cyan.bold\" \"pnpm run watch:ts\" \"pnpm run dev:start\"",
     "dev:start": "cross-env NODE_ENV=development fastify start --ignore-watch=.ts$ -w -l info -P dist/app.js",
-    "generate:swagger": "tsx src/generate-swagger.ts"
+    "generate:swagger": "tsx src/generate-swagger.ts",
+    "generate:schema": "tsx scripts/generate-schema.ts"
   },
   "keywords": [],
   "author": "",
@@ -43,13 +44,15 @@
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^24.0.8",
+    "@types/node": "^24.10.1",
     "@vitest/coverage-v8": "^4.0.18",
+    "ajv": "^8.18.0",
     "c8": "^10.1.2",
     "concurrently": "^9.0.0",
     "cross-env": "^10.1.0",
     "fastify-cli": "^7.4.1",
     "fastify-tsconfig": "^3.0.0",
+    "ts-json-schema-generator": "^2.5.0",
     "ts-node": "^10.4.0",
     "tsx": "^4.21.0",
     "typescript": "~5.9.2",

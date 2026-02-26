@@ -85,6 +85,28 @@ The Wafir widget now routes feedback with a flexible `targets:` config block—a
 
 > The legacy `storage` key configuration has been **removed**. All routing is now handled using the `targets` array and form-level `targets` references. To migrate, define each destination under the `targets` key, and update your forms to reference the appropriate target via `targets: [targetId]`.
 
+### 📋 JSON Schema for IDE Support
+
+Wafir provides a JSON Schema for configuration files to enable autocomplete, validation, and documentation in your IDE. See [docs/schema/README.md](docs/schema/README.md) for detailed setup instructions.
+
+**Quick setup for JSON files:**
+
+```json
+{
+  "$schema": "https://bps-consulting.github.io/wafir/wafir-config.schema.json",
+  "title": "Contact Us",
+  "targets": [...]
+}
+```
+
+**Quick setup for YAML files:**
+
+```yaml
+# yaml-language-server: $schema=https://bps-consulting.github.io/wafir/wafir-config.schema.json
+title: Contact Us
+targets: [...]
+```
+
 ### Example (see `/examples/default/wafir.yaml` for full template)
 
 ```yaml

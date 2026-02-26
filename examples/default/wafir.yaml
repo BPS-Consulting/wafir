@@ -1,3 +1,5 @@
+# yaml-language-server: $schema=https://bps-consulting.github.io/wafir/wafir-config.schema.json
+
 # WAFIR Configuration Example - Default
 # This example shows what the widget displays when no forms are specified.
 # Use this as a reference for the default behavior.

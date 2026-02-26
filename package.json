@@ -7,7 +7,8 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "generate": "turbo run generate:api"
+    "generate": "turbo run generate:api",
+    "generate:schema": "pnpm --filter bridge run generate:schema"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
