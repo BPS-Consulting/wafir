@@ -1,5 +1,5 @@
 {
-  "$schema": "https://bps-consulting.github.io/wafir/wafir-config.schema.json",
+  "$schema": "https://raw.githubusercontent.com/BPS-Consulting/wafir/refs/heads/main/wafir-config.schema.json",
   "title": "Contact Us",
   "targets": [
     {

@@ -93,7 +93,7 @@ Wafir provides a JSON Schema for configuration files to enable autocomplete, val
 
 ```json
 {
-  "$schema": "https://bps-consulting.github.io/wafir/wafir-config.schema.json",
+  "$schema": "https://raw.githubusercontent.com/BPS-Consulting/wafir/refs/heads/main/wafir-config.schema.json",
   "title": "Contact Us",
   "targets": [...]
 }
@@ -102,7 +102,7 @@ Wafir provides a JSON Schema for configuration files to enable autocomplete, val
 **Quick setup for YAML files:**
 
 ```yaml
-# yaml-language-server: $schema=https://bps-consulting.github.io/wafir/wafir-config.schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/BPS-Consulting/wafir/refs/wafir-config.schema.json
 title: Contact Us
 targets: [...]
 ```
