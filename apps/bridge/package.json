@@ -20,7 +20,9 @@
     "dev": "pnpm run build:ts && concurrently -k -p \"[{name}]\" -n \"TypeScript,App\" -c \"yellow.bold,cyan.bold\" \"pnpm run watch:ts\" \"pnpm run dev:start\"",
     "dev:start": "cross-env NODE_ENV=development fastify start --ignore-watch=.ts$ -w -l info -P dist/app.js",
     "generate:swagger": "tsx src/generate-swagger.ts",
-    "generate:schema": "tsx scripts/generate-schema.ts"
+    "generate:schema": "tsx scripts/generate-schema.ts",
+    "check-types": "tsc --noEmit",
+    "format": "prettier --check \"src/**/*.{js,jsx,ts,tsx}\""
   },
   "keywords": [],
   "author": "",

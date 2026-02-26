@@ -82,7 +82,7 @@ forms:
               value: "Now"
         validations:
           required: false
-          
+
   - id: bug
     label: Issue
     icon: 🐛
