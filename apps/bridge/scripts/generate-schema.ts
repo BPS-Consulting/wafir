@@ -41,7 +41,7 @@ try {
 }
 
 // Ensure output directory exists
-const outputDir = path.resolve(__dirname, "../../www/public");
+const outputDir = path.resolve(__dirname, "../../../");
 if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });
   console.log(`📁 Created directory: ${outputDir}`);
