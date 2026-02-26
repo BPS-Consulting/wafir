@@ -11,8 +11,6 @@ The repo includes source code for the following:
 - **Wafir Widget** (packages/wafir): A web component built with Lit that you can embed in any web application to collect user feedback.
 - **Bridge Service** (apps/bridge): A Fastify-based backend service that handles feedback submissions, file uploads, and GitHub integration. See the [wafir-infrastructure](https://github.com/bps-consulting/wafir-infrastructure) repo for deployment and infrastructure details.
 - **Test Web Page** (packages/wafir/index.html): A simple HTML page to test the Wafir widget in isolation.
-- **React Consumer** (internal/react-consumer): A sample React application demonstrating how to integrate the Wafir widget. {TODO: Update or remove if needed}
-- **Framework Wrappers** (packages/react, packages/vue): Sample React and Vue wrappers demonstrating how to integrate the Wafir widget into popular frameworks.
 - **Public Documentation Site** (apps/www): An Astro-based website for public documentation deployed on [GitHub Pages](https://bps-consulting.github.io/wafir/).
 - **Configuration Examples** (examples/): Sample YAML files showing how to configure the Wafir widget.
 
@@ -54,9 +52,8 @@ The repo includes source code for the following:
 
 ## 📂 Project Structure
 
-- **`wafir/`**: The client-side widget built with Lit. It's designed to be embedded in any web application.
+- **`wafir/`**: The client-side widget built with Lit. It's designed to be embedded in any web application as a standard web component.
 - **`bridge/`**: The backend server built with Fastify. It handles submissions, file uploads (to S3), and integrations (like GitHub).
-- **`react-consumer/`**: A sample React application demonstrating how to integrate the Wafir widget.
 
 ## 🛠️ Installation
 
@@ -163,7 +160,7 @@ forms:
 
 ## 🏃‍♂️ Running Locally
 
-To start the development environment for all packages (Widget, Bridge, and Consumer):
+To start the development environment:
 
 ```bash
 pnpm dev
@@ -173,7 +170,6 @@ This command runs `turbo run dev`, which spins up:
 
 - The **Wafir Widget** in watch mode.
 - The **Bridge API** server.
-- The **React Consumer** app to test the integration.
 
 ## 🏗️ Building
 
@@ -305,22 +301,47 @@ npm install wafir
 Import and use in your project:
 
 ```js
-import { WafirWidget } from "wafir";
-// Register/use wafir-widget as a custom element (see docs)
+import "wafir";
+
+// The web component is now registered and ready to use in your HTML
 ```
 
-- For module consumers, import from `wafir`, styles from `wafir/styles/widget.css`, etc.
+Then add the widget to your HTML:
+
+```html
+<wafir-widget
+  config-url="/wafir.yaml"
+  bridge-url="https://your-bridge.example.com"
+></wafir-widget>
+```
+
+You can also import styles if needed:
+
+```js
+import "wafir/styles/widget.css";
+```
 
 ### 🌐 Using via CDN/IIFE (Browser Global)
 
 Add to your HTML:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/wafir/dist/browser/wafir.browser.js"></script>
+<script
+  type="module"
+  src="https://cdn.jsdelivr.net/npm/wafir/dist/browser/wafir.browser.js"
+></script>
 ```
 
-This exposes `Wafir` globally (e.g. `window.WafirWidget`).  
-Include styles from the CDN:
+This automatically registers the `<wafir-widget>` custom element. You can then use it anywhere in your HTML:
+
+```html
+<wafir-widget
+  config-url="/wafir.yaml"
+  bridge-url="https://your-bridge.example.com"
+></wafir-widget>
+```
+
+Optionally include styles from the CDN:
 
 ```html
 <link
@@ -328,7 +349,5 @@ Include styles from the CDN:
   href="https://cdn.jsdelivr.net/npm/wafir/dist/browser/styles/wafir-widget.css"
 />
 ```
-
-- Use `<wafir-widget></wafir-widget>` in your HTML as documented.
 
 See full docs at [GitHub Pages](https://bps-consulting.github.io/wafir/).

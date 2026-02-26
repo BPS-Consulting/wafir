@@ -106,7 +106,6 @@ This runs:
 
 - **Bridge** on `http://localhost:3000`
 - **Wafir Widget** in watch mode
-- **React Consumer** for testing
 
 ## 7. Configure the Widget
 
@@ -114,30 +113,41 @@ Update `wafir/index.html` with your test details:
 
 ```html
 <wafir-widget
-  target-type="string"   # github/issues | github/project
-  target="string"        # e.g., owner/repo or owner/projectNum
-  auth-ref="string"       # e.g., GitHub installation ID
+  target-type="github/issues"
+  target="owner/repo"
+  auth-ref="YOUR_INSTALLATION_ID"
 ></wafir-widget>
 ```
 
-Or use the **React Consumer** in `react-consumer/src/App.tsx`:
+Or if you're testing in your own HTML page:
 
-```tsx
-import "wafir";
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wafir Test</title>
+  </head>
+  <body>
+    <h1>Test Your Application</h1>
 
-function App() {
-  return (
-    <>
-      <wafir-widget
-        target-type="string"   # github/issues | github/project
-        target="string"        # e.g., owner/repo or owner/projectNum
-        auth-ref="string"       # e.g., GitHub installation ID
-      ></wafir-widget>
-      <h1>Wafir Test</h1>
-    </>
-  );
-}
+    <!-- Import the widget -->
+    <script type="module">
+      import "wafir";
+    </script>
+
+    <!-- Use the web component -->
+    <wafir-widget
+      target-type="github/issues"
+      target="owner/repo"
+      auth-ref="YOUR_INSTALLATION_ID"
+    ></wafir-widget>
+  </body>
+</html>
 ```
+
+````
 
 ## 8. S3 Setup (Required for Screenshots)
 
@@ -148,7 +158,7 @@ AWS_ACCESS_KEY_ID=your_access_key
 AWS_SECRET_ACCESS_KEY=your_secret_key
 AWS_REGION=us-east-1
 AWS_S3_BUCKET=your-bucket-name
-```
+````
 
 ## 9. Personal Projects OAuth (Optional)
 

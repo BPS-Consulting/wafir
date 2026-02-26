@@ -20,13 +20,6 @@ This directory contains example `wafir.yaml` configuration files for different u
 3. **Host the config file** anywhere accessible via URL (S3, Gist, CDN, etc.)
 4. **Add the widget** to your application with the config URL:
 
-```tsx
-// React
-import { WafirWidget } from "@wafir/react";
-
-<WafirWidget configUrl="https://example.com/wafir.yaml" />;
-```
-
 ```html
 <!-- Vanilla HTML -->
 <script type="module" src="https://unpkg.com/wafir"></script>
