@@ -8,7 +8,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
     "generate": "turbo run generate:api",
-    "generate:schema": "pnpm --filter bridge run generate:schema"
+    "generate:schema": "pnpm --filter bridge run generate:schema",
+    "test": "turbo run test"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
