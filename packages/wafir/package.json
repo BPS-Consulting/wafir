@@ -31,11 +31,11 @@
   "scripts": {
     "dev": "vite build --watch",
     "prebuild": "pnpm dlx shx cp ../../README.md ../../LICENSE .",
-    "build": "vite build && tsc",
+    "build:pkg": "vite build && tsc",
     "build:iife": "vite build --mode iife",
-    "build:all": "pnpm run build && pnpm run build:iife",
+    "build": "pnpm run build:pkg && pnpm run build:iife",
     "generate:api": "openapi-typescript ../../apps/bridge/swagger.json -o src/api/schema.d.ts",
-    "size": "pnpm run build:all && size-limit",
+    "size": "pnpm run build && size-limit",
     "check-types": "tsc --noEmit",
     "format": "prettier --check \"src/**/*.{js,jsx,ts,tsx}\"",
     "test": "echo 'No tests configured for wafir package'"
