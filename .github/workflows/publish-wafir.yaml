@@ -12,15 +12,14 @@ on:
         type: string
 
 jobs:
-  publish-npm:
-    name: Publish to NPM
+  publish:
+    name: Build and Publish
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/wafir
-
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Fetch all history for turbo caching/git tags if needed
+          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -33,13 +32,12 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
+        # Install from root to link workspace packages correctly
         run: pnpm install --frozen-lockfile
-        working-directory: .
 
-      - name: Extract version from tag
+      - name: Extract version
         id: version
         run: |
-          # Use input version for workflow_dispatch, or extract from tag
           if [ -n "${{ inputs.version }}" ]; then
             VERSION="${{ inputs.version }}"
           else
@@ -48,52 +46,18 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Update package.json version
-        run: npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+        # Use -C or --prefix to target the specific package from root
+        run: npm version ${{ steps.version.outputs.version }} --no-git-tag-version --prefix packages/wafir
 
-      - name: Build package
-        run: pnpm run build
+      - name: Build package (and dependencies)
+        # Use turbo filter. The "..." includes all local dependencies of wafir
+        run: pnpm turbo run build --filter=wafir...
 
       - name: Publish to NPM
-        run: pnpm publish --no-git-checks
+        # Use --filter to publish the specific package
+        run: pnpm --filter wafir publish --no-git-checks --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-  publish-s3:
-    name: Publish IIFE to S3
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/wafir
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        working-directory: .
-
-      - name: Build IIFE bundle
-        run: pnpm run build:iife
-
-      - name: Extract version from tag
-        id: version
-        run: |
-          # Use input version for workflow_dispatch, or extract from tag
-          if [ -n "${{ inputs.version }}" ]; then
-            VERSION="${{ inputs.version }}"
-          else
-            VERSION="${GITHUB_REF_NAME#wafir@}"
-          fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -105,19 +69,16 @@ jobs:
       - name: Upload to S3
         run: |
           VERSION="${{ steps.version.outputs.version }}"
+          
+          # Path is relative to root since we aren't using defaults:run
+          DIST_PATH="packages/wafir/dist/iife/wafir.js"
 
           # Upload versioned file
-          aws s3 cp dist/iife/wafir.js "s3://${{ secrets.S3_BUCKET }}/wafir/${VERSION}/wafir.js" \
+          aws s3 cp $DIST_PATH "s3://${{ secrets.S3_BUCKET }}/wafir/${VERSION}/wafir.js" \
             --content-type "application/javascript" \
-            --cache-control "public, max-age=31536000, immutable" \
-            --acl public-read
+            --cache-control "public, max-age=31536000, immutable"
 
           # Also upload as latest
-          aws s3 cp dist/iife/wafir.js "s3://${{ secrets.S3_BUCKET }}/wafir/latest/wafir.js" \
+          aws s3 cp $DIST_PATH "s3://${{ secrets.S3_BUCKET }}/wafir/latest/wafir.js" \
             --content-type "application/javascript" \
-            --cache-control "public, max-age=3600" \
-            --acl public-read
-
-          echo "Uploaded wafir.js to:"
-          echo "  - s3://${{ secrets.S3_BUCKET }}/wafir/${VERSION}/wafir.js"
-          echo "  - s3://${{ secrets.S3_BUCKET }}/wafir/latest/wafir.js"
+            --cache-control "public, max-age=3600"
