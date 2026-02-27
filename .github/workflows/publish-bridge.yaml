@@ -1,0 +1,56 @@
+name: Publish Bridge App
+
+on:
+  push:
+    tags:
+      - "wafir@*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (e.g., 1.2.3)"
+        required: true
+        type: string
+
+jobs:
+  publish-bridge:
+    name: Publish Bridge to GHCR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install turbo
+        run: pnpm add -g turbo
+
+      - name: Prune Monorepo
+        run: turbo prune bridge --docker
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/bridge/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/bridge:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
