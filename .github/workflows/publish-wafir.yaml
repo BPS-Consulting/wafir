@@ -47,7 +47,7 @@ jobs:
 
       - name: Update package.json version
         # Use -C or --prefix to target the specific package from root
-        run: npm version ${{ steps.version.outputs.version }} --no-git-tag-version --prefix packages/wafir
+        run: pnpm --filter wafir exec npm pkg set version=${{ steps.version.outputs.version }}
 
       - name: Build package (and dependencies)
         # Use turbo filter. The "..." includes all local dependencies of wafir
