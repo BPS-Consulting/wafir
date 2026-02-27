@@ -2,12 +2,14 @@
 import { FastifyPluginAsync } from "fastify";
 import { S3Client } from "@aws-sdk/client-s3";
 import { validateSubmission } from "../../shared/utils/config-validator.js";
+import { mapGitHubError } from "../../shared/utils/github-error-mapper.js";
 import { SubmitService } from "./service.js";
 import {
   GithubIssueSubmission,
   GithubSubmissionContext,
 } from "./github-issue-submission.js";
 import { RequestParserService } from "./request-parser.js";
+import { GitHubProjectService } from "./github-project-service.js";
 
 const submitRoute: FastifyPluginAsync = async (
   fastify,
@@ -19,6 +21,7 @@ const submitRoute: FastifyPluginAsync = async (
   const submitService = new SubmitService();
   const githubSubmission = new GithubIssueSubmission();
   const parserService = new RequestParserService();
+  const projectService = new GitHubProjectService();
 
   fastify.post(
     "/",
@@ -58,7 +61,7 @@ const submitRoute: FastifyPluginAsync = async (
           target: input.target,
           authRef: input.authRef,
           formFields: input.formFields || {},
-          tabId: input.tabId,
+          formId: input.formId,
           requestOrigin,
         });
 
@@ -77,12 +80,23 @@ const submitRoute: FastifyPluginAsync = async (
         const config = validationResult.config!;
 
         // Determine which targets to use for this submission
-        // 1. If a tab is specified and it has targets, use those
-        // 2. Otherwise, use all targets from config
-        const tab = config.tabs?.find((t) => t.id === input.tabId);
+        // 1. If a form is specified and targets is defined:
+        //    - If empty array ([]), this is a submissionless form - reject
+        //    - If non-empty array, use those specific targets
+        // 2. If targets is undefined/omitted, use all targets from config
+        const form = config.forms?.find((f) => f.id === input.formId);
+
+        // Check if targets is explicitly set to empty array (submissionless form)
+        if (form && Array.isArray(form.targets) && form.targets.length === 0) {
+          return reply.code(400).send({
+            error:
+              "This form cannot be submitted as no targets are configured (submissionless form)",
+          });
+        }
+
         const targetIds =
-          tab?.targets && tab.targets.length > 0
-            ? tab.targets
+          form?.targets && form.targets.length > 0
+            ? form.targets
             : config.targets.map((t) => t.id);
 
         // Get the actual target configurations
@@ -140,46 +154,97 @@ const submitRoute: FastifyPluginAsync = async (
           projectNumber = parseInt(projNum, 10);
         }
 
-        // Feedback project settings from config
-        const feedbackProjectNumber =
-          config.feedbackProject?.projectNumber || projectNumber;
-        const feedbackProjectOwner =
-          config.feedbackProject?.owner || projectOwner;
-        const ratingFieldName = config.feedbackProject?.ratingField || "Rating";
-
         // Title and labels can come from form (validated above)
         const title = input.title;
-        const labels = input.labels;
 
-        // Build markdown body from validated form fields
+        // Merge labels: form config labels take priority, then input labels
+        const formLabels = form?.labels || [];
+        const inputLabels = input.labels || [];
+        const labels = [...new Set([...formLabels, ...inputLabels])];
+
+        // Use form id as the issue type
+        const issueType = form?.id;
+
+        // Initialize Clients using config values
+        let appOctokit: any;
+        let userOctokit: any = null;
+
+        try {
+          appOctokit = await fastify.getGitHubClient(installationId);
+        } catch (error: unknown) {
+          const mapped = mapGitHubError(error, { operation: "installation" });
+          request.log.error(
+            { error: mapped.message },
+            "Failed to get GitHub client",
+          );
+          return reply.code(mapped.statusCode).send({
+            error: "GitHub App Configuration Error",
+            message: mapped.message,
+          });
+        }
+
+        try {
+          const userToken =
+            await fastify.tokenStore.getUserToken(installationId);
+          userOctokit = userToken
+            ? fastify.getGitHubClientWithToken(userToken)
+            : null;
+        } catch (error: unknown) {
+          // User token is optional, so we just log and continue
+          request.log.warn(
+            "Failed to get user token, continuing with app token only",
+          );
+        }
+
+        // Determine which fields will be written to project (to exclude from issue body)
+        let excludeFieldsFromBody = new Set<string>();
+        let projectNodeId: string | undefined;
+        let projectUseUserToken = false;
+
+        if (
+          hasProjectTarget &&
+          projectNumber !== undefined &&
+          input.formFields
+        ) {
+          try {
+            const { nodeId: projId, shouldUseUserToken } =
+              await projectService.findProjectNodeId(
+                appOctokit,
+                userOctokit,
+                projectOwner,
+                projectNumber,
+                request.log,
+              );
+
+            if (projId) {
+              projectNodeId = projId;
+              projectUseUserToken = shouldUseUserToken;
+
+              const client =
+                shouldUseUserToken && userOctokit ? userOctokit : appOctokit;
+              excludeFieldsFromBody = await projectService.getMappableFieldIds({
+                octokit: client,
+                projectId: projId,
+                formFields: input.formFields,
+                log: request.log,
+              });
+            }
+          } catch (e) {
+            request.log.warn(
+              { error: e instanceof Error ? e.message : "Unknown error" },
+              "Failed to determine mappable project fields, including all fields in body",
+            );
+          }
+        }
+
+        // Build markdown body from validated form fields, excluding project-mapped fields
         let finalBody = submitService.buildMarkdownFromFields(
           input.formFields || {},
           input.fieldOrder,
+          input.fieldLabels,
+          excludeFieldsFromBody,
+          form?.body, // Pass field configs to properly handle rating fields
         );
-
-        // Append browser info if provided
-        finalBody = submitService.appendBrowserInfo(
-          finalBody,
-          input.browserInfo,
-        );
-
-        // Append console logs if provided
-        finalBody = submitService.appendConsoleLogs(
-          finalBody,
-          input.consoleLogs,
-        );
-
-        // Append current date if enabled on the tab
-        if (tab?.currentDate) {
-          finalBody = submitService.appendCurrentDate(finalBody, true);
-        }
-
-        // Initialize Clients using config values
-        const appOctokit = await fastify.getGitHubClient(installationId);
-        const userToken = await fastify.tokenStore.getUserToken(installationId);
-        const userOctokit = userToken
-          ? fastify.getGitHubClientWithToken(userToken)
-          : null;
 
         // Handle Screenshot Upload
         if (input.screenshotBuffer && input.screenshotMime) {
@@ -204,8 +269,8 @@ const submitRoute: FastifyPluginAsync = async (
           title,
           body: finalBody,
           labels,
-          rating: input.rating,
-          submissionType: input.submissionType,
+          issueType,
+          formFields: input.formFields,
           log: request.log,
           owner,
           repo,
@@ -213,11 +278,9 @@ const submitRoute: FastifyPluginAsync = async (
           userOctokit,
           projectOwner,
           projectNumber,
+          projectNodeId,
+          projectUseUserToken,
           storageType,
-          feedbackProjectNumber,
-          feedbackProjectOwner,
-          ratingFieldName,
-          currentDate: tab?.currentDate,
         } as GithubSubmissionContext);
 
         if (!submissionResult.success) {
@@ -235,6 +298,21 @@ const submitRoute: FastifyPluginAsync = async (
           warning: submissionResult.warning,
         });
       } catch (error: unknown) {
+        // Check if this is a GitHub API error
+        const githubError = error as any;
+        if (githubError.status || githubError.response?.status) {
+          const mapped = mapGitHubError(error, { operation: "repo" });
+          request.log.error(
+            { error: mapped.message },
+            "GitHub API error during submit",
+          );
+          return reply.code(mapped.statusCode).send({
+            error: "GitHub API Error",
+            message: mapped.message,
+          });
+        }
+
+        // Handle other errors
         const message =
           error instanceof Error ? error.message : "Unknown error";
         request.log.error({ error: message }, "Submit failed");

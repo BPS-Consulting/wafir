@@ -1,9 +1,5 @@
 ### Migration Notice
 
-> **Migration Notice:**
-> The legacy `storage` key configuration has been **removed**. All routing is now handled using the `targets` array and tab-level `targets` references. Update your config files as shown above.
-> Start collecting feedback with Wafir in minutes!
-
 - Get the Wafir GitHub App from [GitHub](https://github.com/apps/wafir-web-feedback-widget) and install it on your GitHub account. Make sure to note the _Installation ID_, which is the number at the end of the URL after you install the app.
 - Create a GitHub project on your GitHub account to receive feedback and bug reports. Create any custom fields you want to show up in the widget.
 - Optionally create a `.github/wafir.yaml` configuration file in the target repository to customize the feedback form.
@@ -52,22 +48,40 @@ While Wafir can add issues directly to a repo, we recommend that you create a Gi
 The widget will automatically display fields from your GitHub project. If you provide the widget with the name of a repo, you can further configure the widget form using `.github/wafir.yaml` in your repo.
 
 ```yaml
-issue:
-  labels:
-    - bug
-    - needs-triage
-  screenshot: true
-  browserInfo: true
-  consoleLog: true
-
-fields:
-  - name: priority
-    label: "Priority"
-    type: select
-    options:
-      - "Low"
-      - "Medium"
-      - "High"
+forms:
+  - id: bug
+    label: Report Bug
+    icon: 🐞
+    labels:
+      - bug
+      - needs-triage
+    body:
+      - id: title
+        type: input
+        attributes:
+          label: Issue Title
+        validations:
+          required: true
+      - id: description
+        type: textarea
+        attributes:
+          label: Description
+        validations:
+          required: true
+      - id: priority
+        type: dropdown
+        attributes:
+          label: Priority
+          options:
+            - Low
+            - Medium
+            - High
+      # Opt-in telemetry fields
+      - id: browser-info
+        type: textarea
+        attributes:
+          label: Browser Info
+          autofill: browserInfo
 ```
 
 See [examples/](./examples) for more configuration templates.

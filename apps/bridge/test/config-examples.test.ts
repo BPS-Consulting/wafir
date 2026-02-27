@@ -4,19 +4,17 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Fastify, { FastifyInstance } from "fastify";
-import fp from "fastify-plugin";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  setupTestEnv,
-  createMockOctokit,
-  encodeYamlToBase64,
-  MockOctokit,
-} from "./helper.js";
+import { setupTestEnv } from "./helper.js";
 
 // Import the config route
 import configRoute from "../src/modules/config/routes.js";
+
+// Mock global fetch
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,32 +40,15 @@ function getExampleConfigs(): { name: string; content: string }[] {
 
 describe("Example Configurations", () => {
   let app: FastifyInstance;
-  let mockOctokit: MockOctokit;
 
   beforeEach(async () => {
     setupTestEnv();
-    mockOctokit = createMockOctokit();
 
     app = Fastify({ logger: false });
-
-    // Register mock GitHub plugin
-    await app.register(
-      fp(async (fastify) => {
-        (fastify as any).decorate(
-          "getGitHubClient",
-          vi.fn().mockResolvedValue(mockOctokit),
-        );
-      }),
-    );
 
     // Register the config route
     await app.register(configRoute, { prefix: "/config" });
     await app.ready();
-
-    // Default mock for user lookup
-    mockOctokit.rest.users.getByUsername.mockResolvedValue({
-      data: { type: "User" },
-    });
   });
 
   afterEach(async () => {
@@ -81,20 +62,17 @@ describe("Example Configurations", () => {
     it.each(exampleConfigs)(
       'loads "$name" config successfully',
       async ({ name, content }) => {
-        mockOctokit.rest.repos.getContent.mockResolvedValue({
-          data: {
-            content: encodeYamlToBase64(content),
-            encoding: "base64",
-          },
+        mockFetch.mockResolvedValue({
+          ok: true,
+          headers: new Headers({ "content-type": "text/yaml" }),
+          text: () => Promise.resolve(content),
         });
 
         const response = await app.inject({
           method: "GET",
           url: "/config",
           query: {
-            installationId: "123",
-            owner: "testowner",
-            repo: "testrepo",
+            configUrl: `https://example.com/${name}/wafir.yaml`,
           },
         });
 
@@ -113,10 +91,6 @@ describe("Example Configurations", () => {
             body.targets[0].type,
           );
         }
-
-        // issueTypes should always be present (possibly empty array)
-        expect(body.issueTypes).toBeDefined();
-        expect(Array.isArray(body.issueTypes)).toBe(true);
       },
     );
   });
@@ -126,20 +100,17 @@ describe("Example Configurations", () => {
       const minimalConfig = exampleConfigs.find((c) => c.name === "minimal");
       expect(minimalConfig).toBeDefined();
 
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(minimalConfig!.content),
-          encoding: "base64",
-        },
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "text/yaml" }),
+        text: () => Promise.resolve(minimalConfig!.content),
       });
 
       const response = await app.inject({
         method: "GET",
         url: "/config",
         query: {
-          installationId: "123",
-          owner: "testowner",
-          repo: "testrepo",
+          configUrl: "https://example.com/minimal/wafir.yaml",
         },
       });
 
@@ -149,8 +120,8 @@ describe("Example Configurations", () => {
       expect(body.title).toBe("Feedback");
       expect(body.targets).toHaveLength(1);
       expect(body.targets[0].type).toBe("github/issues");
-      // No tabs defined - should be absent (widget uses defaults)
-      expect(body.tabs).toBeUndefined();
+      // No forms defined - should be absent (widget uses defaults)
+      expect(body.forms).toBeUndefined();
     });
   });
 
@@ -159,43 +130,46 @@ describe("Example Configurations", () => {
       const fullConfig = exampleConfigs.find((c) => c.name === "full-featured");
       expect(fullConfig).toBeDefined();
 
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(fullConfig!.content),
-          encoding: "base64",
-        },
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "text/yaml" }),
+        text: () => Promise.resolve(fullConfig!.content),
       });
 
       const response = await app.inject({
         method: "GET",
         url: "/config",
         query: {
-          installationId: "123",
-          owner: "testowner",
-          repo: "testrepo",
+          configUrl: "https://example.com/full-featured/wafir.yaml",
         },
       });
 
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
 
-      // Check telemetry settings
-      expect(body.telemetry).toBeDefined();
-      expect(body.telemetry.screenshot).toBe(true);
-      expect(body.telemetry.browserInfo).toBe(true);
-      expect(body.telemetry.consoleLog).toBe(true);
+      // Note: telemetry section is now deprecated in favor of autofill fields
+      // The full-featured config no longer has a telemetry section
 
-      // Check tabs exist
-      expect(body.tabs).toBeDefined();
-      expect(Array.isArray(body.tabs)).toBe(true);
-      expect(body.tabs.length).toBeGreaterThan(0);
+      // Check forms exist
+      expect(body.forms).toBeDefined();
+      expect(Array.isArray(body.forms)).toBe(true);
+      expect(body.forms.length).toBeGreaterThan(0);
 
-      // Check at least one tab has the expected structure
-      const firstTab = body.tabs[0];
-      expect(firstTab.id).toBeDefined();
-      expect(firstTab.label).toBeDefined();
-      expect(firstTab.fields).toBeDefined();
-      expect(Array.isArray(firstTab.fields)).toBe(true);
+      // Check at least one form has the expected structure
+      const firstForm = body.forms[0];
+      expect(firstForm.id).toBeDefined();
+      expect(firstForm.label).toBeDefined();
+      expect(firstForm.body).toBeDefined();
+      expect(Array.isArray(firstForm.body)).toBe(true);
+
+      // Check that bug form has autofill fields
+      const bugForm = body.forms.find((f: any) => f.id === "bug");
+      if (bugForm) {
+        const browserInfoField = bugForm.body?.find(
+          (f: any) => f.attributes?.autofill === "browserInfo",
+        );
+        expect(browserInfoField).toBeDefined();
+      }
     });
   });
 
@@ -206,20 +180,17 @@ describe("Example Configurations", () => {
       );
       expect(projectConfig).toBeDefined();
 
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(projectConfig!.content),
-          encoding: "base64",
-        },
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "text/yaml" }),
+        text: () => Promise.resolve(projectConfig!.content),
       });
 
       const response = await app.inject({
         method: "GET",
         url: "/config",
         query: {
-          installationId: "123",
-          owner: "testowner",
-          repo: "testrepo",
+          configUrl: "https://example.com/project-based/wafir.yaml",
         },
       });
 
@@ -235,35 +206,37 @@ describe("Example Configurations", () => {
   });
 
   describe("feedback-focused config validation", () => {
-    it("loads feedback-focused config with feedbackProject", async () => {
+    it("loads feedback-focused config with rating field", async () => {
       const feedbackConfig = exampleConfigs.find(
         (c) => c.name === "feedback-focused",
       );
       expect(feedbackConfig).toBeDefined();
 
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(feedbackConfig!.content),
-          encoding: "base64",
-        },
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "text/yaml" }),
+        text: () => Promise.resolve(feedbackConfig!.content),
       });
 
       const response = await app.inject({
         method: "GET",
         url: "/config",
         query: {
-          installationId: "123",
-          owner: "testowner",
-          repo: "testrepo",
+          configUrl: "https://example.com/feedback-focused/wafir.yaml",
         },
       });
 
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
 
-      expect(body.feedbackProject).toBeDefined();
-      expect(body.feedbackProject.projectNumber).toBeDefined();
-      expect(body.feedbackProject.ratingField).toBeDefined();
+      // Verify feedback form with rating field
+      expect(body.forms).toBeDefined();
+      const feedbackForm = body.forms.find((t: any) => t.id === "feedback");
+      expect(feedbackForm).toBeDefined();
+      const ratingField = feedbackForm.body?.find(
+        (f: any) => f.type === "rating",
+      );
+      expect(ratingField).toBeDefined();
     });
   });
 
@@ -274,31 +247,26 @@ describe("Example Configurations", () => {
       );
       expect(privacyConfig).toBeDefined();
 
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(privacyConfig!.content),
-          encoding: "base64",
-        },
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "text/yaml" }),
+        text: () => Promise.resolve(privacyConfig!.content),
       });
 
       const response = await app.inject({
         method: "GET",
         url: "/config",
         query: {
-          installationId: "123",
-          owner: "testowner",
-          repo: "testrepo",
+          configUrl: "https://example.com/privacy-focused/wafir.yaml",
         },
       });
 
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
 
-      // Privacy-focused should have telemetry disabled
-      expect(body.telemetry).toBeDefined();
-      expect(body.telemetry.screenshot).toBe(false);
-      expect(body.telemetry.browserInfo).toBe(false);
-      expect(body.telemetry.consoleLog).toBe(false);
+      // Privacy-focused config has no telemetry section (uses opt-in autofill fields instead)
+      // This means no automatic telemetry collection
+      expect(body.telemetry).toBeUndefined();
     });
   });
 
@@ -307,30 +275,27 @@ describe("Example Configurations", () => {
       const fullConfig = exampleConfigs.find((c) => c.name === "full-featured");
       expect(fullConfig).toBeDefined();
 
-      mockOctokit.rest.repos.getContent.mockResolvedValue({
-        data: {
-          content: encodeYamlToBase64(fullConfig!.content),
-          encoding: "base64",
-        },
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({ "content-type": "text/yaml" }),
+        text: () => Promise.resolve(fullConfig!.content),
       });
 
       const response = await app.inject({
         method: "GET",
         url: "/config",
         query: {
-          installationId: "123",
-          owner: "testowner",
-          repo: "testrepo",
+          configUrl: "https://example.com/full-featured/wafir.yaml",
         },
       });
 
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
 
-      // Collect all field types from all tabs
+      // Collect all field types from all forms
       const fieldTypes = new Set<string>();
-      for (const tab of body.tabs || []) {
-        for (const field of tab.fields || []) {
+      for (const form of body.forms || []) {
+        for (const field of form.body || []) {
           fieldTypes.add(field.type);
         }
       }

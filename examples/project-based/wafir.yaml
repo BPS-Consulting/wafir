@@ -10,11 +10,11 @@ targets:
     target: your-username/1
     authRef: "YOUR_INSTALLATION_ID" # Replace with your installation ID
 
-tabs:
+forms:
   - id: issue
     label: Report
     icon: bug
-    fields:
+    body:
       - id: title
         type: input
         attributes:

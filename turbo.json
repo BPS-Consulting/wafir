@@ -7,11 +7,18 @@
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**", ".next/**", "build/**"]
     },
-    "lint": {
-      "dependsOn": ["^lint"]
-    },
     "check-types": {
       "dependsOn": ["^check-types"]
+    },
+    "format": {
+      "dependsOn": ["^format"],
+      "inputs": [
+        "**/*.{js,jsx,ts,tsx,md,json,yml,yaml}",
+        "!.next/**",
+        "!dist/**",
+        "!build/**",
+        "!node_modules/**"
+      ]
     },
     "dev": {
       "cache": false,
@@ -25,6 +32,16 @@
       "dependsOn": ["bridge#generate:swagger"],
       "outputs": ["src/api/index.ts"],
       "cache": true
+    },
+    "test": {
+      "dependsOn": ["^test"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "src/**",
+        "!src/**/*.test.ts",
+        "!src/**/*.test.tsx"
+      ],
+      "outputs": ["coverage/**"]
     }
   }
 }

@@ -25,6 +25,7 @@ export interface MockOctokit {
     };
     issues: {
       create: Mock;
+      listLabelsForRepo: Mock;
     };
     users: {
       getByUsername: Mock;
@@ -43,6 +44,7 @@ export function createMockOctokit(): MockOctokit {
       },
       issues: {
         create: vi.fn(),
+        listLabelsForRepo: vi.fn(),
       },
       users: {
         getByUsername: vi.fn(),
@@ -95,10 +97,10 @@ targets:
     type: github/issues
     target: testowner/testrepo
     authRef: "123"
-tabs:
+forms:
   - id: issue
     label: "Report Issue"
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -119,10 +121,10 @@ targets:
     type: github/project
     target: testowner/1
     authRef: "123"
-tabs:
+forms:
   - id: issue
     label: "Report Issue"
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -139,14 +141,10 @@ targets:
     type: github/issues
     target: testowner/testrepo
     authRef: "123"
-feedbackProject:
-  projectNumber: 2
-  ratingField: "Rating"
-tabs:
+forms:
   - id: feedback
     label: "Feedback"
-    isFeedback: true
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -169,14 +167,10 @@ targets:
     type: github/project
     target: testowner/1
     authRef: "123"
-telemetry:
-  screenshot: true
-  browserInfo: true
-  consoleLog: true
-tabs:
+forms:
   - id: issue
     label: "Report Issue"
-    fields:
+    body:
       - id: title
         type: input
         validations:
@@ -188,8 +182,7 @@ tabs:
   - id: feedback
     label: "Feedback"
     icon: "thumbsup"
-    isFeedback: true
-    fields:
+    body:
       - id: rating
         type: rating
         attributes:
@@ -200,6 +193,33 @@ tabs:
         type: textarea
         validations:
           required: true
+`,
+  withAutofillFields: `
+title: "Config with Autofill Fields"
+targets:
+  - id: default
+    type: github/issues
+    target: testowner/testrepo
+    authRef: "123"
+forms:
+  - id: issue
+    label: "Report Issue"
+    body:
+      - id: title
+        type: input
+        validations:
+          required: true
+      - id: message
+        type: textarea
+        validations:
+          required: true
+      - id: browser-info
+        type: textarea
+        attributes:
+          label: "Browser Info"
+          autofill: browserInfo
+        validations:
+          required: false
 `,
 };
 

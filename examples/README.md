@@ -20,13 +20,6 @@ This directory contains example `wafir.yaml` configuration files for different u
 3. **Host the config file** anywhere accessible via URL (S3, Gist, CDN, etc.)
 4. **Add the widget** to your application with the config URL:
 
-```tsx
-// React
-import { WafirWidget } from "@wafir/react";
-
-<WafirWidget configUrl="https://example.com/wafir.yaml" />;
-```
-
 ```html
 <!-- Vanilla HTML -->
 <script type="module" src="https://unpkg.com/wafir"></script>
@@ -37,7 +30,7 @@ import { WafirWidget } from "@wafir/react";
 
 ### Migration from legacy `storage` config
 
-> The legacy `storage` key configuration has been **removed**. All routing is now handled using the `targets` array and tab-level `targets` references. To migrate, define each destination under the `targets` key and update your tabs to reference the appropriate target via `targets: [targetId]`. See `/default/wafir.yaml` for updated config patterns.
+> The legacy `storage` key configuration has been **removed**. All routing is now handled using the `targets` array and form-level `targets` references. To migrate, define each destination under the `targets` key and update your forms to reference the appropriate target via `targets: [targetId]`. See `/default/wafir.yaml` for updated config patterns.
 
 ### Required Fields
 
@@ -56,13 +49,13 @@ targets:
     authRef: "YOUR_INSTALLATION_ID"
 ```
 
-### Example Tab Routing
+### Example Form Routing
 
 ```yaml
-tabs:
+forms:
   - id: feedback
     label: "Feedback"
-    icon: thumbsup
+    icon: 👍
     targets: [project]
     fields:
       - id: title
@@ -80,13 +73,31 @@ tabs:
           required: true
 ```
 
-### Automatic Data Collection
+### Opt-In Telemetry Fields
+
+Users control what data they share via autofill checkboxes:
 
 ```yaml
-telemetry:
-  screenshot: true # Enable screenshot capture
-  browserInfo: true # Collect URL, user agent, viewport
-  consoleLog: false # Capture console messages
+forms:
+  - id: bug
+    label: Report Bug
+    body:
+      # ... other fields ...
+      - id: browser-info
+        type: textarea
+        attributes:
+          label: "Browser Info"
+          autofill: browserInfo # Shows checkbox to include
+      - id: screenshot
+        type: textarea
+        attributes:
+          label: "Screenshot"
+          autofill: screenshot # Shows capture button
+      - id: console-logs
+        type: textarea
+        attributes:
+          label: "Console Logs"
+          autofill: consoleLog # Shows checkbox to include
 ```
 
 ### Form Fields
@@ -94,11 +105,10 @@ telemetry:
 Field types: `input`, `textarea`, `email`, `dropdown`, `checkboxes`, `rating`, `markdown`
 
 ```yaml
-tabs:
+forms:
   - id: feedback
     label: "Feedback"
-    icon: thumbsup # Options: thumbsup, lightbulb, bug
-    isFeedback: true # Uses rating field for project integration
+    icon: 👍 # Can be any emoji or unicode character: 👍, 💡, 🐞, ⭐, 😀
     fields:
       - id: title
         type: input
@@ -120,7 +130,7 @@ tabs:
 ## Tips
 
 - Use **meaningful field names** - they appear in the GitHub issue body
-- Enable **screenshots** for visual bugs
-- Enable **browserInfo** for debugging browser-specific issues
+- Add **screenshot autofill** fields for visual bugs
+- Add **browserInfo autofill** fields for debugging browser-specific issues
 - Keep forms **short** - users are more likely to submit brief forms
 - Host your config on a **CDN** for best performance

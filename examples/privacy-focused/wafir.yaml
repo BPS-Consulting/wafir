@@ -1,5 +1,6 @@
 # WAFIR Configuration Example - Privacy Focused
 # Minimal data collection for privacy-conscious applications
+# No autofill telemetry fields - only user-provided content is collected
 # Host this file anywhere and point your widget to it via configUrl
 
 title: "Send Feedback"
@@ -10,16 +11,11 @@ targets:
     target: your-username/your-repo
     authRef: "YOUR_INSTALLATION_ID" # Replace with your installation ID
 
-telemetry:
-  screenshot: false
-  browserInfo: false
-  consoleLog: false
-
-tabs:
+forms:
   - id: feedback
     label: Feedback
     icon: thumbsup
-    fields:
+    body:
       - id: title
         type: input
         attributes:

@@ -12,6 +12,7 @@ const fieldSchema = {
         "checkboxes",
         "markdown",
         "rating",
+        "date",
       ],
       description:
         "Field input type. Matches GitHub Form Schema types plus Wafir extensions.",
@@ -20,6 +21,13 @@ const fieldSchema = {
       type: "string",
       description:
         "Unique identifier for the field (used as key in JSON output/issue body).",
+    },
+    display: {
+      type: "string",
+      enum: ["visible", "none"],
+      default: "visible",
+      description:
+        "Controls field visibility. 'none' hides the field from the UI but still includes its value in submissions. Defaults to 'visible'.",
     },
     attributes: {
       type: "object",
@@ -50,11 +58,16 @@ const fieldSchema = {
           type: "boolean",
           description: "Allow multiple selections (dropdown type only).",
         },
+        default: {
+          type: "integer",
+          description:
+            "Index of the pre-selected option in the options array (dropdown type only).",
+        },
         options: {
-          description: "Options for dropdown or checkboxes.",
+          description: "Options for dropdown, checkboxes, or rating fields.",
           oneOf: [
             {
-              // Dropdown options are an array of strings
+              // Dropdown/rating options are an array of strings
               type: "array",
               items: { type: "string" },
             },
@@ -72,11 +85,18 @@ const fieldSchema = {
             },
           ],
         },
-        // Wafir Extension Attribute
-        ratingLabels: {
-          type: "array",
-          items: { type: "string" },
-          description: "Custom labels for star rating (Wafir extension only).",
+        // Wafir Extension: Icon for rating field
+        icon: {
+          type: "string",
+          description:
+            "Unicode character/emoji used as the rating icon (rating type only). Defaults to ⭐.",
+        },
+        // Wafir Extension: Auto-fill attribute for telemetry fields
+        autofill: {
+          type: "string",
+          enum: ["browserInfo", "screenshot", "consoleLog"],
+          description:
+            "Auto-fill the field with telemetry data. When specified, renders an opt-in checkbox. Values: browserInfo (URL, user agent, viewport), screenshot (captured screenshot), consoleLog (recent console messages).",
         },
       },
     },
@@ -92,43 +112,43 @@ const fieldSchema = {
   },
 };
 
-const tabSchema = {
+const formSchema = {
   type: "object",
   required: ["id"],
   properties: {
-    id: { type: "string", description: "Unique tab identifier" },
+    id: { type: "string", description: "Unique form identifier" },
     label: {
       type: "string",
       description: "Display label (defaults to capitalized id)",
     },
     icon: {
       type: "string",
-      enum: ["thumbsup", "lightbulb", "bug"],
-      description: "Tab icon",
-    },
-    isFeedback: {
-      type: "boolean",
-      default: false,
       description:
-        "If true, rating from this tab populates project Rating field",
+        "Form icon (displayed in tab UI). Can be any unicode character or emoji. Examples: '👍', '💡', '🐞', '⭐', '😀'.",
     },
-    currentDate: {
-      type: "boolean",
-      default: false,
-      description:
-        "If true, the current date and time will be automatically inserted into the issue body in a human-readable format",
-    },
-    fields: {
+    body: {
       type: "array",
       items: fieldSchema,
       description:
-        "Form fields for this tab. If omitted, defaults are used for known tab IDs.",
+        "Form body (fields) for this form. If omitted, defaults are used for known form IDs.",
     },
     targets: {
       type: "array",
       items: { type: "string" },
       description:
-        "IDs of target(s) for this tab. If omitted or empty, all targets will be used. Each ID must reference a valid target from the top-level targets array.",
+        "IDs of target(s) for this form. If omitted, all targets will be used. If an empty array ([]), no target is selectable and submissions will be disabled for this form (submissionless). Each ID must reference a valid target from the top-level targets array.",
+    },
+    labels: {
+      type: "array",
+      items: { type: "string" },
+      description:
+        "Labels automatically added to issues created from this form. Similar to GitHub issue form templates.",
+    },
+    templateUrl: {
+      type: "string",
+      format: "uri",
+      description:
+        "URL to a GitHub issue form template YAML file. When provided, the form fields will be fetched from this template.",
     },
   },
 };
@@ -155,7 +175,7 @@ export const wafirConfigSchema = {
           id: {
             type: "string",
             description:
-              "Unique identifier for this target, referenced by tabs to route submissions.",
+              "Unique identifier for this target, referenced by forms to route submissions.",
           },
           type: {
             type: "string",
@@ -198,11 +218,11 @@ export const wafirConfigSchema = {
         },
       },
     },
-    tabs: {
+    forms: {
       type: "array",
-      items: tabSchema,
+      items: formSchema,
       description:
-        "Widget tabs configuration. Defaults to feedback, suggestion, issue if omitted.",
+        "Widget forms configuration. Forms are displayed as tabs in the UI. Defaults to feedback, suggestion, issue if omitted.",
     },
     issueTypes: {
       type: "array",
@@ -214,26 +234,6 @@ export const wafirConfigSchema = {
           id: { type: "number" },
           name: { type: "string" },
           color: { type: "string" },
-        },
-      },
-    },
-    feedbackProject: {
-      type: "object",
-      description:
-        "Dedicated project for feedback submissions with star ratings",
-      properties: {
-        projectNumber: {
-          type: "number",
-          description: "GitHub Project number for feedback",
-        },
-        owner: {
-          type: "string",
-          description: "Project owner (defaults to repo owner)",
-        },
-        ratingField: {
-          type: "string",
-          default: "Rating",
-          description: "Name of the Rating field in the project",
         },
       },
     },

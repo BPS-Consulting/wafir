@@ -32,7 +32,7 @@ The widget includes extensive console logging. Open your browser's developer con
 1. You should see a thumbs-up button in the bottom-right corner
 2. Click the button to open the modal
 3. The config will be fetched from `/wafir.yaml`
-4. You should see tabs: Feedback, Suggestion, Issue
+4. You should see forms (displayed as tabs): Feedback, Suggestion, Issue
 
 ## Troubleshooting
 

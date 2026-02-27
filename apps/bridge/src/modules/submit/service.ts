@@ -8,24 +8,12 @@ export interface SubmitBody {
   target?: string;
   authRef?: string;
   title: string;
-  tabId?: string;
+  formId?: string;
   labels?: string[];
-  rating?: number;
-  submissionType?: "issue" | "feedback";
   formFields?: Record<string, unknown>;
   fieldOrder?: string[];
-  browserInfo?: {
-    url?: string;
-    userAgent?: string;
-    viewportWidth?: number;
-    viewportHeight?: number;
-    language?: string;
-  };
-  consoleLogs?: Array<{
-    type: string;
-    message: string;
-    timestamp: string;
-  }>;
+  /** Map of field IDs to their display labels */
+  fieldLabels?: Record<string, string>;
 }
 
 // Keys to exclude from the markdown body (used for other purposes)
@@ -36,11 +24,18 @@ const EXCLUDED_FORM_KEYS = new Set(["title"]);
  */
 export class SubmitService {
   /**
-   * Converts a numeric rating (1-5) to star emojis.
+   * Converts a numeric rating to repeated icon characters.
+   * @param rating - The rating value (0 means no rating, 1-maxRating for actual ratings)
+   * @param maxRating - Maximum rating value (defaults to 5)
+   * @param icon - The icon character to repeat (defaults to ⭐)
    */
-  ratingToStars(rating: number): string {
-    const clampedRating = Math.min(Math.max(Math.round(rating), 1), 5);
-    return "⭐".repeat(clampedRating);
+  ratingToIcons(rating: number, maxRating = 5, icon = "⭐"): string {
+    const clampedRating = Math.min(Math.max(Math.round(rating), 0), maxRating);
+    // Allow 0 to represent no rating
+    if (clampedRating === 0) {
+      return "No rating";
+    }
+    return icon.repeat(clampedRating);
   }
 
   /**
@@ -56,10 +51,25 @@ export class SubmitService {
 
   /**
    * Builds a markdown body from form fields.
+   * @param formFields - The form field values keyed by field ID
+   * @param fieldOrder - Optional array of field IDs specifying display order
+   * @param fieldLabels - Optional map of field IDs to their display labels
+   * @param excludeFields - Optional set of field IDs to exclude (e.g., fields written to project)
+   * @param fieldConfigs - Optional array of field configurations to determine field types
    */
   buildMarkdownFromFields(
     formFields: Record<string, unknown>,
     fieldOrder?: string[],
+    fieldLabels?: Record<string, string>,
+    excludeFields?: Set<string>,
+    fieldConfigs?: Array<{
+      id?: string;
+      type: string;
+      attributes?: {
+        icon?: string;
+        options?: string[] | Array<{ label: string; required?: boolean }>;
+      };
+    }>,
   ): string {
     const orderedKeys = fieldOrder?.length
       ? fieldOrder.filter((key) => key in formFields)
@@ -67,17 +77,51 @@ export class SubmitService {
 
     const lines: string[] = [];
 
+    // Build a map of field IDs to their types for quick lookup
+    const fieldTypeMap = new Map<
+      string,
+      { type: string; icon?: string; maxRating?: number }
+    >();
+    if (fieldConfigs) {
+      for (const config of fieldConfigs) {
+        if (config.id) {
+          // Calculate maxRating from options array length
+          let maxRating = 5; // default
+          if (config.attributes?.options) {
+            maxRating = config.attributes.options.length;
+          }
+          fieldTypeMap.set(String(config.id), {
+            type: config.type,
+            icon: config.attributes?.icon,
+            maxRating,
+          });
+        }
+      }
+    }
+
     for (const key of orderedKeys) {
       if (EXCLUDED_FORM_KEYS.has(key)) continue;
+      if (excludeFields?.has(key)) continue;
 
       const value = formFields[key];
+      // Skip undefined, null, or empty string
+      // Note: 0 will not be skipped by this check (e.g., ratings show "No rating" for 0)
       if (value === undefined || value === null || value === "") continue;
 
-      const label = this.formatFieldLabel(key);
+      // Use provided label if available, otherwise format from field ID
+      const label = fieldLabels?.[key] || this.formatFieldLabel(key);
       let displayValue: string;
 
-      if (key === "rating" && typeof value === "number") {
-        displayValue = this.ratingToStars(value);
+      const fieldType = fieldTypeMap.get(key)?.type;
+
+      // Check if this is a rating field by type, or fallback to key name
+      if (
+        (fieldType === "rating" || key === "rating") &&
+        typeof value === "number"
+      ) {
+        const icon = fieldTypeMap.get(key)?.icon || "⭐";
+        const maxRating = fieldTypeMap.get(key)?.maxRating || 5;
+        displayValue = this.ratingToIcons(value, maxRating, icon);
       } else if (Array.isArray(value)) {
         displayValue = value.join(", ");
       } else {
@@ -88,69 +132,6 @@ export class SubmitService {
     }
 
     return lines.join("\n\n");
-  }
-
-  /**
-   * Appends browser info as markdown if provided.
-   */
-  appendBrowserInfo(
-    body: string,
-    browserInfo?: SubmitBody["browserInfo"],
-  ): string {
-    if (!browserInfo) return body;
-
-    const infoLines: string[] = [];
-    if (browserInfo.url) infoLines.push(`| URL | ${browserInfo.url} |`);
-    if (browserInfo.userAgent)
-      infoLines.push(`| User Agent | \`${browserInfo.userAgent}\` |`);
-    if (browserInfo.viewportWidth && browserInfo.viewportHeight)
-      infoLines.push(
-        `| Viewport | ${browserInfo.viewportWidth}x${browserInfo.viewportHeight} |`,
-      );
-    if (browserInfo.language)
-      infoLines.push(`| Language | ${browserInfo.language} |`);
-
-    if (infoLines.length === 0) return body;
-
-    const browserSection = `\n\n---\n\n**Browser Info**\n| Field | Value |\n| :--- | :--- |\n${infoLines.join("\n")}`;
-    return body + browserSection;
-  }
-
-  /**
-   * Appends console logs as markdown if provided.
-   */
-  appendConsoleLogs(
-    body: string,
-    consoleLogs?: SubmitBody["consoleLogs"],
-  ): string {
-    if (!consoleLogs || consoleLogs.length === 0) return body;
-
-    const logsText = consoleLogs
-      .map((log) => `[${log.type.toUpperCase()}] ${log.message}`)
-      .join("\n");
-
-    return body + `\n\n---\n\n**Console Logs**\n\`\`\`\n${logsText}\n\`\`\``;
-  }
-
-  /**
-   * Appends the current date and time in human-readable format if enabled.
-   */
-  appendCurrentDate(body: string, includeDate: boolean): string {
-    if (!includeDate) return body;
-
-    const now = new Date();
-    const formattedDate = now.toLocaleString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      timeZoneName: "short",
-    });
-
-    return body + `\n\n---\n\n**Submitted At**\n${formattedDate}`;
   }
 
   /**
@@ -177,6 +158,6 @@ export class SubmitService {
     );
 
     const publicUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${fileKey}`;
-    return `\n\n![Screenshot](${publicUrl})`;
+    return `\n\n**Screenshot**\n![Screenshot](${publicUrl})`;
   }
 }

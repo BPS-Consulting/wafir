@@ -19,10 +19,26 @@ const getClient = () => {
 export type WafirConfigBase =
   paths["/config/"]["get"]["responses"][200]["content"]["application/json"];
 
+// Canonical form and field types from API schema
+// Make display optional since it has a default value of "visible"
+type FieldConfigApiBase = NonNullable<
+  NonNullable<WafirConfigBase["forms"]>[number]["body"]
+>[number];
+export type FieldConfigApi = Omit<FieldConfigApiBase, "display"> & {
+  display?: FieldConfigApiBase["display"];
+};
+
+// FormConfigApi with body using the corrected FieldConfigApi type
+type FormConfigApiBase = NonNullable<WafirConfigBase["forms"]>[number];
+export type FormConfigApi = Omit<FormConfigApiBase, "body"> & {
+  body?: FieldConfigApi[];
+};
+
 // Extended WafirConfig type with targets array (required for user-hosted configs)
-export type WafirConfig = WafirConfigBase & {
+// and corrected forms array type
+export type WafirConfig = Omit<WafirConfigBase, "forms"> & {
   targets: Array<{
-    /** Unique identifier for this target, referenced by tabs to route submissions. */
+    /** Unique identifier for this target, referenced by forms to route submissions. */
     id: string;
     /** Target type using MIME-type convention. Currently supported: github/issues, github/project. */
     type: "github/issues" | "github/project";
@@ -31,11 +47,8 @@ export type WafirConfig = WafirConfigBase & {
     /** Authentication reference used to authorize communication with the target. For GitHub types, this is the installation ID. */
     authRef: string;
   }>;
+  forms?: FormConfigApi[];
 };
-
-// Canonical tab and field types from API schema
-export type TabConfigApi = NonNullable<WafirConfig["tabs"]>[number];
-export type FieldConfigApi = NonNullable<TabConfigApi["fields"]>[number];
 
 export const checkBridgeHealth = async (
   bridgeUrl?: string,
@@ -55,13 +68,14 @@ export const checkBridgeHealth = async (
 };
 
 /**
- * @deprecated The widget now fetches config directly from a user-hosted URL.
- * This function is kept for backward compatibility but will be removed in a future version.
+ * Fetches and parses a wafir configuration file from a URL via the backend.
+ * The backend handles YAML/JSON parsing and returns a typed config object.
+ * @param configUrl - URL to the raw configuration file (YAML or JSON format)
+ * @param bridgeUrl - Optional custom bridge URL
+ * @returns Parsed configuration object
  */
 export const getWafirConfig = async (
-  installationId: number,
-  owner: string,
-  repo: string,
+  configUrl: string,
   bridgeUrl?: string,
 ): Promise<WafirConfigBase | undefined> => {
   if (bridgeUrl) {
@@ -71,9 +85,7 @@ export const getWafirConfig = async (
   const { data, error } = await getClient().GET("/config/", {
     params: {
       query: {
-        installationId,
-        owner,
-        repo,
+        configUrl,
       },
     },
   });
@@ -85,19 +97,41 @@ export const getWafirConfig = async (
   return data;
 };
 
-export interface BrowserInfo {
-  url?: string;
-  userAgent?: string;
-  viewportWidth?: number;
-  viewportHeight?: number;
-  language?: string;
-}
+/**
+ * Template response type from the API
+ */
+export type TemplateResponse =
+  paths["/config/template"]["get"]["responses"][200]["content"]["application/json"];
 
-export interface ConsoleLogEntry {
-  type: string;
-  message: string;
-  timestamp: string;
-}
+/**
+ * Fetches and parses a GitHub Issue Form template from a URL via the backend.
+ * The backend handles YAML parsing and returns the body (fields) and labels.
+ * @param templateUrl - URL to the raw template file (YAML format)
+ * @param bridgeUrl - Optional custom bridge URL
+ * @returns Parsed template with body and labels
+ */
+export const getTemplate = async (
+  templateUrl: string,
+  bridgeUrl?: string,
+): Promise<TemplateResponse | undefined> => {
+  if (bridgeUrl) {
+    setBridgeUrl(bridgeUrl);
+  }
+
+  const { data, error } = await getClient().GET("/config/template", {
+    params: {
+      query: {
+        templateUrl,
+      },
+    },
+  });
+
+  if (error) {
+    throw new Error("Failed to fetch template");
+  }
+
+  return data;
+};
 
 export interface SubmitIssueParams {
   /** URL to the authoritative config file - required for server-side validation */
@@ -109,17 +143,15 @@ export interface SubmitIssueParams {
   /** Authentication reference (e.g., installation ID for GitHub) */
   authRef: string;
   title: string;
-  /** The active tab ID for field validation */
-  tabId?: string;
+  /** The form ID for field validation */
+  formId?: string;
   labels?: string[];
   screenshot?: Blob;
   bridgeUrl?: string;
-  rating?: number;
-  submissionType?: "issue" | "feedback";
   formFields?: Record<string, unknown>;
   fieldOrder?: string[];
-  browserInfo?: BrowserInfo;
-  consoleLogs?: ConsoleLogEntry[];
+  /** Map of field IDs to their display labels */
+  fieldLabels?: Record<string, string>;
 }
 
 export const submitIssue = async (params: SubmitIssueParams) => {
@@ -129,16 +161,13 @@ export const submitIssue = async (params: SubmitIssueParams) => {
     target,
     authRef,
     title,
-    tabId,
+    formId,
     labels,
     screenshot,
     bridgeUrl,
-    rating,
-    submissionType,
     formFields,
     fieldOrder,
-    browserInfo,
-    consoleLogs,
+    fieldLabels,
   } = params;
 
   if (bridgeUrl) {
@@ -151,8 +180,8 @@ export const submitIssue = async (params: SubmitIssueParams) => {
   formData.append("target", target);
   formData.append("authRef", authRef);
   formData.append("title", title);
-  if (tabId) {
-    formData.append("tabId", tabId);
+  if (formId) {
+    formData.append("formId", formId);
   }
   if (labels) {
     formData.append("labels", JSON.stringify(labels));
@@ -160,23 +189,14 @@ export const submitIssue = async (params: SubmitIssueParams) => {
   if (screenshot) {
     formData.append("screenshot", screenshot, "screenshot.png");
   }
-  if (rating !== undefined) {
-    formData.append("rating", String(rating));
-  }
-  if (submissionType) {
-    formData.append("submissionType", submissionType);
-  }
   if (formFields) {
     formData.append("formFields", JSON.stringify(formFields));
   }
   if (fieldOrder) {
     formData.append("fieldOrder", JSON.stringify(fieldOrder));
   }
-  if (browserInfo) {
-    formData.append("browserInfo", JSON.stringify(browserInfo));
-  }
-  if (consoleLogs) {
-    formData.append("consoleLogs", JSON.stringify(consoleLogs));
+  if (fieldLabels) {
+    formData.append("fieldLabels", JSON.stringify(fieldLabels));
   }
 
   const response = await getClient().POST("/submit/", {

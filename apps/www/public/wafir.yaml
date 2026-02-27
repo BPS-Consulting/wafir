@@ -1,37 +1,35 @@
-# WAFIR Configuration Example - Default
-# This example shows what the widget displays when no tabs are specified.
-# Use this as a reference for the default behavior.
+# Wafir widget configuration for the public Wafir GitHub Pages site
 
 title: "Contact Us"
-installationId: 105081464
 
-storage:
-  type: issue # Options: issue, project, both
-  owner: BPS-Consulting
-  repo: wafir
-  projectNumber: 9
+targets:
+  - id: default
+    type: github/issues
+    target: BPS-Consulting/wafir
+    authRef: "105081464"
+  - id: project
+    type: github/project
+    target: BPS-Consulting/9
+    authRef: "105081464"
 
-# Optional: Dedicated project for feedback with rating field
-# feedbackProject:
-#   projectNumber: 1          # Your feedback project number
-#   owner: org-name           # Project owner (defaults to repo owner)
-#   ratingField: "Rating"     # Name of the Rating field in your project
-
-telemetry:
-  screenshot: true
-  browserInfo: true
-  consoleLog: false
-
-tabs:
+forms:
   - id: feedback
     label: Feedback
     icon: thumbsup
-    isFeedback: true
-    fields:
+    labels:
+      - feedback
+    targets: [project]
+    body:
       - id: rating
         type: rating
         attributes:
-          label: "How satisfied are you with our website? (if you see this, then the config fetching works!)"
+          label: "How satisfied are you with Wafir?"
+          options:
+            - "Very Unsatisfied"
+            - "Unsatisfied"
+            - "Neutral"
+            - "Satisfied"
+            - "Excellent"
         validations:
           required: true
       - id: description
@@ -44,7 +42,10 @@ tabs:
   - id: suggestion
     label: Suggestion
     icon: lightbulb
-    fields:
+    labels:
+      - enhancement
+    targets: [project]
+    body:
       - id: title
         type: input
         attributes:
@@ -55,13 +56,42 @@ tabs:
         type: textarea
         attributes:
           label: "Additional information:"
+          placeholder: "Please add some details to help us understand your suggestion better"
         validations:
           required: false
-
+      - id: value
+        type: dropdown
+        attributes:
+          label: "Business value"
+          options:
+            - label: "Low"
+              value: "Low"
+            - label: "Medium"
+              value: "Medium"
+            - label: "High"
+              value: "High"
+        validations:
+          required: false
+      - id: needed
+        type: dropdown
+        attributes:
+          label: "Needed"
+          options:
+            - label: "Later"
+              value: "Later"
+            - label: "Soon"
+              value: "Soon"
+            - label: "Now"
+              value: "Now"
+        validations:
+          required: false
   - id: issue
     label: Issue
     icon: bug
-    fields:
+    labels:
+      - bug
+    targets: [default]
+    body:
       - id: title
         type: input
         attributes:
@@ -72,5 +102,30 @@ tabs:
         type: textarea
         attributes:
           label: "Additional information:"
+          placeholder: "Please include steps to reproduce and expected vs actual behavior"
         validations:
           required: true
+      # Opt-in telemetry fields - users choose what to share
+      - id: browser-info
+        type: textarea
+        attributes:
+          label: "Browser Info"
+          autofill: browserInfo
+        validations:
+          required: false
+      - id: screenshot
+        type: textarea
+        attributes:
+          label: "Screenshot"
+          autofill: screenshot
+        validations:
+          required: false
+
+  - id: question
+    label: ❓Question
+    targets: [none]
+    body:
+      - id: info
+        type: markdown
+        attributes:
+          value: "Please ask your question in our GitHub Discussions forum: https://github.com/BPS-Consulting/wafir/discussions"

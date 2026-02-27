@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (button) {
     button.addEventListener("click", () => {
       wafirWidget.open({
-        tab: "suggestion",
+        tab: "feature", // Form ID is "feature" (label is "Suggestion")
         prefill: {
           title: "Add dark mode support",
           description:

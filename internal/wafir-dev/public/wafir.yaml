@@ -1,7 +1,4 @@
-# WAFIR Configuration Example - Default
-# This example shows what the widget displays when no tabs are specified.
-# Use this as a reference for the default behavior.
-# Host this file anywhere and point your widget to it via configUrl
+# Wafir config for internal testing.  Targets Wafir repo.
 
 title: "Contact Us"
 
@@ -15,23 +12,16 @@ targets:
     target: BPS-Consulting/9
     authRef: "105081464"
 
-telemetry:
-  screenshot: true
-  browserInfo: true
-  consoleLog: false
-
-tabs:
+forms:
   - id: feedback
     label: Feedback
-    icon: thumbsup
-    isFeedback: true
+    icon: 👍
     targets: [project]
-    currentDate: true
-    fields:
+    body:
       - id: rating
         type: rating
         attributes:
-          label: "How satisfied are you with our website? AGAGAG"
+          label: "How satisfied are you with our website?"
         validations:
           required: true
       - id: description
@@ -40,11 +30,19 @@ tabs:
           label: "What is the main reason for this rating?"
         validations:
           required: false
+      - id: submitted
+        type: date
+        display: none
+        attributes:
+          value: "today"
+        validations:
+          required: true
 
-  - id: suggestion
+  - id: feature
     label: Suggestion
-    icon: lightbulb
-    fields:
+    icon: 💡
+    targets: [project]
+    body:
       - id: title
         type: input
         attributes:
@@ -55,23 +53,81 @@ tabs:
         type: textarea
         attributes:
           label: "Additional information:"
+          placeholder: "Please add some details to help us understand your suggestion better"
+        validations:
+          required: false
+      - id: value
+        type: dropdown
+        attributes:
+          label: "Business value"
+          options:
+            - label: "Low"
+              value: "Low"
+            - label: "Medium"
+              value: "Medium"
+            - label: "High"
+              value: "High"
+        validations:
+          required: false
+      - id: needed
+        type: dropdown
+        attributes:
+          label: "Needed"
+          options:
+            - label: "Later"
+              value: "Later"
+            - label: "Soon"
+              value: "Soon"
+            - label: "Now"
+              value: "Now"
         validations:
           required: false
 
-  - id: issue
+  - id: bug
     label: Issue
-    icon: bug
+    icon: 🐛
     targets: [default]
-    fields:
+    body:
       - id: title
         type: input
         attributes:
-          label: "What issue did you encounter?"
+          label: "Issue Title"
         validations:
           required: true
       - id: description
         type: textarea
         attributes:
-          label: "Additional information:"
+          label: "Describe the issue"
         validations:
           required: true
+      # Opt-in telemetry fields
+      - id: browser-info
+        type: textarea
+        attributes:
+          label: "Browser Info"
+          autofill: browserInfo
+        validations:
+          required: false
+      - id: console-logs
+        type: textarea
+        attributes:
+          label: "Console Logs"
+          autofill: consoleLog
+        validations:
+          required: false
+      - id: screenshot
+        type: textarea
+        attributes:
+          label: "Screenshot"
+          autofill: screenshot
+        validations:
+          required: false
+
+  - id: question
+    label: ❓Question
+    targets: []
+    body:
+      - id: info
+        type: markdown
+        attributes:
+          value: "Please ask your question in our GitHub Discussions forum: https://github.com/BPS-Consulting/wafir/discussions"

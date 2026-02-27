@@ -1,12 +1,9 @@
 import { LitElement, html, unsafeCSS } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import widgetStyles from "./styles/wafir-widget.css?inline";
-import bugIcon from "./assets/bug.svg?raw";
-import thumbsupIcon from "./assets/thumbsup.svg?raw";
-import lightbulbIcon from "./assets/lightbulb.svg?raw";
 import "./wafir-form";
 import "./wafir-highlighter";
+import wafirLogo from "./assets/wafir-logo.svg?raw";
 import {
   isSelecting,
   isCapturing,
@@ -16,30 +13,28 @@ import {
   setTabFormData,
   setBrowserInfo,
   setConsoleLogs,
-  browserInfo,
-  consoleLogs,
+  setCurrentFormId,
+  getFormScreenshot,
 } from "./store.js";
 import { StoreController } from "@nanostores/lit";
 import type {
-  TabConfigApi as TabConfig,
+  FormConfigApi as FormConfig,
   FieldConfigApi as FieldConfig,
   WafirConfig,
 } from "./api/client.js";
 import { dataURLtoBlob } from "./utils/file.js";
 import { getBrowserInfo, consoleInterceptor } from "./utils/telemetry.js";
 import {
-  getDefaultTabs,
+  getDefaultForms,
   getDefaultFields,
   getDefaultConfig,
 } from "./default-config.js";
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
 type WidgetPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 
-const TAB_ICONS: Record<string, string> = {
-  thumbsup: thumbsupIcon,
-  lightbulb: lightbulbIcon,
-  bug: bugIcon,
-};
+// Module-level in-memory storage for last active tab (session only, not persisted across reloads)
+let lastActiveTabId: string | null = null;
 
 @customElement("wafir-widget")
 export class WafirWidget extends LitElement {
@@ -53,10 +48,10 @@ export class WafirWidget extends LitElement {
   position: WidgetPosition = "bottom-right";
 
   @property({ type: String, attribute: "tooltip-text" })
-  tooltipText = "Open Issue Widget";
+  tooltipText = "Give Feedback";
 
   @property({ type: Array })
-  tabs: TabConfig[] = [];
+  forms: FormConfig[] = [];
 
   @property({ type: String, attribute: "target-type" })
   targetType = "";
@@ -69,7 +64,6 @@ export class WafirWidget extends LitElement {
 
   private _isSelectingController = new StoreController(this, isSelecting);
   private _isCapturingController = new StoreController(this, isCapturing);
-  private _capturedImageController = new StoreController(this, capturedImage);
 
   @state()
   isModalOpen = false;
@@ -87,17 +81,10 @@ export class WafirWidget extends LitElement {
   private _hasCustomTrigger = false;
 
   @state()
-  private _tabs: TabConfig[] = getDefaultTabs();
+  private _forms: FormConfig[] = getDefaultForms();
 
   @state()
-  private _activeTabId: string = "feedback";
-
-  @state()
-  private _telemetry = {
-    screenshot: true,
-    browserInfo: true,
-    consoleLog: false,
-  };
+  private _activeFormId: string = "feedback";
 
   // Requested tab from programmatic open() call, to be applied after config loads
   private _requestedTabId: string | null = null;
@@ -107,24 +94,25 @@ export class WafirWidget extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._checkCustomTrigger();
-    this._mergeInlineTabs();
+    this._mergeInlineForms();
   }
 
   private _checkCustomTrigger() {
     this._hasCustomTrigger = this.querySelector('[slot="trigger"]') !== null;
   }
 
-  private _mergeInlineTabs() {
-    if (this.tabs && this.tabs.length > 0) {
-      this._tabs = this.tabs.map((tab) => ({
-        ...tab,
-        fields:
-          tab.fields && tab.fields.length > 0
-            ? tab.fields
-            : getDefaultFields(tab.id),
+  private _mergeInlineForms() {
+    if (this.forms && this.forms.length > 0) {
+      this._forms = this.forms.map((form) => ({
+        ...form,
+        body:
+          form.body && form.body.length > 0
+            ? form.body
+            : getDefaultFields(form.id),
       }));
-      if (this._tabs.length > 0) {
-        this._activeTabId = this._tabs[0].id;
+      if (this._forms.length > 0) {
+        this._activeFormId = this._forms[0].id;
+        setCurrentFormId(this._forms[0].id);
       }
     }
   }
@@ -153,7 +141,7 @@ export class WafirWidget extends LitElement {
       // For now, just open the modal
     } else if (options?.prefill && this.isModalOpen) {
       // Modal is already open, apply prefill immediately
-      this._applyPrefillData(this._activeTabId, options.prefill);
+      this._applyPrefillData(this._activeFormId, options.prefill);
     }
 
     // Open the modal (this will trigger config load and tab application)
@@ -161,15 +149,17 @@ export class WafirWidget extends LitElement {
       this._openModal(options?.prefill);
     } else if (options?.tab) {
       // Modal is already open, just switch tabs
-      const tabExists = this._tabs.some((t) => t.id === options.tab);
+      const tabExists = this._forms.some(
+        (t: FormConfig) => t.id === options.tab,
+      );
       if (tabExists) {
-        this._activeTabId = options.tab!;
+        this._activeFormId = options.tab!;
         if (options?.prefill) {
           this._applyPrefillData(options.tab, options.prefill);
         }
       } else {
         console.warn(
-          `Wafir: Unknown tab "${options.tab}". Available tabs: ${this._tabs.map((t) => t.id).join(", ")}`,
+          `Wafir: Unknown tab "${options.tab}". Available tabs: ${this._forms.map((t: FormConfig) => t.id).join(", ")}`,
         );
       }
     }
@@ -181,14 +171,16 @@ export class WafirWidget extends LitElement {
    * @param prefill - Key-value pairs of field data
    */
   private _applyPrefillData(tabId: string, prefill: Record<string, any>) {
-    const tab = this._tabs.find((t) => t.id === tabId);
-    if (!tab || !tab.fields) {
+    const form = this._forms.find((t: FormConfig) => t.id === tabId);
+    if (!form || !form.body) {
       console.warn(`Wafir: Cannot apply prefill, tab "${tabId}" not found`);
       return;
     }
 
     // Get valid field IDs from the tab configuration
-    const validFieldIds = new Set(tab.fields.map((f) => String(f.id)));
+    const validFieldIds = new Set(
+      form.body.map((f: FieldConfig) => String(f.id)),
+    );
 
     // Filter and warn about unknown fields
     const validPrefillData: Record<string, any> = {};
@@ -217,20 +209,31 @@ export class WafirWidget extends LitElement {
 
     // After config is loaded, apply requested tab and prefill
     if (this._requestedTabId) {
-      const tabExists = this._tabs.some((t) => t.id === this._requestedTabId);
+      const tabExists = this._forms.some(
+        (t: FormConfig) => t.id === this._requestedTabId,
+      );
       if (tabExists) {
-        this._activeTabId = this._requestedTabId;
+        this._activeFormId = this._requestedTabId;
       } else {
         console.warn(
-          `Wafir: Unknown tab "${this._requestedTabId}". Available tabs: ${this._tabs.map((t) => t.id).join(", ")}`,
+          `Wafir: Unknown tab "${this._requestedTabId}". Available tabs: ${this._forms.map((t: FormConfig) => t.id).join(", ")}`,
         );
       }
       this._requestedTabId = null; // Clear after applying
+    } else if (lastActiveTabId) {
+      // Restore last active tab from in-memory storage if no requested tab
+      const tabExists = this._forms.some(
+        (t: FormConfig) => t.id === lastActiveTabId,
+      );
+      if (tabExists) {
+        this._activeFormId = lastActiveTabId;
+      }
+      // If the tab no longer exists, fall back to default (first tab)
     }
 
     // Apply prefill data after config and tab are set
     if (prefillData) {
-      this._applyPrefillData(this._activeTabId, prefillData);
+      this._applyPrefillData(this._activeFormId, prefillData);
     }
   }
 
@@ -256,6 +259,97 @@ export class WafirWidget extends LitElement {
       console.warn("Wafir: Failed to check bridge health", error);
       this.isBridgeAvailable = false;
     }
+  }
+
+  /**
+   * Fetches a GitHub issue form template from a URL via the backend.
+   * @param templateUrl - URL to the template (can be relative)
+   * @param baseUrl - Base URL to resolve relative URLs against
+   * @returns Template fields and labels, or undefined if fetch fails
+   */
+  private async _fetchTemplate(
+    templateUrl: string,
+    baseUrl?: string,
+  ): Promise<{ body: FieldConfig[]; labels?: string[] } | undefined> {
+    try {
+      // Resolve relative URLs against the base config URL
+      let resolvedUrl = templateUrl;
+      if (
+        baseUrl &&
+        !templateUrl.startsWith("http://") &&
+        !templateUrl.startsWith("https://")
+      ) {
+        const base = new URL(baseUrl);
+        resolvedUrl = new URL(templateUrl, base).toString();
+      } else if (
+        !templateUrl.startsWith("http://") &&
+        !templateUrl.startsWith("https://")
+      ) {
+        // Resolve against current origin
+        resolvedUrl = new URL(templateUrl, window.location.origin).toString();
+      }
+
+      // Fetch and parse template via the backend
+      const { getTemplate } = await import("./api/client.js");
+      const template = await getTemplate(
+        resolvedUrl,
+        this.bridgeUrl || undefined,
+      );
+
+      if (!template || !template.body || !Array.isArray(template.body)) {
+        console.warn(
+          `Wafir: Invalid template format from ${resolvedUrl}: missing body`,
+        );
+        return undefined;
+      }
+
+      return {
+        body: template.body as FieldConfig[],
+        labels: template.labels,
+      };
+    } catch (error) {
+      console.warn(
+        `Wafir: Error fetching template from ${templateUrl}:`,
+        error,
+      );
+      return undefined;
+    }
+  }
+
+  /**
+   * Processes forms that have templateUrl, fetching and merging template fields.
+   * @param forms - Array of form configurations
+   * @param baseUrl - Base URL to resolve relative template URLs against
+   * @returns Forms with template fields merged in
+   */
+  private async _processFormTemplates(
+    forms: FormConfig[],
+    baseUrl?: string,
+  ): Promise<FormConfig[]> {
+    const processedForms = await Promise.all(
+      forms.map(async (form) => {
+        // If form has templateUrl and no body defined, fetch from template
+        if (form.templateUrl && (!form.body || form.body.length === 0)) {
+          const templateData = await this._fetchTemplate(
+            form.templateUrl,
+            baseUrl,
+          );
+          if (templateData) {
+            return {
+              ...form,
+              body: templateData.body,
+              // Merge template labels with form labels (form labels take priority)
+              labels: form.labels?.length
+                ? form.labels
+                : templateData.labels || form.labels,
+            };
+          }
+        }
+        return form;
+      }),
+    );
+
+    return processedForms;
   }
 
   private _resolveConfigUrl(configUrl: string): string {
@@ -293,7 +387,7 @@ export class WafirWidget extends LitElement {
           : defaultConfig.targets,
       };
 
-      this._applyConfig(this._config);
+      await this._applyConfig(this._config);
       return;
     }
 
@@ -304,31 +398,15 @@ export class WafirWidget extends LitElement {
       // Resolve relative URLs to same origin
       const resolvedUrl = this._resolveConfigUrl(this.configUrl);
 
-      const response = await fetch(resolvedUrl, {
-        method: "GET",
-        signal: AbortSignal.timeout(10000), // 10 second timeout
-      });
+      // Fetch and parse config via the backend
+      const { getWafirConfig } = await import("./api/client.js");
+      const config = await getWafirConfig(
+        resolvedUrl,
+        this.bridgeUrl || undefined,
+      );
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch config: ${response.status}`);
-      }
-
-      const contentType = response.headers.get("content-type") || "";
-      let config: WafirConfig;
-
-      if (
-        contentType.includes("yaml") ||
-        contentType.includes("x-yaml") ||
-        resolvedUrl.endsWith(".yaml") ||
-        resolvedUrl.endsWith(".yml")
-      ) {
-        // Parse YAML
-        const yamlText = await response.text();
-        const yaml = await import("js-yaml");
-        config = yaml.load(yamlText) as WafirConfig;
-      } else {
-        // Parse JSON
-        config = await response.json();
+      if (!config) {
+        throw new Error("No config returned from backend");
       }
 
       // Validate required fields
@@ -337,54 +415,57 @@ export class WafirWidget extends LitElement {
           "Wafir: Config missing required fields (targets), using defaults",
           config,
         );
+        this.configFetchError =
+          "Configuration missing required fields (targets)";
         this._config = getDefaultConfig();
-        this._applyConfig(this._config);
+        await this._applyConfig(this._config);
         return;
       }
 
-      this._config = config;
-      this._applyConfig(config);
+      this._config = config as WafirConfig;
+      await this._applyConfig(config as WafirConfig, resolvedUrl);
     } catch (error) {
-      console.error("Wafir: Failed to fetch remote config, using defaults", {
+      console.error("Wafir: Failed to fetch remote config", {
         error,
         configUrl: this.configUrl,
       });
+      this.configFetchError =
+        error instanceof Error ? error.message : "Failed to load configuration";
       this._config = getDefaultConfig();
-      this._applyConfig(this._config);
+      await this._applyConfig(this._config);
     } finally {
       this.isConfigLoading = false;
     }
   }
 
-  private _applyConfig(config: WafirConfig) {
-    if (config.tabs && Array.isArray(config.tabs)) {
-      this._tabs = config.tabs.map((tab: TabConfig) => ({
-        id: tab.id,
-        label: tab.label || this._capitalize(tab.id),
-        icon: tab.icon,
-        isFeedback: tab.isFeedback ?? false,
-        fields:
-          tab.fields && tab.fields.length > 0
-            ? tab.fields
-            : getDefaultFields(tab.id),
+  private async _applyConfig(config: WafirConfig, configUrl?: string) {
+    if (config.forms && Array.isArray(config.forms)) {
+      // Process forms that have templateUrl to fetch their fields
+      const processedForms = await this._processFormTemplates(
+        config.forms,
+        configUrl,
+      );
+
+      this._forms = processedForms.map((form: FormConfig) => ({
+        id: form.id,
+        label: form.label || this._capitalize(form.id),
+        icon: form.icon,
+        targets: form.targets,
+        body:
+          form.body && form.body.length > 0
+            ? form.body
+            : getDefaultFields(form.id),
       }));
-      if (this._tabs.length > 0) {
-        this._activeTabId = this._tabs[0].id;
+      if (this._forms.length > 0) {
+        this._activeFormId = this._forms[0].id;
+        setCurrentFormId(this._forms[0].id);
       }
     } else {
-      console.warn("Wafir: No tabs in config or tabs is not an array");
+      console.warn("Wafir: No forms in config or forms is not an array");
     }
 
     if (config.title) {
       this.modalTitle = config.title;
-    }
-
-    if (config.telemetry) {
-      this._telemetry = {
-        screenshot: config.telemetry.screenshot ?? true,
-        browserInfo: config.telemetry.browserInfo ?? true,
-        consoleLog: config.telemetry.consoleLog ?? false,
-      };
     }
   }
 
@@ -396,18 +477,47 @@ export class WafirWidget extends LitElement {
     this.isModalOpen = false;
   }
 
-  private _getActiveTab(): TabConfig | undefined {
-    return this._tabs.find((t) => t.id === this._activeTabId);
+  private async _retryFetchConfig() {
+    this.configFetchError = null;
+    await this._fetchConfig();
+  }
+
+  private _getActiveForm(): FormConfig | undefined {
+    return this._forms.find((f) => f.id === this._activeFormId);
   }
 
   private _getActiveFormConfig(): FieldConfig[] {
-    const tab = this._getActiveTab();
-    const fields = tab?.fields || [];
+    const form = this._getActiveForm();
+    const fields = form?.body || [];
     return fields;
   }
 
-  private _switchTab(tabId: string) {
-    this._activeTabId = tabId;
+  private _switchForm(formId: string) {
+    this._activeFormId = formId;
+    setCurrentFormId(formId);
+    // Save the active tab to in-memory storage for session persistence
+    lastActiveTabId = formId;
+  }
+
+  private _formHasValidTarget(): boolean {
+    if (!this._config?.targets?.length) return false;
+    const activeForm = this._getActiveForm();
+    const formTargets = activeForm?.targets;
+
+    // If targets is explicitly an empty array, this is a submissionless form
+    if (Array.isArray(formTargets) && formTargets.length === 0) {
+      return false;
+    }
+
+    // If targets has values, check if at least one is valid
+    if (formTargets?.length) {
+      return formTargets.some((id) =>
+        this._config!.targets.some((t) => t.id === id),
+      );
+    }
+
+    // If targets is undefined/omitted, all targets are valid
+    return true;
   }
 
   @property({ type: String, attribute: "config-url" })
@@ -421,7 +531,7 @@ export class WafirWidget extends LitElement {
 
   private async _handleSubmit(event: CustomEvent) {
     const formData = event.detail.formData as Record<string, unknown>;
-    const activeTab = this._getActiveTab();
+    const activeForm = this._getActiveForm();
 
     if (
       !this._config ||
@@ -435,15 +545,15 @@ export class WafirWidget extends LitElement {
 
     const { targets } = this._config;
 
-    // Find the target for the active tab
-    // If tab has targets specified, use the first one for validation
-    // If tab has no targets specified, backend will route to all targets
-    const activeTabTargets = activeTab?.targets;
+    // Find the target for the active form
+    // If form has targets specified, use the first one for validation
+    // If form has no targets specified, backend will route to all targets
+    const activeFormTargets = activeForm?.targets;
     let targetConfig = targets[0]; // Default to first target
 
-    if (activeTabTargets && activeTabTargets.length > 0) {
-      // Use the first target specified for this tab
-      const targetId = activeTabTargets[0];
+    if (activeFormTargets && activeFormTargets.length > 0) {
+      // Use the first target specified for this form
+      const targetId = activeFormTargets[0];
       const foundTarget = targets.find(
         (t: { id: string }) => t.id === targetId,
       );
@@ -451,7 +561,7 @@ export class WafirWidget extends LitElement {
         targetConfig = foundTarget;
       } else {
         console.error(
-          `Wafir: Tab "${activeTab.id}" references unknown target "${targetId}". Available targets: ${targets.map((t) => t.id).join(", ")}`,
+          `Wafir: Form "${activeForm.id}" references unknown target "${targetId}". Available targets: ${targets.map((t) => t.id).join(", ")}`,
         );
         alert("Widget configuration error: Invalid target reference");
         return;
@@ -474,34 +584,47 @@ export class WafirWidget extends LitElement {
 
     try {
       const title =
-        (formData.title as string) || activeTab?.label || "Submission";
-      const labels: string[] = [this._activeTabId];
+        (formData.title as string) || activeForm?.label || "Submission";
+      const labels: string[] = [this._activeFormId];
 
       const { submitIssue } = await import("./api/client.js");
-
-      const screenshotDataUrl = this._capturedImageController.value;
-      const screenshotBlob = screenshotDataUrl
-        ? dataURLtoBlob(screenshotDataUrl)
-        : undefined;
-
-      const isFeedbackTab = activeTab?.isFeedback ?? false;
-      const submissionType: "issue" | "feedback" = isFeedbackTab
-        ? "feedback"
-        : "issue";
-      const rating = isFeedbackTab
-        ? Number(formData.rating) || undefined
-        : undefined;
 
       // Filter out markdown fields before submission
       const activeFields = this._getActiveFormConfig();
       const submitFields = activeFields.filter((f) => f.type !== "markdown");
       const fieldOrder = submitFields.map((f) => String(f.id));
 
+      // Get screenshot for current form only (no fallback to global)
+      // Only include screenshot if the form has a screenshot field
+      const hasScreenshotField = activeFields.some(
+        (f) => (f.attributes as any)?.autofill === "screenshot",
+      );
+      const formScreenshot = getFormScreenshot(this._activeFormId);
+      const screenshotDataUrl = hasScreenshotField ? formScreenshot : null;
+      const screenshotBlob = screenshotDataUrl
+        ? dataURLtoBlob(screenshotDataUrl)
+        : undefined;
+
+      // Build field labels map from config
+      const fieldLabels: Record<string, string> = {};
+      for (const field of submitFields) {
+        const id = String(field.id);
+        const label = field.attributes?.label;
+        if (label) {
+          fieldLabels[id] = label;
+        }
+      }
+
       // Only send user-data fields in formFields
       const filteredFormData: Record<string, unknown> = {};
       for (const field of submitFields) {
         const id = String(field.id);
-        if (formData[id] !== undefined) filteredFormData[id] = formData[id];
+        if (formData[id] !== undefined) {
+          filteredFormData[id] = formData[id];
+        } else if (field.type === "rating") {
+          // Always send 0 for rating fields if not set
+          filteredFormData[id] = 0;
+        }
       }
 
       // Always send the resolved absolute URL to the backend
@@ -510,30 +633,25 @@ export class WafirWidget extends LitElement {
         : "";
 
       // Note: We send one target for validation, but the backend will determine
-      // which targets to actually submit to based on the tab's targets array in the config.
-      // If the tab has no targets specified, the backend will route to all configured targets.
+      // which targets to actually submit to based on the form's targets array in the config.
+      // If the form has no targets specified, the backend will route to all configured targets.
       await submitIssue({
         configUrl: resolvedConfigUrl,
         targetType: targetConfig.type,
         target: targetConfig.target,
         authRef: targetConfig.authRef,
         title,
-        tabId: this._activeTabId,
+        formId: this._activeFormId,
         labels,
         screenshot: screenshotBlob,
         bridgeUrl: this.bridgeUrl || undefined,
-        rating,
-        submissionType,
         formFields: filteredFormData,
         fieldOrder,
-        browserInfo: this._telemetry.browserInfo
-          ? (browserInfo.get() ?? undefined)
-          : undefined,
-        consoleLogs: this._telemetry.consoleLog ? consoleLogs.get() : undefined,
+        fieldLabels,
       });
 
       alert("Thank you for your input!");
-      clearTabFormData(this._activeTabId);
+      clearTabFormData(this._activeFormId);
       capturedImage.set(null);
       this.isModalOpen = false;
     } catch (error) {
@@ -542,123 +660,164 @@ export class WafirWidget extends LitElement {
     }
   }
 
-  private _renderTabIcon(iconName: string | undefined) {
-    if (!iconName) return "";
-    return unsafeHTML(TAB_ICONS[iconName] || "");
+  private _renderFormIcon(icon: string | undefined) {
+    if (!icon) return "";
+    return html`<span class="icon-char">${icon}</span>`;
   }
 
   render() {
-    if (this._isCapturingController.value) {
-      return html``;
-    }
+    // During capture, hide with CSS instead of not rendering
+    // This preserves component state (like autofill checkbox state)
+    const isCapturing = this._isCapturingController.value;
 
     if (this._isSelectingController.value) {
       return html`<wafir-highlighter></wafir-highlighter>`;
     }
 
     return html`
-      ${this._hasCustomTrigger
-        ? html`<div
-            class="trigger-container ${this.position}"
-            @click="${this._handleTriggerClick}"
-          >
-            <slot name="trigger"></slot>
-          </div>`
-        : html`
-            <div class="trigger-container ${this.position}">
-              <button
-                @click="${this._handleTriggerClick}"
-                part="button"
-                aria-label="${this.tooltipText}"
-              >
-                <span>${unsafeHTML(thumbsupIcon)}</span>
-              </button>
-              <div class="tooltip">${this.tooltipText}</div>
-            </div>
-          `}
-      ${this.isModalOpen
-        ? html`
-            <div
-              class="modal-backdrop"
-              @click="${this._closeModal}"
-              role="dialog"
-              aria-modal="true"
+      <div style="${isCapturing ? "display: none;" : ""}">
+        ${this._hasCustomTrigger
+          ? html`<div
+              class="trigger-container ${this.position}"
+              @click="${this._handleTriggerClick}"
             >
-              <div
-                class="modal-content"
-                @click="${(e: Event) => e.stopPropagation()}"
-              >
-                <div class="modal-header">
-                  <h3 id="modal-title">${this.modalTitle}</h3>
-                  <button
-                    class="close-button"
-                    @click="${this._closeModal}"
-                    aria-label="Close modal"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="lucide lucide-x-icon lucide-x"
-                    >
-                      <path d="M18 6 6 18" />
-                      <path d="m6 6 12 12" />
-                    </svg>
-                  </button>
-                </div>
-
-                <div class="mode-tabs">
-                  ${(() => {
-                    return this._tabs.map(
-                      (tab) => html`
-                        <button
-                          class="mode-tab ${this._activeTabId === tab.id
-                            ? "active"
-                            : ""}"
-                          @click="${() => this._switchTab(tab.id)}"
-                        >
-                          ${this._renderTabIcon(tab.icon)} ${tab.label}
-                        </button>
-                      `,
-                    );
-                  })()}
-                </div>
-                <wafir-form
-                  .tabId="${this._activeTabId}"
-                  .fields="${this._getActiveFormConfig()}"
-                  .formLabel="${this._getActiveTab()?.label || ""}"
-                  .showBrowserInfo="${this._telemetry.browserInfo}"
-                  .showConsoleLog="${this._telemetry.consoleLog}"
-                  .showScreenshot="${this._telemetry.screenshot}"
-                  @form-submit="${this._handleSubmit}"
-                ></wafir-form>
-                ${this.isConfigLoading
-                  ? html`
-                      <div
-                        class="loading-overlay"
-                        role="status"
-                        aria-live="polite"
-                        aria-busy="true"
-                      >
-                        <div class="loading-content">
-                          <div class="spinner" aria-hidden="true"></div>
-                          <span class="loading-text">Loading</span>
-                        </div>
-                      </div>
-                    `
-                  : ""}
+              <slot name="trigger"></slot>
+            </div>`
+          : html`
+              <div class="trigger-container ${this.position}">
+                <button
+                  @click="${this._handleTriggerClick}"
+                  part="button"
+                  aria-label="${this.tooltipText}"
+                >
+                  <span>${unsafeHTML(wafirLogo)}</span>
+                </button>
+                <div class="tooltip">${this.tooltipText}</div>
               </div>
-            </div>
-          `
-        : ""}
+            `}
+        ${this.isModalOpen
+          ? html`
+              <div
+                class="modal-backdrop"
+                @click="${this._closeModal}"
+                role="dialog"
+                aria-modal="true"
+              >
+                <div
+                  class="modal-content"
+                  @click="${(e: Event) => e.stopPropagation()}"
+                >
+                  <div class="modal-header">
+                    <h3 id="modal-title">${this.modalTitle}</h3>
+                    <button
+                      class="close-button"
+                      @click="${this._closeModal}"
+                      aria-label="Close modal"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-x-icon lucide-x"
+                      >
+                        <path d="M18 6 6 18" />
+                        <path d="m6 6 12 12" />
+                      </svg>
+                    </button>
+                  </div>
 
-      <wafir-highlighter></wafir-highlighter>
+                  <div class="mode-tabs">
+                    ${(() => {
+                      return this._forms.map(
+                        (form) => html`
+                          <button
+                            class="mode-tab ${this._activeFormId === form.id
+                              ? "active"
+                              : ""}"
+                            @click="${() => this._switchForm(form.id)}"
+                          >
+                            ${this._renderFormIcon(form.icon)} ${form.label}
+                          </button>
+                        `,
+                      );
+                    })()}
+                  </div>
+                  <wafir-form
+                    .tabId="${this._activeFormId}"
+                    .fields="${this._getActiveFormConfig()}"
+                    .formLabel="${this._getActiveForm()?.label || ""}"
+                    .hasValidTarget="${this._formHasValidTarget()}"
+                    @form-submit="${this._handleSubmit}"
+                  ></wafir-form>
+                  ${this.isConfigLoading
+                    ? html`
+                        <div
+                          class="loading-overlay"
+                          role="status"
+                          aria-live="polite"
+                          aria-busy="true"
+                        >
+                          <div class="loading-content">
+                            <div class="spinner" aria-hidden="true"></div>
+                            <span class="loading-text">Loading</span>
+                          </div>
+                        </div>
+                      `
+                    : ""}
+                  ${this.configFetchError && !this.isConfigLoading
+                    ? html`
+                        <div
+                          class="error-overlay"
+                          role="alert"
+                          aria-live="assertive"
+                        >
+                          <div class="error-content">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="48"
+                              height="48"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              class="error-icon"
+                              aria-hidden="true"
+                            >
+                              <circle cx="12" cy="12" r="10" />
+                              <line x1="12" y1="8" x2="12" y2="12" />
+                              <line x1="12" y1="16" x2="12.01" y2="16" />
+                            </svg>
+                            <span class="error-title"
+                              >Failed to load configuration</span
+                            >
+                            <span class="error-message"
+                              >${this.configFetchError}</span
+                            >
+                            <button
+                              class="retry-button"
+                              @click="${this._retryFetchConfig}"
+                            >
+                              Retry
+                            </button>
+                          </div>
+                        </div>
+                      `
+                    : ""}
+                </div>
+              </div>
+            `
+          : ""}
+
+        <wafir-highlighter></wafir-highlighter>
+      </div>
     `;
   }
 }

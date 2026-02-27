@@ -175,16 +175,14 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get WAFIR Configuration (Deprecated)
-     * @deprecated
-     * @description DEPRECATED: The widget now fetches config directly from a user-hosted URL. This endpoint is kept for backward compatibility but will be removed in a future version. Fetches and parses .github/wafir.yaml from the target repository.
+     * Get WAFIR Configuration
+     * @description Fetches and parses a wafir configuration file from a user-provided URL. The URL should point to a raw YAML or JSON configuration file.
      */
     get: {
       parameters: {
         query: {
-          installationId: number;
-          owner: string;
-          repo: string;
+          /** @description URL to the raw configuration file (YAML or JSON format) */
+          configUrl: string;
         };
         header?: never;
         path?: never;
@@ -206,7 +204,7 @@ export interface paths {
               title: string;
               /** @description Target destinations for form submissions. Each target defines where and how submissions are stored. */
               targets: {
-                /** @description Unique identifier for this target, referenced by tabs to route submissions. */
+                /** @description Unique identifier for this target, referenced by forms to route submissions. */
                 id: string;
                 /**
                  * @description Target type using MIME-type convention. Currently supported: github/issues, github/project.
@@ -236,24 +234,16 @@ export interface paths {
                  */
                 consoleLog: boolean;
               };
-              /** @description Widget tabs configuration. Defaults to feedback, suggestion, issue if omitted. */
-              tabs?: {
-                /** @description Unique tab identifier */
+              /** @description Widget forms configuration. Forms are displayed as tabs in the UI. Defaults to feedback, suggestion, issue if omitted. */
+              forms?: {
+                /** @description Unique form identifier */
                 id: string;
                 /** @description Display label (defaults to capitalized id) */
                 label?: string;
-                /**
-                 * @description Tab icon
-                 * @enum {string}
-                 */
-                icon?: "thumbsup" | "lightbulb" | "bug";
-                /**
-                 * @description If true, rating from this tab populates project Rating field
-                 * @default false
-                 */
-                isFeedback: boolean;
-                /** @description Form fields for this tab. If omitted, defaults are used for known tab IDs. */
-                fields?: {
+                /** @description Form icon (displayed in tab UI). Can be any unicode character or emoji. Examples: '👍', '💡', '🐞', '⭐', '😀'. */
+                icon?: string;
+                /** @description Form body (fields) for this form. If omitted, defaults are used for known form IDs. */
+                body?: {
                   /**
                    * @description Field input type. Matches GitHub Form Schema types plus Wafir extensions.
                    * @enum {string}
@@ -265,9 +255,16 @@ export interface paths {
                     | "dropdown"
                     | "checkboxes"
                     | "markdown"
-                    | "rating";
+                    | "rating"
+                    | "date";
                   /** @description Unique identifier for the field (used as key in JSON output/issue body). */
                   id?: string;
+                  /**
+                   * @description Controls field visibility. 'none' hides the field from the UI but still includes its value in submissions. Defaults to 'visible'.
+                   * @default visible
+                   * @enum {string}
+                   */
+                  display: "visible" | "none";
                   /** @description Visual and behavioral attributes for the field. */
                   attributes?: {
                     /** @description Display label for the field. */
@@ -282,23 +279,37 @@ export interface paths {
                     render?: string;
                     /** @description Allow multiple selections (dropdown type only). */
                     multiple?: boolean;
-                    /** @description Options for dropdown or checkboxes. */
+                    /** @description Index of the pre-selected option in the options array (dropdown type only). */
+                    default?: number;
+                    /** @description Options for dropdown, checkboxes, or rating fields. */
                     options?:
                       | string[]
                       | {
                           label: string;
                           required?: boolean;
                         }[];
-                    /** @description Custom labels for star rating (Wafir extension only). */
-                    ratingLabels?: string[];
+                    /** @description Unicode character/emoji used as the rating icon (rating type only). Defaults to ⭐. */
+                    icon?: string;
+                    /**
+                     * @description Auto-fill the field with telemetry data. When specified, renders an opt-in checkbox. Values: browserInfo (URL, user agent, viewport), screenshot (captured screenshot), consoleLog (recent console messages).
+                     * @enum {string}
+                     */
+                    autofill?: "browserInfo" | "screenshot" | "consoleLog";
                   };
                   validations?: {
                     /** @description Whether the field is required. */
                     required?: boolean;
                   };
                 }[];
-                /** @description IDs of target(s) for this tab. If omitted or empty, all targets will be used. Each ID must reference a valid target from the top-level targets array. */
+                /** @description IDs of target(s) for this form. If omitted, all targets will be used. If an empty array ([]), no target is selectable and submissions will be disabled for this form (submissionless). Each ID must reference a valid target from the top-level targets array. */
                 targets?: string[];
+                /** @description Labels automatically added to issues created from this form. Similar to GitHub issue form templates. */
+                labels?: string[];
+                /**
+                 * Format: uri
+                 * @description URL to a GitHub issue form template YAML file. When provided, the form fields will be fetched from this template.
+                 */
+                templateUrl?: string;
               }[];
               /** @description Available issue types from the organization (auto-populated) */
               issueTypes?: {
@@ -306,18 +317,18 @@ export interface paths {
                 name?: string;
                 color?: string;
               }[];
-              /** @description Dedicated project for feedback submissions with star ratings */
-              feedbackProject?: {
-                /** @description GitHub Project number for feedback */
-                projectNumber?: number;
-                /** @description Project owner (defaults to repo owner) */
-                owner?: string;
-                /**
-                 * @description Name of the Rating field in the project
-                 * @default Rating
-                 */
-                ratingField: string;
-              };
+            };
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error?: string;
+              message?: string;
             };
           };
         };
@@ -337,6 +348,159 @@ export interface paths {
     };
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/config/template": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get GitHub Issue Form Template
+     * @description Fetches and parses a GitHub Issue Form template from a user-provided URL. Returns the body (fields) and labels from the template.
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description URL to the raw template file (YAML format) */
+          templateUrl: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              /** @description Array of form fields from the template */
+              body: {
+                [key: string]: unknown;
+              }[];
+              /** @description Labels from the template */
+              labels?: string[];
+            };
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error?: string;
+              message?: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error?: string;
+              message?: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/generate/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Generate Sample Config
+     * @description Generates a sample wafir.yaml configuration file based on GitHub repository labels and project fields. Provide your installation ID and an array of targets to analyze. Returns the config as plain text YAML.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          "application/json": {
+            /** @description Your GitHub App installation ID */
+            installationId: number;
+            /** @description Array of targets to analyze */
+            targets: {
+              /**
+               * @description Target type
+               * @enum {string}
+               */
+              type: "github/issues" | "github/project";
+              /** @description Target identifier: "owner/repo" for issues, "owner/projectNumber" for projects */
+              target: string;
+            }[];
+          };
+        };
+      };
+      responses: {
+        /** @description Generated wafir.yaml configuration content */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": string;
+          };
+        };
+        /** @description Default Response */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error?: string;
+              message?: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error?: string;
+              message?: string;
+            };
+          };
+        };
+      };
+    };
     delete?: never;
     options?: never;
     head?: never;
@@ -379,6 +543,67 @@ export interface paths {
     };
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/notifications/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Store Notification
+     * @description Accepts a JSON payload and stores it in S3 in the notifications folder.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              success?: boolean;
+              filename?: string;
+              message?: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error?: string;
+              message?: string;
+            };
+          };
+        };
+      };
+    };
     delete?: never;
     options?: never;
     head?: never;

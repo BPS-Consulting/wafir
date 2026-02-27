@@ -1,5 +1,9 @@
-import { domToDataUrl } from "modern-screenshot";
-import { isCapturing, setCapturedImage } from "../store";
+import {
+  isCapturing,
+  setCapturedImage,
+  setFormScreenshot,
+  getCurrentFormId,
+} from "../store";
 
 export async function takeFullPageScreenshot(
   highlightEl: HTMLElement | null = null,
@@ -52,6 +56,9 @@ export async function takeFullPageScreenshot(
         ? "#ffffff"
         : bgColor;
 
+    // Lazy load modern-screenshot only when actually taking a screenshot
+    const { domToDataUrl } = await import("modern-screenshot");
+
     const dataUrl = await domToDataUrl(document.documentElement, {
       width,
       height,
@@ -68,7 +75,10 @@ export async function takeFullPageScreenshot(
       },
     });
 
+    // Store screenshot both globally (for backward compatibility) and per-form
     setCapturedImage(dataUrl);
+    const formId = getCurrentFormId();
+    setFormScreenshot(formId, dataUrl);
   } catch (err) {
     console.error("Failed to capture full page screenshot", err);
   } finally {

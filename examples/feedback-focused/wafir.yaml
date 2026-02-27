@@ -10,21 +10,22 @@ targets:
     target: your-username/your-repo
     authRef: "YOUR_INSTALLATION_ID" # Replace with your installation ID
 
-# Dedicated project for feedback with rating field
-feedbackProject:
-  projectNumber: 1
-  ratingField: "Rating"
-
-tabs:
+forms:
   - id: feedback
     label: Feedback
     icon: thumbsup
-    isFeedback: true
-    fields:
+    body:
       - id: rating
         type: rating
         attributes:
           label: "How satisfied are you?"
+          icon: "⭐"
+          options:
+            - "Very Unsatisfied"
+            - "Unsatisfied"
+            - "Neutral"
+            - "Satisfied"
+            - "Very Satisfied"
         validations:
           required: true
       - id: comment
