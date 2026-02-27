@@ -13,7 +13,7 @@ pnpm deploy --prod --filter=. lambda-dist
 
 # Compile TS
 echo "Building TypeScript..."
-pnpm run build:ts
+pnpm run build
 
 # Copy built assets
 echo "Copying compiled artifacts..."
