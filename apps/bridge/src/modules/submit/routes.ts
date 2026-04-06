@@ -244,9 +244,7 @@ const submitRoute: FastifyPluginAsync = async (
         if (form?.body && input.formFields) {
           for (const fieldConfig of form.body) {
             if (!fieldConfig.id) continue;
-            const mapTo = (fieldConfig.attributes as any)?.map as
-              | string
-              | undefined;
+            const mapTo = fieldConfig.attributes?.map;
             if (!mapTo) continue;
 
             const fieldValue = input.formFields[fieldConfig.id];
@@ -271,7 +269,7 @@ const submitRoute: FastifyPluginAsync = async (
                     per_page: 100,
                   });
                 const matched = milestonesResponse.data.find(
-                  (m: any) =>
+                  (m: { title: string; number: number }) =>
                     m.title.toLowerCase() ===
                     String(fieldValue).toLowerCase(),
                 );
