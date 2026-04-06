@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "Wafir Issue Reporter",
+  "version": "0.1.0",
+  "description": "Inject the Wafir feedback & issue-reporter widget into any page. Submit GitHub issues without installing the Wafir Bridge app.",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content/injector.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["vendor/wafir.iife.js", "content/main-world.js"],
+      "matches": ["http://*/*", "https://*/*"]
+    }
+  ],
+  "options_page": "options/index.html",
+  "action": {
+    "default_popup": "options/index.html",
+    "default_title": "Wafir Extension Settings",
+    "default_icon": {
+      "16": "icons/icon16.svg",
+      "32": "icons/icon32.svg",
+      "48": "icons/icon48.svg",
+      "128": "icons/icon128.svg"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.svg",
+    "32": "icons/icon32.svg",
+    "48": "icons/icon48.svg",
+    "128": "icons/icon128.svg"
+  }
+}

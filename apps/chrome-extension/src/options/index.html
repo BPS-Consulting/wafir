@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wafir Extension – Settings</title>
+    <link rel="stylesheet" href="./options.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <img src="../icons/icon48.svg" alt="Wafir logo" class="logo" />
+        <div>
+          <h1 class="title">Wafir Issue Reporter</h1>
+          <p class="subtitle">Chrome Extension Settings</p>
+        </div>
+      </header>
+
+      <div id="status-banner" class="banner hidden" aria-live="polite"></div>
+
+      <form id="settings-form" novalidate>
+        <!-- Enable/disable toggle -->
+        <section class="card">
+          <div class="field-row">
+            <div>
+              <label class="label" for="enabled">Enable Widget</label>
+              <p class="hint">
+                When enabled, the Wafir widget is injected into every page you
+                visit.
+              </p>
+            </div>
+            <label class="toggle" aria-label="Enable widget">
+              <input type="checkbox" id="enabled" name="enabled" />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </section>
+
+        <!-- GitHub credentials -->
+        <section class="card">
+          <h2 class="section-title">GitHub Credentials</h2>
+
+          <div class="field">
+            <label class="label" for="githubToken">
+              Personal Access Token (PAT)
+              <span class="required">*</span>
+            </label>
+            <p class="hint">
+              A GitHub PAT with the <code>repo</code> scope. This token is used
+              to create issues on your behalf. Generate one at
+              <a
+                href="https://github.com/settings/personal-access-tokens/new"
+                target="_blank"
+                rel="noopener noreferrer"
+                >github.com/settings/tokens</a
+              >.
+            </p>
+            <input
+              type="password"
+              id="githubToken"
+              name="githubToken"
+              class="input"
+              placeholder="ghp_…"
+              autocomplete="off"
+            />
+          </div>
+        </section>
+
+        <!-- Wafir config -->
+        <section class="card">
+          <h2 class="section-title">Wafir Configuration</h2>
+
+          <div class="field">
+            <label class="label" for="configUrl">
+              Config File URL
+              <span class="required">*</span>
+            </label>
+            <p class="hint">
+              An <strong>HTTPS</strong> URL pointing to your Wafir YAML or JSON
+              configuration file (e.g. a raw GitHub Gist or hosted file). The
+              file must be publicly accessible.
+            </p>
+            <input
+              type="url"
+              id="configUrl"
+              name="configUrl"
+              class="input"
+              placeholder="https://raw.githubusercontent.com/…/wafir.yaml"
+            />
+          </div>
+        </section>
+
+        <!-- ImgBB -->
+        <section class="card">
+          <h2 class="section-title">Screenshot Uploads</h2>
+
+          <div class="notice notice--warning">
+            <strong>⚠️ Screenshot Privacy Warning</strong>
+            <p>
+              Screenshots are uploaded to ImgBB and
+              <strong>expire after&nbsp;5&nbsp;minutes</strong>. Do
+              <strong>not</strong> take screenshots of sensitive information
+              such as passwords, personal data, or confidential documents.
+            </p>
+          </div>
+
+          <div class="field">
+            <label class="label" for="imgbbApiKey">ImgBB API Key</label>
+            <p class="hint">
+              Optional. When provided, screenshots taken with the widget are
+              uploaded to ImgBB (free tier available at
+              <a
+                href="https://api.imgbb.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                >api.imgbb.com</a
+              >) and embedded in the GitHub issue. Leave blank to skip
+              screenshots.
+            </p>
+            <input
+              type="password"
+              id="imgbbApiKey"
+              name="imgbbApiKey"
+              class="input"
+              placeholder="Your ImgBB API key"
+              autocomplete="off"
+            />
+          </div>
+        </section>
+
+        <!-- Actions -->
+        <div class="actions">
+          <button type="submit" class="btn btn--primary" id="save-btn">
+            Save Settings
+          </button>
+          <button type="button" class="btn btn--secondary" id="test-btn">
+            Test Connection
+          </button>
+        </div>
+      </form>
+
+      <!-- Test result -->
+      <div id="test-result" class="banner hidden" aria-live="polite"></div>
+
+      <footer class="footer">
+        <p>
+          Wafir Chrome Extension &mdash;
+          <a
+            href="https://github.com/BPS-Consulting/wafir"
+            target="_blank"
+            rel="noopener noreferrer"
+            >View on GitHub</a
+          >
+        </p>
+      </footer>
+    </div>
+
+    <script type="module" src="./options.js"></script>
+  </body>
+</html>
