@@ -12,33 +12,28 @@ export async function takeFullPageScreenshot(
   isCapturing.set(true);
 
   let highlight: HTMLDivElement | null = null;
-  const originalBodyStyle = {
-    background: "",
-    backgroundColor: "",
-    backgroundImage: "",
-  };
 
   try {
     const htmlEl = document.documentElement;
-    const bodyEl = document.body;
 
     if (highlightEl) {
       const rect = highlightEl.getBoundingClientRect();
+      const borderWidth = 4;
       highlight = document.createElement("div");
       highlight.className = "wafir-temp-highlight";
       Object.assign(highlight.style, {
         position: "absolute",
-        top: `${rect.top + window.scrollY}px`,
-        left: `${rect.left + window.scrollX}px`,
-        width: `${rect.width}px`,
-        height: `${rect.height}px`,
-        outline: "4px solid #2563eb",
-        outlineOffset: "-4px",
+        top: `${rect.top + window.scrollY - borderWidth}px`,
+        left: `${rect.left + window.scrollX - borderWidth}px`,
+        width: `${rect.width + borderWidth * 2}px`,
+        height: `${rect.height + borderWidth * 2}px`,
+        border: `${borderWidth}px solid #2563eb`,
+        boxSizing: "border-box",
         backgroundColor: "rgba(37, 99, 235, 0.1)",
         zIndex: "2147483647",
         pointerEvents: "none",
       });
-      bodyEl.appendChild(highlight);
+      htmlEl.appendChild(highlight);
 
       // Chromium: Ensure paint
       await new Promise((resolve) =>
@@ -46,48 +41,39 @@ export async function takeFullPageScreenshot(
       );
     }
 
-    const htmlStyle = window.getComputedStyle(htmlEl);
-    const bodyStyle = window.getComputedStyle(bodyEl);
+    const width = window.innerWidth;
+    const height = window.innerHeight;
 
-    const isBodyTransparent =
-      bodyStyle.backgroundColor === "rgba(0, 0, 0, 0)" ||
-      bodyStyle.backgroundColor === "transparent";
-    const htmlHasBg =
-      htmlStyle.backgroundColor !== "rgba(0, 0, 0, 0)" ||
-      htmlStyle.backgroundImage !== "none";
+    const computedBgColor = (() => {
+      const htmlBg = window.getComputedStyle(htmlEl).backgroundColor;
+      if (htmlBg && htmlBg !== "rgba(0, 0, 0, 0)" && htmlBg !== "transparent")
+        return htmlBg;
 
-    if (isBodyTransparent && htmlHasBg) {
-      originalBodyStyle.background = bodyEl.style.background;
-      bodyEl.style.background = htmlStyle.background;
-    }
+      const bodyBg = window.getComputedStyle(document.body).backgroundColor;
+      if (bodyBg && bodyBg !== "rgba(0, 0, 0, 0)" && bodyBg !== "transparent")
+        return bodyBg;
 
-    const width = Math.max(
-      htmlEl.scrollWidth,
-      bodyEl.scrollWidth,
-      window.innerWidth,
-    );
-    const height = Math.max(
-      htmlEl.scrollHeight,
-      bodyEl.scrollHeight,
-      window.innerHeight,
-    );
+      return "#ffffff";
+    })();
 
     const { domToDataUrl } = await import("modern-screenshot");
 
-    const dataUrl = await domToDataUrl(bodyEl, {
+    const dataUrl = await domToDataUrl(htmlEl, {
       width,
       height,
-      backgroundColor:
-        htmlStyle.backgroundColor !== "transparent"
-          ? htmlStyle.backgroundColor
-          : "#ffffff",
+      backgroundColor: computedBgColor,
+      style: {
+        transform: `translate(${-window.scrollX}px, ${-window.scrollY}px)`,
+        backgroundColor: computedBgColor,
+        minHeight: `${Math.max(document.documentElement.scrollHeight, height)}px`,
+      },
       scale: 1,
       filter: (node: Node) => {
         if (node instanceof HTMLElement) {
           const tagName = node.tagName.toLowerCase();
           if (node.classList.contains("wafir-temp-highlight")) return true;
           if (tagName.startsWith("wafir-")) return false;
-          if (["script", "style", "link"].includes(tagName)) return false;
+          if (["script"].includes(tagName)) return false;
         }
         return true;
       },
@@ -99,7 +85,6 @@ export async function takeFullPageScreenshot(
     console.error("Failed to capture screenshot", err);
   } finally {
     highlight?.remove();
-    document.body.style.background = originalBodyStyle.background;
     isCapturing.set(false);
   }
 }
