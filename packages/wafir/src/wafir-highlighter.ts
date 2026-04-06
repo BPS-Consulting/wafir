@@ -8,7 +8,7 @@ import {
   isCapturing,
 } from "./store";
 import { StoreController } from "@nanostores/lit";
-import { takeFullPageScreenshot } from "./utils/screenshot";
+import { takeViewportScreenshot } from "./utils/screenshot";
 
 @customElement("wafir-highlighter")
 export class WafirHighlighter extends LitElement {
@@ -78,7 +78,7 @@ export class WafirHighlighter extends LitElement {
 
     const el = hoveredElement.get();
     if (el) {
-      await takeFullPageScreenshot(el);
+      await takeViewportScreenshot(el);
       stopSelection();
     }
   }

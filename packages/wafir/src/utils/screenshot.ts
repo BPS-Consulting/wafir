@@ -5,7 +5,7 @@ import {
   getCurrentFormId,
 } from "../store";
 
-export async function takeFullPageScreenshot(
+export async function takeViewportScreenshot(
   highlightEl: HTMLElement | null = null,
 ): Promise<void> {
   if (isCapturing.get()) return;
@@ -67,7 +67,8 @@ export async function takeFullPageScreenshot(
       style: {
         transform: `translate(${-window.scrollX}px, ${-window.scrollY}px)`,
         backgroundColor: computedBgColor,
-        minHeight: `${Math.max(document.documentElement.scrollHeight, height)}px`,
+        height: `${height}px`,
+        overflow: "hidden",
       },
       scale: 1,
       filter: (node: Node) => {

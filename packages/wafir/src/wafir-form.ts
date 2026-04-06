@@ -19,7 +19,7 @@ import {
   formAutofillEnabled,
   isCapturing,
 } from "./store";
-import { takeFullPageScreenshot } from "./utils/screenshot";
+import { takeViewportScreenshot } from "./utils/screenshot";
 import { resolveDateValue, isDateToken } from "./utils/date";
 import type { FieldConfigApi as FieldConfig } from "./api/client";
 import type { BrowserInfo, ConsoleLog } from "./utils/telemetry";
@@ -122,7 +122,7 @@ export class WafirForm extends LitElement {
         }
       } else if (autofillType === "screenshot") {
         // Automatically take a screenshot when checkbox is checked
-        takeFullPageScreenshot();
+        takeViewportScreenshot();
       }
       setTabFormData(this.tabId, { ...currentData, [fieldId]: value });
     } else {
@@ -177,7 +177,7 @@ export class WafirForm extends LitElement {
             >
           </div>
           <div class="screenshot-actions">
-            <button type="button" @click="${() => takeFullPageScreenshot()}">
+            <button type="button" @click="${() => takeViewportScreenshot()}">
               Capture Screenshot
             </button>
           </div>
@@ -218,7 +218,7 @@ export class WafirForm extends LitElement {
               <div class="screenshot-actions">
                 <button
                   type="button"
-                  @click="${() => takeFullPageScreenshot()}"
+                  @click="${() => takeViewportScreenshot()}"
                 >
                   Retake
                 </button>
