@@ -61,6 +61,8 @@ export async function takeFullPageScreenshot(
     const dataUrl = await domToDataUrl(htmlEl, {
       width,
       height,
+      type: "image/webp",
+      quality: 0.8,
       backgroundColor: computedBgColor,
       style: {
         transform: `translate(${-window.scrollX}px, ${-window.scrollY}px)`,
