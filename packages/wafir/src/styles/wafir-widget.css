@@ -257,6 +257,14 @@ button[part="button"] .icon-char {
   border-radius: var(--wafir-modal-border-radius, 12px);
 }
 
+/* Blocking loading overlay (standalone, not overlaying content) */
+.loading-overlay.blocking {
+  position: relative;
+  min-height: 300px;
+  background: var(--wafir-modal-bg, white);
+  backdrop-filter: none;
+}
+
 .loading-content {
   display: flex;
   flex-direction: column;
@@ -328,6 +336,14 @@ button[part="button"] .icon-char {
   z-index: 10000;
   backdrop-filter: blur(2px);
   border-radius: var(--wafir-modal-border-radius, 12px);
+}
+
+/* Blocking error overlay (standalone, not overlaying content) */
+.error-overlay.blocking {
+  position: relative;
+  min-height: 300px;
+  background: var(--wafir-modal-bg, white);
+  backdrop-filter: none;
 }
 
 .error-content {
