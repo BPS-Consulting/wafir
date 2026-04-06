@@ -670,24 +670,27 @@ export class WafirWidget extends LitElement {
     // This preserves component state (like autofill checkbox state)
     const isCapturing = this._isCapturingController.value;
 
+    // Always show screenshot overlay when capturing, even during selection
+    const screenshotOverlay = isCapturing
+      ? html`
+          <div
+            class="screenshot-overlay"
+            role="status"
+            aria-live="polite"
+            aria-busy="true"
+          >
+            <div class="spinner" aria-hidden="true"></div>
+            <span class="screenshot-text">Screenshotting</span>
+          </div>
+        `
+      : null;
+
     if (this._isSelectingController.value) {
-      return html`<wafir-highlighter></wafir-highlighter>`;
+      return html`${screenshotOverlay}<wafir-highlighter></wafir-highlighter>`;
     }
 
     return html`
-      ${isCapturing
-        ? html`
-            <div
-              class="screenshot-overlay"
-              role="status"
-              aria-live="polite"
-              aria-busy="true"
-            >
-              <div class="spinner" aria-hidden="true"></div>
-              <span class="screenshot-text">Screenshotting</span>
-            </div>
-          `
-        : null}
+      ${screenshotOverlay}
       <div style="${isCapturing ? "display: none;" : ""}">
         ${this._hasCustomTrigger
           ? html`<div

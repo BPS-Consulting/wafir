@@ -1,7 +1,12 @@
 import { LitElement, html, unsafeCSS } from "lit";
 import highlighterStyles from "./styles/wafir-highlighter.css?inline";
 import { customElement, state } from "lit/decorators.js";
-import { isSelecting, hoveredElement, stopSelection } from "./store";
+import {
+  isSelecting,
+  hoveredElement,
+  stopSelection,
+  isCapturing,
+} from "./store";
 import { StoreController } from "@nanostores/lit";
 import { takeFullPageScreenshot } from "./utils/screenshot";
 
@@ -32,7 +37,8 @@ export class WafirHighlighter extends LitElement {
   };
 
   private _handleMouseMove = (e: MouseEvent) => {
-    if (!isSelecting.get()) return;
+    // Block interaction while capturing screenshot
+    if (!isSelecting.get() || isCapturing.get()) return;
 
     // Hide overlay momentarily to get the element underneath
     const target = this.shadowRoot?.querySelector(".overlay") as HTMLElement;
@@ -67,6 +73,9 @@ export class WafirHighlighter extends LitElement {
   }
 
   private async _handleClick() {
+    // Block interaction while capturing screenshot
+    if (isCapturing.get()) return;
+
     const el = hoveredElement.get();
     if (el) {
       await takeFullPageScreenshot(el);

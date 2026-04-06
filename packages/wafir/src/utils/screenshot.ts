@@ -7,7 +7,12 @@ import {
 
 export async function takeFullPageScreenshot(
   highlightEl: HTMLElement | null = null,
-) {
+): Promise<void> {
+  // Block concurrent screenshot attempts - silently ignore if already capturing
+  if (isCapturing.get()) {
+    return;
+  }
+
   isCapturing.set(true);
 
   // Give time for UI to hide if needed (though Lit reactive update should handle it if we wait a tick)
