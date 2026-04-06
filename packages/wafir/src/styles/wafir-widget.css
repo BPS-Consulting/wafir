@@ -286,6 +286,34 @@ button[part="button"] .icon-char {
   }
 }
 
+/* Screenshot overlay - full page */
+.screenshot-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 2147483647;
+  pointer-events: all;
+}
+
+.screenshot-overlay .spinner {
+  width: 48px;
+  height: 48px;
+}
+
+.screenshot-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
 /* Error overlay */
 .error-overlay {
   position: absolute;
