@@ -98,6 +98,13 @@ const fieldSchema = {
           description:
             "Auto-fill the field with telemetry data. When specified, renders an opt-in checkbox. Values: browserInfo (URL, user agent, viewport), screenshot (captured screenshot), consoleLog (recent console messages).",
         },
+        // Wafir Extension: Map field to a GitHub issue property
+        map: {
+          type: "string",
+          enum: ["milestone", "assignees"],
+          description:
+            "Maps this dropdown field to a GitHub issue property. 'milestone' sets the issue milestone (matched by title). 'assignees' sets the issue assignees (GitHub usernames). Mapped fields are excluded from the issue body.",
+        },
       },
     },
     validations: {

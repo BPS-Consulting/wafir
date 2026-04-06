@@ -26,6 +26,10 @@ export interface GithubSubmissionContext extends SubmissionContext {
   issueType?: string;
   /** Form fields to be mapped to project fields */
   formFields?: Record<string, unknown>;
+  /** Milestone number to set on the issue */
+  milestone?: number;
+  /** GitHub usernames to assign to the issue */
+  assignees?: string[];
 }
 
 /**
@@ -134,6 +138,8 @@ export class GithubIssueSubmission extends SubmissionBase {
           body: string;
           labels: string[];
           type?: string;
+          milestone?: number;
+          assignees?: string[];
         } = {
           owner: context.owner,
           repo: context.repo,
@@ -149,6 +155,16 @@ export class GithubIssueSubmission extends SubmissionBase {
         // Add issue type if specified (requires repository to have issue types enabled)
         if (context.issueType) {
           createParams.type = context.issueType;
+        }
+
+        // Add milestone if specified
+        if (context.milestone !== undefined) {
+          createParams.milestone = context.milestone;
+        }
+
+        // Add assignees if specified
+        if (context.assignees && context.assignees.length > 0) {
+          createParams.assignees = context.assignees;
         }
 
         const issue = await context.appOctokit.rest.issues.create(createParams);

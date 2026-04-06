@@ -4,7 +4,9 @@
   "title": "Wafir Configuration",
   "description": "Configuration schema for Wafir widget - feedback, bug reports, and telemetry collection",
   "type": "object",
-  "required": ["targets"],
+  "required": [
+    "targets"
+  ],
   "properties": {
     "title": {
       "type": "string",
@@ -17,7 +19,12 @@
       "description": "Target destinations for form submissions. Each target defines where and how submissions are stored.",
       "items": {
         "type": "object",
-        "required": ["id", "type", "target", "authRef"],
+        "required": [
+          "id",
+          "type",
+          "target",
+          "authRef"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -25,7 +32,10 @@
           },
           "type": {
             "type": "string",
-            "enum": ["github/issues", "github/project"],
+            "enum": [
+              "github/issues",
+              "github/project"
+            ],
             "description": "Target type using MIME-type convention. Currently supported: github/issues, github/project."
           },
           "target": {
@@ -65,7 +75,9 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id"],
+        "required": [
+          "id"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -83,7 +95,9 @@
             "type": "array",
             "items": {
               "type": "object",
-              "required": ["type"],
+              "required": [
+                "type"
+              ],
               "properties": {
                 "type": {
                   "type": "string",
@@ -105,7 +119,10 @@
                 },
                 "display": {
                   "type": "string",
-                  "enum": ["visible", "none"],
+                  "enum": [
+                    "visible",
+                    "none"
+                  ],
                   "default": "visible",
                   "description": "Controls field visibility. 'none' hides the field from the UI but still includes its value in submissions. Defaults to 'visible'."
                 },
@@ -154,7 +171,9 @@
                           "type": "array",
                           "items": {
                             "type": "object",
-                            "required": ["label"],
+                            "required": [
+                              "label"
+                            ],
                             "properties": {
                               "label": {
                                 "type": "string"
@@ -173,8 +192,20 @@
                     },
                     "autofill": {
                       "type": "string",
-                      "enum": ["browserInfo", "screenshot", "consoleLog"],
+                      "enum": [
+                        "browserInfo",
+                        "screenshot",
+                        "consoleLog"
+                      ],
                       "description": "Auto-fill the field with telemetry data. When specified, renders an opt-in checkbox. Values: browserInfo (URL, user agent, viewport), screenshot (captured screenshot), consoleLog (recent console messages)."
+                    },
+                    "map": {
+                      "type": "string",
+                      "enum": [
+                        "milestone",
+                        "assignees"
+                      ],
+                      "description": "Maps this dropdown field to a GitHub issue property. 'milestone' sets the issue milestone (matched by title). 'assignees' sets the issue assignees (GitHub usernames). Mapped fields are excluded from the issue body."
                     }
                   }
                 },

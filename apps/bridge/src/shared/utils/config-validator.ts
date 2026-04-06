@@ -123,6 +123,7 @@ interface FieldConfig {
     label?: string;
     options?: string[] | Array<{ label: string; required?: boolean }>;
     icon?: string;
+    map?: "milestone" | "assignees";
   };
   validations?: {
     required?: boolean;
