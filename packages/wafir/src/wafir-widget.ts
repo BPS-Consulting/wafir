@@ -675,6 +675,19 @@ export class WafirWidget extends LitElement {
     }
 
     return html`
+      ${isCapturing
+        ? html`
+            <div
+              class="screenshot-overlay"
+              role="status"
+              aria-live="polite"
+              aria-busy="true"
+            >
+              <div class="spinner" aria-hidden="true"></div>
+              <span class="screenshot-text">Screenshotting</span>
+            </div>
+          `
+        : null}
       <div style="${isCapturing ? "display: none;" : ""}">
         ${this._hasCustomTrigger
           ? html`<div

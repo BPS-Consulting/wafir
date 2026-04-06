@@ -49,12 +49,22 @@ export async function takeFullPageScreenshot(
       window.innerHeight,
     );
 
-    const computedStyle = window.getComputedStyle(document.body);
-    const bgColor = computedStyle.backgroundColor;
-    const backgroundColor =
-      bgColor === "rgba(0, 0, 0, 0)" || bgColor === "transparent"
-        ? "#ffffff"
-        : bgColor;
+    const getCanvasColor = () => {
+      const bodyStyle = window.getComputedStyle(document.body);
+      const htmlStyle = window.getComputedStyle(document.documentElement);
+
+      // Use body color if set, otherwise html color, otherwise white
+      const bg = bodyStyle.backgroundColor;
+      if (bg && bg !== "rgba(0, 0, 0, 0)" && bg !== "transparent") return bg;
+
+      const htmlBg = htmlStyle.backgroundColor;
+      if (htmlBg && htmlBg !== "rgba(0, 0, 0, 0)" && htmlBg !== "transparent")
+        return htmlBg;
+
+      return "#ffffff";
+    };
+
+    const backgroundColor = getCanvasColor();
 
     // Lazy load modern-screenshot only when actually taking a screenshot
     const { domToDataUrl } = await import("modern-screenshot");
@@ -63,6 +73,7 @@ export async function takeFullPageScreenshot(
       width,
       height,
       backgroundColor,
+      scale: 1,
       filter: (node: Node) => {
         if (node instanceof HTMLElement) {
           const tagName = node.tagName.toLowerCase();
