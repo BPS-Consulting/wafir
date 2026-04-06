@@ -15,7 +15,7 @@ targets:
 forms:
   - id: feedback
     label: Feedback
-    icon: thumbsup
+    icon: "👍"
     labels:
       - feedback
     targets: [project]
@@ -41,7 +41,7 @@ forms:
 
   - id: suggestion
     label: Suggestion
-    icon: lightbulb
+    icon: "💡"
     labels:
       - enhancement
     targets: [project]
@@ -64,12 +64,9 @@ forms:
         attributes:
           label: "Business value"
           options:
-            - label: "Low"
-              value: "Low"
-            - label: "Medium"
-              value: "Medium"
-            - label: "High"
-              value: "High"
+            - "Low"
+            - "Medium"
+            - "High"
         validations:
           required: false
       - id: needed
@@ -77,17 +74,15 @@ forms:
         attributes:
           label: "Needed"
           options:
-            - label: "Later"
-              value: "Later"
-            - label: "Soon"
-              value: "Soon"
-            - label: "Now"
-              value: "Now"
+            - "Later"
+            - "Soon"
+            - "Now"
         validations:
           required: false
+
   - id: issue
     label: Issue
-    icon: bug
+    icon: "🐞"
     labels:
       - bug
     targets: [default]
@@ -105,7 +100,6 @@ forms:
           placeholder: "Please include steps to reproduce and expected vs actual behavior"
         validations:
           required: true
-      # Opt-in telemetry fields - users choose what to share
       - id: browser-info
         type: textarea
         attributes:
@@ -122,10 +116,11 @@ forms:
           required: false
 
   - id: question
-    label: ❓Question
-    targets: [none]
+    label: Question
+    icon: "❓"
+    targets: []
     body:
       - id: info
         type: markdown
         attributes:
-          value: "Please ask your question in our GitHub Discussions forum: https://github.com/BPS-Consulting/wafir/discussions"
+          value: "Please ask your question in our [GitHub Discussions forum](https://github.com/BPS-Consulting/wafir/discussions)."
