@@ -71,9 +71,10 @@ async function handleConfig(
 
   let config: unknown;
   try {
+    const pathname = url.pathname;
     const isYaml =
-      configUrl.endsWith(".yaml") ||
-      configUrl.endsWith(".yml");
+      pathname.endsWith(".yaml") ||
+      pathname.endsWith(".yml");
     if (isYaml) {
       config = yaml.load(text);
     } else {
@@ -177,6 +178,9 @@ async function uploadScreenshot(
 
 // ─── Issue body formatter ─────────────────────────────────────────────────────
 
+// Field IDs handled separately (not rendered in the main field loop)
+const AUTOFILL_FIELD_IDS = new Set(["screenshot", "browser-info", "console-logs"]);
+
 function buildIssueBody(
   formFields: Record<string, unknown>,
   fieldOrder: string[],
@@ -191,8 +195,8 @@ function buildIssueBody(
 
     if (value === undefined || value === null || value === "") continue;
 
-    // Skip internal screenshot/browserInfo fields – handled separately
-    if (fieldId === "screenshot" || fieldId === "browser-info" || fieldId === "console-logs") {
+    // Skip autofill fields – they are rendered in dedicated sections below
+    if (AUTOFILL_FIELD_IDS.has(fieldId)) {
       continue;
     }
 

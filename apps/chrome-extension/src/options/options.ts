@@ -63,7 +63,7 @@ form.addEventListener("submit", async (e) => {
 
   // Basic validation
   if (patch.configUrl && !/^https?:\/\//.test(patch.configUrl)) {
-    showBanner(statusBanner, "Config URL must start with https://", "error");
+    showBanner(statusBanner, "Config URL must start with http:// or https://", "error");
     fields.configUrl.focus();
     return;
   }
@@ -128,7 +128,7 @@ testBtn.addEventListener("click", async () => {
     });
     if (response.ok) {
       const user = (await response.json()) as { login?: string };
-      results.push(`✓ GitHub token is valid (authenticated as ${user.login ?? "unknown"}).`);
+      results.push(`✓ GitHub token is valid (authenticated as ${user.login ?? "authenticated user"}).`);
     } else if (response.status === 401) {
       results.push("✗ GitHub token is invalid or expired.");
       allOk = false;

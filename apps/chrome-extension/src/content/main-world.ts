@@ -35,14 +35,22 @@
           ? input.href
           : (input as Request).url;
 
-    if (!url.startsWith(BRIDGE_URL)) {
+    // Only intercept requests to our synthetic bridge origin.
+    // Use origin comparison (not startsWith) to avoid matching subdomains like
+    // "https://wafir-extension.invalid.attacker.com".
+    let parsedUrl: URL | null = null;
+    try {
+      parsedUrl = new URL(url);
+    } catch {
+      return _originalFetch(input, init);
+    }
+    if (parsedUrl.origin !== BRIDGE_URL) {
       return _originalFetch(input, init);
     }
 
-    const urlObj = new URL(url);
-    const path = urlObj.pathname;
+    const path = parsedUrl.pathname;
     const params: Record<string, string> = Object.fromEntries(
-      urlObj.searchParams.entries(),
+      parsedUrl.searchParams.entries(),
     );
     const method = (init?.method ?? "GET").toUpperCase();
 
