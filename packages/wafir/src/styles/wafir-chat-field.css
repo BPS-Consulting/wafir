@@ -12,6 +12,7 @@
 .chat-container {
   display: flex;
   flex-direction: column;
+  margin-top: 16px;
   height: 300px;
   border: 1px solid var(--wafir-form-border-color, #d1d5db);
   border-radius: var(--wafir-form-border-radius, 6px);

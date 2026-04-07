@@ -2,6 +2,7 @@
 import { LitElement, html, unsafeCSS } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import chatFieldStyles from "./styles/wafir-chat-field.css?inline";
+import { sendChatMessage } from "./api/client.js";
 
 interface ChatMessage {
   role: "user" | "assistant" | "error";
@@ -14,12 +15,6 @@ interface ChatMessage {
  */
 @customElement("wafir-chat-field")
 export class WafirChatField extends LitElement {
-  /**
-   * The Bridge API URL for chat requests.
-   */
-  @property({ type: String, attribute: "bridge-url" })
-  bridgeUrl = "";
-
   /**
    * Placeholder text for the input field.
    */
@@ -53,17 +48,6 @@ export class WafirChatField extends LitElement {
   static styles = [unsafeCSS(chatFieldStyles)];
 
   /**
-   * Gets the effective Bridge URL.
-   */
-  private _getBridgeUrl(): string {
-    return (
-      this.bridgeUrl ||
-      (import.meta as any).env?.VITE_WAFIR_API_URL ||
-      "https://v6hvmahyx2.execute-api.us-east-2.amazonaws.com"
-    );
-  }
-
-  /**
    * Sends a message to the chat API.
    */
   private async _sendMessage(): Promise<void> {
@@ -81,36 +65,24 @@ export class WafirChatField extends LitElement {
     this._scrollToBottom();
 
     try {
-      const response = await fetch(`${this._getBridgeUrl()}/chat/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message }),
-      });
+      const result = await sendChatMessage(message);
 
-      if (response.status === 403) {
+      if (result.error === "not authorized") {
         // Not authorized
         this._isAuthorized = false;
         this._messages = []; // Clear messages
         return;
       }
 
-      if (!response.ok) {
-        throw new Error(`Chat request failed: ${response.status}`);
-      }
-
-      const data = (await response.json()) as { reply: string; error?: string };
-
-      if (data.error) {
+      if (result.error) {
         this._messages = [
           ...this._messages,
-          { role: "error", content: data.error },
+          { role: "error", content: result.error },
         ];
-      } else {
+      } else if (result.reply) {
         this._messages = [
           ...this._messages,
-          { role: "assistant", content: data.reply },
+          { role: "assistant", content: result.reply },
         ];
       }
     } catch (error) {
