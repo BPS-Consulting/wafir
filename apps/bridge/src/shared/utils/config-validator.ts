@@ -14,11 +14,6 @@ const DEFAULT_CONFIG: WafirConfig = {
       authRef: "",
     },
   ],
-  telemetry: {
-    screenshot: true,
-    browserInfo: true,
-    consoleLog: false,
-  },
   forms: [
     {
       id: "feedback",
