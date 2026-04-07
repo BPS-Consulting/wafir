@@ -213,3 +213,35 @@ export const submitIssue = async (params: SubmitIssueParams) => {
 
   return response.data;
 };
+
+/**
+ * Sends a chat message to the Bridge API.
+ * @param message - The user's message
+ * @param bridgeUrl - Optional custom bridge URL
+ * @returns The AI's reply or an error
+ */
+export const sendChatMessage = async (
+  message: string,
+  bridgeUrl?: string,
+): Promise<{ reply?: string; error?: string }> => {
+  const urlToUse = bridgeUrl || currentBridgeUrl;
+
+  const response = await fetch(`${urlToUse}/chat/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ message }),
+  });
+
+  if (response.status === 403) {
+    return { error: "not authorized" };
+  }
+
+  if (!response.ok) {
+    return { error: `Chat request failed: ${response.status}` };
+  }
+
+  const data = (await response.json()) as { reply?: string; error?: string };
+  return data;
+};

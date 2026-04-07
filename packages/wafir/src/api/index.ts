@@ -4,658 +4,691 @@
  */
 
 export interface paths {
-  "/auth/github": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Initiate GitHub OAuth
-     * @description Redirects to GitHub OAuth for user authorization
-     */
-    get: {
-      parameters: {
-        query: {
-          installationId: string;
-          returnUrl?: string;
+    "/auth/github": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Default Response */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/auth/github/callback": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * GitHub OAuth Callback
-     * @description Handles OAuth callback from GitHub
-     */
-    get: {
-      parameters: {
-        query: {
-          code: string;
-          state: string;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Default Response */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/auth/status/{installationId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Check Auth Status
-     * @description Check if user token exists for installation
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          installationId: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Default Response */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              connected?: boolean;
-              installationId?: number;
+        /**
+         * Initiate GitHub OAuth
+         * @description Redirects to GitHub OAuth for user authorization
+         */
+        get: {
+            parameters: {
+                query: {
+                    installationId: string;
+                    returnUrl?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
             };
-          };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
         };
-      };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/auth/{installationId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Disconnect Auth
-     * @description Remove stored user token for installation
-     */
-    delete: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          installationId: string;
+    "/auth/github/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Default Response */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
+        /**
+         * GitHub OAuth Callback
+         * @description Handles OAuth callback from GitHub
+         */
+        get: {
+            parameters: {
+                query: {
+                    code: string;
+                    state: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
         };
-      };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/config/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get WAFIR Configuration
-     * @description Fetches and parses a wafir configuration file from a user-provided URL. The URL should point to a raw YAML or JSON configuration file.
-     */
-    get: {
-      parameters: {
-        query: {
-          /** @description URL to the raw configuration file (YAML or JSON format) */
-          configUrl: string;
+    "/auth/status/{installationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Default Response */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              /**
-               * @description Modal title
-               * @default Contact Us
-               */
-              title: string;
-              /** @description Target destinations for form submissions. Each target defines where and how submissions are stored. */
-              targets: {
-                /** @description Unique identifier for this target, referenced by forms to route submissions. */
-                id: string;
-                /**
-                 * @description Target type using MIME-type convention. Currently supported: github/issues, github/project.
-                 * @enum {string}
-                 */
-                type: "github/issues" | "github/project";
-                /** @description Target identifier. Format depends on type: 'owner/repo' for github/issues, 'owner/projectNum' for github/project. */
-                target: string;
-                /** @description Authentication reference used to authorize communication with the target. For GitHub types, this is the installation ID. */
-                authRef: string;
-              }[];
-              /** @description Automatic data collection settings */
-              telemetry?: {
-                /**
-                 * @description Enable screenshot capture
-                 * @default true
-                 */
-                screenshot: boolean;
-                /**
-                 * @description Collect URL, user agent, viewport, language
-                 * @default true
-                 */
-                browserInfo: boolean;
-                /**
-                 * @description Capture console messages
-                 * @default false
-                 */
-                consoleLog: boolean;
-              };
-              /** @description Widget forms configuration. Forms are displayed as tabs in the UI. Defaults to feedback, suggestion, issue if omitted. */
-              forms?: {
-                /** @description Unique form identifier */
-                id: string;
-                /** @description Display label (defaults to capitalized id) */
-                label?: string;
-                /** @description Form icon (displayed in tab UI). Can be any unicode character or emoji. Examples: '👍', '💡', '🐞', '⭐', '😀'. */
-                icon?: string;
-                /** @description Form body (fields) for this form. If omitted, defaults are used for known form IDs. */
-                body?: {
-                  /**
-                   * @description Field input type. Matches GitHub Form Schema types plus Wafir extensions.
-                   * @enum {string}
-                   */
-                  type:
-                    | "input"
-                    | "email"
-                    | "textarea"
-                    | "dropdown"
-                    | "checkboxes"
-                    | "markdown"
-                    | "rating"
-                    | "date";
-                  /** @description Unique identifier for the field (used as key in JSON output/issue body). */
-                  id?: string;
-                  /**
-                   * @description Controls field visibility. 'none' hides the field from the UI but still includes its value in submissions. Defaults to 'visible'.
-                   * @default visible
-                   * @enum {string}
-                   */
-                  display: "visible" | "none";
-                  /** @description Visual and behavioral attributes for the field. */
-                  attributes?: {
-                    /** @description Display label for the field. */
-                    label?: string;
-                    /** @description Helper text displayed below the label. */
-                    description?: string;
-                    /** @description Placeholder text (input, textarea, email only). */
-                    placeholder?: string;
-                    /** @description Default value or the Markdown content (markdown type). */
-                    value?: string;
-                    /** @description Syntax highlighting style for textarea (e.g., 'shell', 'javascript'). */
-                    render?: string;
-                    /** @description Allow multiple selections (dropdown type only). */
-                    multiple?: boolean;
-                    /** @description Index of the pre-selected option in the options array (dropdown type only). */
-                    default?: number;
-                    /** @description Options for dropdown, checkboxes, or rating fields. */
-                    options?:
-                      | string[]
-                      | {
-                          label: string;
-                          required?: boolean;
+        /**
+         * Check Auth Status
+         * @description Check if user token exists for installation
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    installationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            connected?: boolean;
+                            installationId?: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/{installationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Disconnect Auth
+         * @description Remove stored user token for installation
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    installationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send a chat message
+         * @description Sends a message to the AI chat service and returns a response. Only authorized origins can use this endpoint.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description The user's message to send to the chat service */
+                        message: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description The AI's response */
+                            reply?: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Error message for unauthorized access */
+                            error?: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/config/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get WAFIR Configuration
+         * @description Fetches and parses a wafir configuration file from a user-provided URL. The URL should point to a raw YAML or JSON configuration file.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description URL to the raw configuration file (YAML or JSON format) */
+                    configUrl: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Modal title
+                             * @default Contact Us
+                             */
+                            title: string;
+                            /** @description Target destinations for form submissions. Each target defines where and how submissions are stored. */
+                            targets: {
+                                /** @description Unique identifier for this target, referenced by forms to route submissions. */
+                                id: string;
+                                /**
+                                 * @description Target type using MIME-type convention. Currently supported: github/issues, github/project.
+                                 * @enum {string}
+                                 */
+                                type: "github/issues" | "github/project";
+                                /** @description Target identifier. Format depends on type: 'owner/repo' for github/issues, 'owner/projectNum' for github/project. */
+                                target: string;
+                                /** @description Authentication reference used to authorize communication with the target. For GitHub types, this is the installation ID. */
+                                authRef: string;
+                            }[];
+                            /** @description Widget forms configuration. Forms are displayed as tabs in the UI. Defaults to feedback, suggestion, issue if omitted. */
+                            forms?: {
+                                /** @description Unique form identifier */
+                                id: string;
+                                /** @description Display label (defaults to capitalized id) */
+                                label?: string;
+                                /** @description Form icon (displayed in tab UI). Can be any unicode character or emoji. Examples: '👍', '💡', '🐞', '⭐', '😀'. */
+                                icon?: string;
+                                /** @description Form body (fields) for this form. If omitted, defaults are used for known form IDs. */
+                                body?: {
+                                    /**
+                                     * @description Field input type. Matches GitHub Form Schema types plus Wafir extensions.
+                                     * @enum {string}
+                                     */
+                                    type: "input" | "email" | "textarea" | "dropdown" | "checkboxes" | "markdown" | "rating" | "date" | "chat";
+                                    /** @description Unique identifier for the field (used as key in JSON output/issue body). */
+                                    id?: string;
+                                    /**
+                                     * @description Controls field visibility. 'none' hides the field from the UI but still includes its value in submissions. Defaults to 'visible'.
+                                     * @default visible
+                                     * @enum {string}
+                                     */
+                                    display: "visible" | "none";
+                                    /** @description Visual and behavioral attributes for the field. */
+                                    attributes?: {
+                                        /** @description Display label for the field. */
+                                        label?: string;
+                                        /** @description Helper text displayed below the label. */
+                                        description?: string;
+                                        /** @description Placeholder text (input, textarea, email only). */
+                                        placeholder?: string;
+                                        /** @description Default value or the Markdown content (markdown type). */
+                                        value?: string;
+                                        /** @description Syntax highlighting style for textarea (e.g., 'shell', 'javascript'). */
+                                        render?: string;
+                                        /** @description Allow multiple selections (dropdown type only). */
+                                        multiple?: boolean;
+                                        /** @description Index of the pre-selected option in the options array (dropdown type only). */
+                                        default?: number;
+                                        /** @description Options for dropdown, checkboxes, or rating fields. */
+                                        options?: string[] | {
+                                            label: string;
+                                            required?: boolean;
+                                        }[];
+                                        /** @description Unicode character/emoji used as the rating icon (rating type only). Defaults to ⭐. */
+                                        icon?: string;
+                                        /**
+                                         * @description Auto-fill the field with telemetry data. When specified, renders an opt-in checkbox. Values: browserInfo (URL, user agent, viewport), screenshot (captured screenshot), consoleLog (recent console messages).
+                                         * @enum {string}
+                                         */
+                                        autofill?: "browserInfo" | "screenshot" | "consoleLog";
+                                    };
+                                    validations?: {
+                                        /** @description Whether the field is required. */
+                                        required?: boolean;
+                                    };
+                                }[];
+                                /** @description IDs of target(s) for this form. If omitted, all targets will be used. If an empty array ([]), no target is selectable and submissions will be disabled for this form (submissionless). Each ID must reference a valid target from the top-level targets array. */
+                                targets?: string[];
+                                /** @description Labels automatically added to issues created from this form. Similar to GitHub issue form templates. */
+                                labels?: string[];
+                                /**
+                                 * Format: uri
+                                 * @description URL to a GitHub issue form template YAML file. When provided, the form fields will be fetched from this template.
+                                 */
+                                templateUrl?: string;
+                            }[];
+                            /** @description Available issue types from the organization (auto-populated) */
+                            issueTypes?: {
+                                id?: number;
+                                name?: string;
+                                color?: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                            message?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/config/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get GitHub Issue Form Template
+         * @description Fetches and parses a GitHub Issue Form template from a user-provided URL. Returns the body (fields) and labels from the template.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description URL to the raw template file (YAML format) */
+                    templateUrl: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Array of form fields from the template */
+                            body: {
+                                [key: string]: unknown;
+                            }[];
+                            /** @description Labels from the template */
+                            labels?: string[];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                            message?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/generate/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generate Sample Config
+         * @description Generates a sample wafir.yaml configuration file based on GitHub repository labels and project fields. Provide your installation ID and an array of targets to analyze. Returns the config as plain text YAML.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Your GitHub App installation ID */
+                        installationId: number;
+                        /** @description Array of targets to analyze */
+                        targets: {
+                            /**
+                             * @description Target type
+                             * @enum {string}
+                             */
+                            type: "github/issues" | "github/project";
+                            /** @description Target identifier: "owner/repo" for issues, "owner/projectNumber" for projects */
+                            target: string;
                         }[];
-                    /** @description Unicode character/emoji used as the rating icon (rating type only). Defaults to ⭐. */
-                    icon?: string;
-                    /**
-                     * @description Auto-fill the field with telemetry data. When specified, renders an opt-in checkbox. Values: browserInfo (URL, user agent, viewport), screenshot (captured screenshot), consoleLog (recent console messages).
-                     * @enum {string}
-                     */
-                    autofill?: "browserInfo" | "screenshot" | "consoleLog";
-                  };
-                  validations?: {
-                    /** @description Whether the field is required. */
-                    required?: boolean;
-                  };
-                }[];
-                /** @description IDs of target(s) for this form. If omitted, all targets will be used. If an empty array ([]), no target is selectable and submissions will be disabled for this form (submissionless). Each ID must reference a valid target from the top-level targets array. */
-                targets?: string[];
-                /** @description Labels automatically added to issues created from this form. Similar to GitHub issue form templates. */
-                labels?: string[];
-                /**
-                 * Format: uri
-                 * @description URL to a GitHub issue form template YAML file. When provided, the form fields will be fetched from this template.
-                 */
-                templateUrl?: string;
-              }[];
-              /** @description Available issue types from the organization (auto-populated) */
-              issueTypes?: {
-                id?: number;
-                name?: string;
-                color?: string;
-              }[];
+                    };
+                };
             };
-          };
-        };
-        /** @description Default Response */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              error?: string;
-              message?: string;
+            responses: {
+                /** @description Generated wafir.yaml configuration content */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": string;
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                            message?: string;
+                        };
+                    };
+                };
             };
-          };
         };
-        /** @description Default Response */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              error?: string;
-              message?: string;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/health/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Health Check
+         * @description Returns the health status of the bridge service
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
             };
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/config/template": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get GitHub Issue Form Template
-     * @description Fetches and parses a GitHub Issue Form template from a user-provided URL. Returns the body (fields) and labels from the template.
-     */
-    get: {
-      parameters: {
-        query: {
-          /** @description URL to the raw template file (YAML format) */
-          templateUrl: string;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Default Response */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              /** @description Array of form fields from the template */
-              body: {
-                [key: string]: unknown;
-              }[];
-              /** @description Labels from the template */
-              labels?: string[];
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status?: string;
+                            timestamp?: string;
+                        };
+                    };
+                };
             };
-          };
         };
-        /** @description Default Response */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              error?: string;
-              message?: string;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Store Notification
+         * @description Accepts a JSON payload and stores it in S3 in the notifications folder.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
             };
-          };
-        };
-        /** @description Default Response */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              error?: string;
-              message?: string;
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
             };
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/generate/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Generate Sample Config
-     * @description Generates a sample wafir.yaml configuration file based on GitHub repository labels and project fields. Provide your installation ID and an array of targets to analyze. Returns the config as plain text YAML.
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          "application/json": {
-            /** @description Your GitHub App installation ID */
-            installationId: number;
-            /** @description Array of targets to analyze */
-            targets: {
-              /**
-               * @description Target type
-               * @enum {string}
-               */
-              type: "github/issues" | "github/project";
-              /** @description Target identifier: "owner/repo" for issues, "owner/projectNumber" for projects */
-              target: string;
-            }[];
-          };
-        };
-      };
-      responses: {
-        /** @description Generated wafir.yaml configuration content */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": string;
-          };
-        };
-        /** @description Default Response */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              error?: string;
-              message?: string;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            success?: boolean;
+                            filename?: string;
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                            message?: string;
+                        };
+                    };
+                };
             };
-          };
         };
-        /** @description Default Response */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              error?: string;
-              message?: string;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/submit/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit Feedback/Issue
+         * @description Creates a GitHub issue or project draft from form fields. Supports multipart/form-data.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
             };
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/health/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Health Check
-     * @description Returns the health status of the bridge service
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Default Response */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              status?: string;
-              timestamp?: string;
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
             };
-          };
         };
-      };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/notifications/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Store Notification
-     * @description Accepts a JSON payload and stores it in S3 in the notifications folder.
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: {
-        content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
-        };
-      };
-      responses: {
-        /** @description Default Response */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              success?: boolean;
-              filename?: string;
-              message?: string;
-            };
-          };
-        };
-        /** @description Default Response */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              error?: string;
-              message?: string;
-            };
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/submit/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Submit Feedback/Issue
-     * @description Creates a GitHub issue or project draft from form fields. Supports multipart/form-data.
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Default Response */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: never;
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    schemas: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;

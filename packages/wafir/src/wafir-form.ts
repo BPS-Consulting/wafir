@@ -2,6 +2,7 @@
 import { LitElement, html, unsafeCSS } from "lit";
 import formStyles from "./styles/wafir-form.css?inline";
 import "./rating";
+import "./wafir-chat-field";
 import { RATING_OPTIONS, RATING_ICON } from "./default-config.js";
 import { customElement, property } from "lit/decorators.js";
 import { StoreController } from "@nanostores/lit";
@@ -600,6 +601,15 @@ export class WafirForm extends LitElement {
           />
         `;
 
+      case "chat":
+        return html`
+          <wafir-chat-field
+            id="${String(field.id)}"
+            placeholder="${field.attributes?.placeholder ||
+            "Type your message..."}"
+          ></wafir-chat-field>
+        `;
+
       case "input":
       case "email":
       default:
@@ -634,6 +644,10 @@ export class WafirForm extends LitElement {
             </div>`;
           if (field.type === "markdown")
             return html`<div class="form-markdown-group">
+              ${this._renderFieldInput(field)}
+            </div>`;
+          if (field.type === "chat")
+            return html`<div class="form-group">
               ${this._renderFieldInput(field)}
             </div>`;
 
