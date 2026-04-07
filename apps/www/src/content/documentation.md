@@ -9,7 +9,7 @@ Customize and extend Wafir to match your needs.
 ```html
 <wafir-widget
   config-url="/wafir.yaml"
-  bridge-url="https://your-bridge.example.com"
+  bridge-url="https://my-bridge.example.com"
 >
 </wafir-widget>
 ```
@@ -19,8 +19,8 @@ Or configure inline without a config file:
 ```html
 <wafir-widget
   target-type="github/issues"
-  target="owner/repo"
-  auth-ref="YOUR_INSTALLATION_ID"
+  target="my-owner-name/my-repo-name"
+  auth-ref="my-installation-id"
 >
 </wafir-widget>
 ```
@@ -51,8 +51,8 @@ title: "Contact Us"
 targets:
   - id: default
     type: github/issues
-    target: your-username/your-repo
-    authRef: "YOUR_INSTALLATION_ID"
+    target: my-owner-name/my-repo-name
+    authRef: my-installation-id
 
 forms:
   - id: bug
@@ -80,7 +80,7 @@ The `targets` key defines where feedback submissions are routed. Each target spe
 | --------- | ------ | ------------------------------------------------------------ |
 | `id`      | string | Unique identifier referenced by forms                        |
 | `type`    | string | `github/issues` or `github/project`                          |
-| `target`  | string | `owner/repo` for issues, `owner/project-number` for projects |
+| `target`  | string | `<owner>/<repo>` for issues, `<owner>/<project-number>` for projects |
 | `authRef` | string | GitHub App installation ID                                   |
 
 ### Example
@@ -89,12 +89,12 @@ The `targets` key defines where feedback submissions are routed. Each target spe
 targets:
   - id: default
     type: github/issues
-    target: your-username/your-repo
-    authRef: "YOUR_INSTALLATION_ID"
+    target: my-owner-name/my-repo-name
+    authRef: my-installation-id
   - id: project
     type: github/project
-    target: your-username/9
-    authRef: "YOUR_INSTALLATION_ID"
+    target: my-owner-name/9
+    authRef: my-installation-id
 ```
 
 ---
@@ -382,7 +382,7 @@ forms:
 
 ## JavaScript API
 
-Wafir provides a JavaScript API for programmatically opening the widget, switching tabs, or prefilling fields.
+Wafir provides a JavaScript API for programmatically opening the widget, switching tabs, or prefilling fields.  This is useful for automatically requesting feedback after task completion (e.g., to get a customer effort score) or for pre-populating fields for an issue report.
 
 ### NPM/Module Usage
 

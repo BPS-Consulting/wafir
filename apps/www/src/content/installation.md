@@ -70,8 +70,8 @@ Example:
 targets:
   - id: default
     type: github/issues
-    target: your-username/your-repo
-    authRef: "YOUR_INSTALLATION_ID"
+    target: my-owner-name/my-repo-name
+    authRef: "my-installation-id"
 
 forms:
   - id: feedback
@@ -143,8 +143,8 @@ Update your `wafir.yaml` to route feedback to your project:
 targets:
   - id: feedback-project
     type: github/project
-    target: your-username/project-number
-    authRef: "YOUR_INSTALLATION_ID"
+    target: my-username/my-project-number
+    authRef: "my-installation-id"
 
 forms:
   - id: feedback
@@ -183,7 +183,7 @@ For self-hosted deployments, set `bridge-url` to your server:
 ```html
 <wafir-widget
   config-url="/wafir.yaml"
-  bridge-url="https://your-bridge.example.com"
+  bridge-url="https://my-bridge.example.com"
 ></wafir-widget>
 ```
 
