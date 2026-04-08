@@ -1,0 +1,56 @@
+# Uses simpler.grants.gov's issue templates for an example on how to use templateUrl
+title: "Project Management Portal"
+targets:
+  - id: "main-repo"
+    type: "github/issues"
+    target: "HHS/simpler-grants-gov"
+    authRef: "YOUR_INSTALLATION_ID"
+
+forms:
+  - id: "bug-report"
+    label: "Bug Report"
+    icon: "🐞"
+    targets: ["main-repo"]
+    templateUrl: "https://raw.githubusercontent.com/HHS/simpler-grants-gov/main/.github/ISSUE_TEMPLATE/1_bug_report.yml"
+
+  - id: "feature-request"
+    label: "Feature Request"
+    icon: "💡"
+    targets: ["main-repo"]
+    templateUrl: "https://raw.githubusercontent.com/HHS/simpler-grants-gov/main/.github/ISSUE_TEMPLATE/2_feature_request.yml"
+
+  - id: "internal-decision"
+    label: "Internal Decision"
+    icon: "⚖️"
+    targets: ["main-repo"]
+    templateUrl: "https://raw.githubusercontent.com/HHS/simpler-grants-gov/main/.github/ISSUE_TEMPLATE/3_internal_decision.yml"
+
+  - id: "internal-deliverable"
+    label: "Internal Deliverable"
+    icon: "📦"
+    targets: ["main-repo"]
+    templateUrl: "https://raw.githubusercontent.com/HHS/simpler-grants-gov/main/.github/ISSUE_TEMPLATE/4_internal_deliverable.yml"
+
+  - id: "internal-epic"
+    label: "Internal Epic"
+    icon: "🏔️"
+    targets: ["main-repo"]
+    templateUrl: "https://raw.githubusercontent.com/HHS/simpler-grants-gov/main/.github/ISSUE_TEMPLATE/5_internal_epic.yml"
+
+  - id: "internal-task"
+    label: "Internal Task"
+    icon: "✅"
+    targets: ["main-repo"]
+    templateUrl: "https://raw.githubusercontent.com/HHS/simpler-grants-gov/main/.github/ISSUE_TEMPLATE/6_internal_task.yml"
+
+  - id: "internal-proposal"
+    label: "Internal Proposal"
+    icon: "📝"
+    targets: ["main-repo"]
+    templateUrl: "https://raw.githubusercontent.com/HHS/simpler-grants-gov/main/.github/ISSUE_TEMPLATE/7_internal_proposal.yml"
+
+  - id: "internal-recurring-sam"
+    label: "Recurring SAM"
+    icon: "🔄"
+    targets: ["main-repo"]
+    templateUrl: "https://raw.githubusercontent.com/HHS/simpler-grants-gov/main/.github/ISSUE_TEMPLATE/8_internal_reoccuring_sam.yml"
