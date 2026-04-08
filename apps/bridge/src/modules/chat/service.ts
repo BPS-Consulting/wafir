@@ -1,8 +1,8 @@
 // Copyright (C) 2024 BPS-Consulting - Licensed under AGPLv3
 import {
-  BedrockRuntimeClient,
-  InvokeModelCommand,
-} from "@aws-sdk/client-bedrock-runtime";
+  BedrockAgentRuntimeClient,
+  InvokeAgentCommand,
+} from "@aws-sdk/client-bedrock-agent-runtime";
 
 export interface ChatRequest {
   message: string;
@@ -13,59 +13,58 @@ export interface ChatResponse {
 }
 
 /**
- * Service for interacting with Amazon Bedrock chat models.
+ * Service for interacting with Amazon Bedrock Agents.
  */
 export class ChatService {
-  private client: BedrockRuntimeClient;
-  private modelId: string;
+  private client: BedrockAgentRuntimeClient;
+  private agentId: string;
+  private agentAliasId: string;
 
   constructor() {
-    this.client = new BedrockRuntimeClient({
+    this.client = new BedrockAgentRuntimeClient({
       region: process.env.AWS_REGION || "us-east-1",
     });
-    this.modelId =
-      process.env.CHAT_BEDROCK_MODEL_ID ||
-      "anthropic.claude-3-haiku-20240307-v1:0";
+    // These IDs are found in the AWS Console under Bedrock > Agents
+    this.agentId = process.env.BEDROCK_AGENT_ID || "";
+    this.agentAliasId = process.env.BEDROCK_AGENT_ALIAS_ID || "TSTALIASID"; // "TSTALIASID" is default for draft
   }
 
   /**
-   * Sends a message to Bedrock and returns the response.
+   * Sends a message to a Bedrock Agent and returns the aggregated response.
    * @param message - The user's message
-   * @returns The AI's reply
+   * @param sessionId - Optional session ID to maintain conversation context
+   * @returns The Agent's reply
    */
-  async chat(message: string): Promise<string> {
-    // Format for Claude models on Bedrock
-    const payload = {
-      anthropic_version: "bedrock-2023-05-31",
-      max_tokens: 1024,
-      messages: [
-        {
-          role: "user",
-          content: message,
-        },
-      ],
-    };
-
-    const command = new InvokeModelCommand({
-      modelId: this.modelId,
-      contentType: "application/json",
-      accept: "application/json",
-      body: JSON.stringify(payload),
+  async chat(
+    message: string,
+    sessionId: string = "default-session",
+  ): Promise<string> {
+    const command = new InvokeAgentCommand({
+      agentId: this.agentId,
+      agentAliasId: this.agentAliasId,
+      sessionId: sessionId,
+      inputText: message,
     });
 
-    const response = await this.client.send(command);
-    const responseBody = JSON.parse(new TextDecoder().decode(response.body));
+    try {
+      const response = await this.client.send(command);
+      let fullResponse = "";
 
-    // Extract text from Claude response format
-    if (responseBody.content && Array.isArray(responseBody.content)) {
-      const textContent = responseBody.content.find(
-        (c: { type: string }) => c.type === "text",
-      );
-      if (textContent && textContent.text) {
-        return textContent.text;
+      // Bedrock Agents return a stream of events
+      if (response.completion) {
+        for await (const chunk of response.completion) {
+          if (chunk.chunk && chunk.chunk.bytes) {
+            // Decode the binary chunk into text
+            const text = new TextDecoder("utf-8").decode(chunk.chunk.bytes);
+            fullResponse += text;
+          }
+        }
       }
-    }
 
-    return responseBody.completion || "No response generated";
+      return fullResponse || "No response generated";
+    } catch (error) {
+      console.error("Error invoking Bedrock Agent:", error);
+      throw new Error("Failed to get response from AI Agent");
+    }
   }
 }
