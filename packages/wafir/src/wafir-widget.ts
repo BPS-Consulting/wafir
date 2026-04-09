@@ -89,6 +89,12 @@ export class WafirWidget extends LitElement {
   @state()
   private _activeFormId: string = "feedback";
 
+  @state()
+  private _showLeftFade = false;
+
+  @state()
+  private _showRightFade = false;
+
   // Requested tab from programmatic open() call, to be applied after config loads
   private _requestedTabId: string | null = null;
 
@@ -544,6 +550,95 @@ export class WafirWidget extends LitElement {
     lastActiveTabId = formId;
   }
 
+  private _resizeObserver: ResizeObserver | null = null;
+
+  private _updateTabFades() {
+    const tabsContainer = this.renderRoot?.querySelector(
+      ".mode-tabs",
+    ) as HTMLElement | null;
+    if (!tabsContainer) {
+      this._showLeftFade = false;
+      this._showRightFade = false;
+      return;
+    }
+
+    const { scrollLeft, scrollWidth, clientWidth } = tabsContainer;
+    // Show left fade if scrolled away from start
+    this._showLeftFade = scrollLeft > 0;
+    // Show right fade if there's more content to scroll (with 1px tolerance)
+    this._showRightFade = scrollLeft + clientWidth < scrollWidth - 1;
+  }
+
+  private _onTabScroll = () => {
+    this._updateTabFades();
+  };
+
+  private _onTabWheel = (event: WheelEvent) => {
+    const tabsContainer = this.renderRoot?.querySelector(
+      ".mode-tabs",
+    ) as HTMLElement | null;
+    if (!tabsContainer) return;
+
+    // Check if there's horizontal overflow
+    const hasOverflow = tabsContainer.scrollWidth > tabsContainer.clientWidth;
+    if (!hasOverflow) return;
+
+    // Convert vertical scroll to horizontal scroll (without needing shift key)
+    if (event.deltaY !== 0 && !event.shiftKey) {
+      event.preventDefault();
+      tabsContainer.scrollLeft += event.deltaY;
+    }
+  };
+
+  private _setupTabFadeObserver() {
+    // Clean up any existing observer
+    this._cleanupTabFadeObserver();
+
+    const tabsContainer = this.renderRoot?.querySelector(
+      ".mode-tabs",
+    ) as HTMLElement | null;
+    if (!tabsContainer) return;
+
+    // Use ResizeObserver to detect container size changes
+    this._resizeObserver = new ResizeObserver(() => {
+      this._updateTabFades();
+    });
+    this._resizeObserver.observe(tabsContainer);
+
+    // Initial check
+    this._updateTabFades();
+  }
+
+  private _cleanupTabFadeObserver() {
+    if (this._resizeObserver) {
+      this._resizeObserver.disconnect();
+      this._resizeObserver = null;
+    }
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this._cleanupTabFadeObserver();
+  }
+
+  updated(changedProperties: Map<string, unknown>) {
+    super.updated(changedProperties);
+    // Set up fade observer when modal opens or forms change
+    if (
+      changedProperties.has("isModalOpen") ||
+      changedProperties.has("_forms")
+    ) {
+      if (this.isModalOpen && this._forms.length > 0) {
+        // Use requestAnimationFrame to ensure DOM is fully rendered
+        requestAnimationFrame(() => {
+          this._setupTabFadeObserver();
+        });
+      } else {
+        this._cleanupTabFadeObserver();
+      }
+    }
+  }
+
   private _formHasValidTarget(): boolean {
     if (!this._config?.targets?.length) return false;
     const activeForm = this._getActiveForm();
@@ -848,21 +943,65 @@ export class WafirWidget extends LitElement {
                             </button>
                           </div>
 
-                          <div class="mode-tabs">
-                            ${this._forms.map(
-                              (form) => html`
-                                <button
-                                  class="mode-tab ${this._activeFormId ===
-                                  form.id
-                                    ? "active"
-                                    : ""}"
-                                  @click="${() => this._switchForm(form.id)}"
+                          <div class="mode-tabs-wrapper">
+                            <div
+                              class="fade-edge fade-left ${this._showLeftFade
+                                ? "visible"
+                                : ""}"
+                              aria-hidden="true"
+                            >
+                              <span class="scroll-arrow">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
                                 >
-                                  ${this._renderFormIcon(form.icon)}
-                                  ${form.label}
-                                </button>
-                              `,
-                            )}
+                                  <path d="m15 18-6-6 6-6" />
+                                </svg>
+                              </span>
+                            </div>
+                            <div
+                              class="fade-edge fade-right ${this._showRightFade
+                                ? "visible"
+                                : ""}"
+                              aria-hidden="true"
+                            >
+                              <span class="scroll-arrow">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                >
+                                  <path d="m9 18 6-6-6-6" />
+                                </svg>
+                              </span>
+                            </div>
+                            <div
+                              class="mode-tabs"
+                              @scroll="${this._onTabScroll}"
+                              @wheel="${this._onTabWheel}"
+                            >
+                              ${this._forms.map(
+                                (form) => html`
+                                  <button
+                                    class="mode-tab ${this._activeFormId ===
+                                    form.id
+                                      ? "active"
+                                      : ""}"
+                                    @click="${() => this._switchForm(form.id)}"
+                                  >
+                                    ${this._renderFormIcon(form.icon)}
+                                    ${form.label}
+                                  </button>
+                                `,
+                              )}
+                            </div>
                           </div>
                           <wafir-form
                             .tabId="${this._activeFormId}"
