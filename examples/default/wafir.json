@@ -20,7 +20,9 @@
       "id": "feedback",
       "label": "Feedback",
       "icon": "👍",
-      "labels": ["feedback"],
+      "meta": {
+        "labels": ["feedback"]
+      },
       "targets": ["project"],
       "body": [
         {
@@ -57,7 +59,9 @@
       "id": "suggestion",
       "label": "Suggestion",
       "icon": "💡",
-      "labels": ["enhancement"],
+      "meta": {
+        "labels": ["enhancement"]
+      },
       "body": [
         {
           "id": "title",
@@ -85,7 +89,9 @@
       "id": "issue",
       "label": "Issue",
       "icon": "🐞",
-      "labels": ["bug"],
+      "meta": {
+        "labels": ["bug"]
+      },
       "targets": ["default"],
       "body": [
         {

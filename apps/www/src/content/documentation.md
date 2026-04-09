@@ -105,25 +105,27 @@ Forms define the structure of your feedback widget. Each form represents a disti
 
 ### Form Properties
 
-| Property      | Type      | Description                                                                                                                                  |
-| ------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`          | string    | Unique identifier. Also used as GitHub issue type when creating issues.                                                                      |
-| `label`       | string    | Display label shown in the form tab                                                                                                          |
-| `icon`        | string?   | Unicode character or emoji displayed in form tab. Examples: 👍, 💡, 🐞, ⭐                                                                   |
-| `labels`      | string[]? | GitHub labels to auto-apply to issues                                                                                                        |
-| `templateUrl` | string?   | URL to a GitHub issue form template YAML                                                                                                     |
-| `targets`     | array?    | Array of target IDs to route submissions to. Set to a non-existent ID (e.g., `[none]`) to disable the submit button for informational forms. |
-| `body`        | array     | Array of field definitions                                                                                                                   |
+| Property      | Type    | Description                                                                                                                                  |
+| ------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`          | string  | Unique identifier for internal routing and tab selection. Does NOT map to a GitHub issue type or create labels.                              |
+| `label`       | string  | Display label shown in the form tab                                                                                                          |
+| `icon`        | string? | Unicode character or emoji displayed in form tab. Examples: 👍, 💡, 🐞, ⭐                                                                   |
+| `meta`        | object? | Target-specific metadata for the form. For `github/issues`, supports `labels` and `type`. See [Form Meta](#form-meta) below.                 |
+| `templateUrl` | string? | URL to a GitHub issue form template YAML                                                                                                     |
+| `targets`     | array?  | Array of target IDs to route submissions to. Set to a non-existent ID (e.g., `[none]`) to disable the submit button for informational forms. |
+| `body`        | array   | Array of field definitions                                                                                                                   |
 
 ### Example
 
 ```yaml
 forms:
-  - id: Bug
+  - id: bug
     label: Report Bug
     icon: 🐞
-    labels:
-      - bug
+    meta:
+      labels:
+        - bug
+      type: bug
     targets: [default]
     body:
       - id: title
@@ -157,6 +159,36 @@ forms:
         validations:
           required: true
 ```
+
+### Form Meta
+
+The `meta` field provides target-specific metadata for each form. Its structure varies depending on the target type.
+
+#### For `github/issues` Targets
+
+| Property | Type     | Description                                                                                                    |
+| -------- | -------- | -------------------------------------------------------------------------------------------------------------- |
+| `labels` | string[] | Labels to apply to created issues. **Must already exist** in the target repository—new labels are NOT created. |
+| `type`   | string   | GitHub issue type name or ID to assign. The type must already exist in the organization.                       |
+
+**Example:**
+
+```yaml
+forms:
+  - id: bug
+    label: Report Bug
+    icon: 🐞
+    meta:
+      labels:
+        - bug
+        - needs-triage
+      type: bug
+    targets: [default]
+    body:
+      # ...fields
+```
+
+> **Important:** Labels specified in `meta.labels` will NOT be created automatically. If a label does not exist in the target repository, the submission will proceed but that label will not be applied. Ensure labels are pre-created in your repository before referencing them.
 
 ### Using GitHub Issue Templates
 

@@ -116,7 +116,11 @@ const formSchema = {
   type: "object",
   required: ["id"],
   properties: {
-    id: { type: "string", description: "Unique form identifier" },
+    id: {
+      type: "string",
+      description:
+        "Unique form identifier. Used only for internal routing and tab selection—does NOT map to a GitHub issue type or create labels.",
+    },
     label: {
       type: "string",
       description: "Display label (defaults to capitalized id)",
@@ -138,11 +142,24 @@ const formSchema = {
       description:
         "IDs of target(s) for this form. If omitted, all targets will be used. If an empty array ([]), no target is selectable and submissions will be disabled for this form (submissionless). Each ID must reference a valid target from the top-level targets array.",
     },
-    labels: {
-      type: "array",
-      items: { type: "string" },
+    meta: {
+      type: "object",
       description:
-        "Labels automatically added to issues created from this form. Similar to GitHub issue form templates.",
+        "Target-specific metadata for this form. The structure varies by target type. For github/issues, may include 'labels' (array of existing label names—will NOT create new labels) and 'type' (GitHub issue type name or ID, if the organization has issue types enabled). For other targets, this field is ignored or may be extended in the future.",
+      properties: {
+        labels: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "GitHub issue labels to add when creating issues. Labels must already exist in the target repository—new labels will NOT be created.",
+        },
+        type: {
+          type: "string",
+          description:
+            "(github/issues only) GitHub issue type name or ID to assign. The type must already exist in the organization.",
+        },
+      },
+      additionalProperties: true,
     },
     templateUrl: {
       type: "string",

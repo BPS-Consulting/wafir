@@ -17,8 +17,9 @@ forms:
   - id: issue
     label: Issue
     icon: bug
-    labels:
-      - bug
+    meta:
+      labels:
+        - bug
     body:
       - id: title
         type: input

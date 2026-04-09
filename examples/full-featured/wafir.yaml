@@ -14,9 +14,10 @@ forms:
   - id: feedback
     label: "Product Feedback"
     icon: "star"
-    labels:
-      - feedback
-      - user-submitted
+    meta:
+      labels:
+        - feedback
+        - user-submitted
     body:
       - id: intro
         type: markdown
@@ -77,9 +78,10 @@ forms:
   - id: bug
     label: "Bug Report"
     icon: "bug"
-    labels:
-      - bug
-      - wafir-submitted
+    meta:
+      labels:
+        - bug
+        - wafir-submitted
     body:
       - id: bug_intro
         type: markdown
@@ -162,9 +164,10 @@ forms:
   - id: suggestion
     label: "Suggest a Feature"
     icon: "lightbulb"
-    labels:
-      - enhancement
-      - feature-request
+    meta:
+      labels:
+        - enhancement
+        - feature-request
     body:
       - id: idea_intro
         type: markdown

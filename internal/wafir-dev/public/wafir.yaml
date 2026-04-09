@@ -3,7 +3,7 @@
 title: "Contact Us"
 
 targets:
-  - id: default
+  - id: main-repo
     type: github/issues
     target: BPS-Consulting/wafir
     authRef: "105081464"
@@ -13,121 +13,56 @@ targets:
     authRef: "105081464"
 
 forms:
-  - id: feedback
-    label: Feedback
-    icon: 👍
-    targets: [project]
+  - id: "task"
+    label: "Bug Report"
+    icon: "🐞"
+    targets: ["main-repo"]
     body:
-      - id: rating
-        type: rating
+      - type: textarea
+        id: summary
         attributes:
-          label: "How satisfied are you with our website?"
+          label: Summary
+          description: Please describe the bug you experienced
+          placeholder: What happened? What did you want to happen?
         validations:
           required: true
-      - id: description
-        type: textarea
+      - type: dropdown
+        id: reproducibility
         attributes:
-          label: "What is the main reason for this rating?"
-        validations:
-          required: false
-      - id: submitted
-        type: date
-        display: none
-        attributes:
-          value: "today"
-        validations:
-          required: true
-
-  - id: feature
-    label: Suggestion
-    icon: 💡
-    targets: [project]
-    body:
-      - id: title
-        type: input
-        attributes:
-          label: "What is your suggestion?"
-        validations:
-          required: true
-      - id: description
-        type: textarea
-        attributes:
-          label: "Additional information:"
-          placeholder: "Please add some details to help us understand your suggestion better"
-        validations:
-          required: false
-      - id: value
-        type: dropdown
-        attributes:
-          label: "Business value"
+          label: Reproducibility
+          description: Please describe the frequency of the bug
           options:
-            - label: "Low"
-              value: "Low"
-            - label: "Medium"
-              value: "Medium"
-            - label: "High"
-              value: "High"
+            - It happened once then I did not try again
+            - It happened once then I tried again and everything worked
+            - I tried multiple times and saw the bug every time
+            - I tried multiple times and saw the bug intermittently
+            - None of the above
+      - type: textarea
+        id: repro_steps
+        attributes:
+          label: How to reproduce the bug
+          description: To see the bug with our own eyes, what steps should we follow?
         validations:
           required: false
-      - id: needed
-        type: dropdown
+      - type: dropdown
+        id: browser
         attributes:
-          label: "Needed"
+          label: Browser
+          description: Which web browser were you using when you experienced the bug? (if any)
           options:
-            - label: "Later"
-              value: "Later"
-            - label: "Soon"
-              value: "Soon"
-            - label: "Now"
-              value: "Now"
-        validations:
-          required: false
-
-  - id: bug
-    label: Issue
-    icon: 🐛
-    targets: [default]
-    body:
-      - id: title
-        type: input
+            - Chrome
+            - Firefox
+            - Internet Explorer
+            - Microsoft Edge
+            - Safari
+            - Other
+            - I do not know
+            - Not applicable
+      - type: checkboxes
+        id: terms
         attributes:
-          label: "Issue Title"
-        validations:
-          required: true
-      - id: description
-        type: textarea
-        attributes:
-          label: "Describe the issue"
-        validations:
-          required: true
-      # Opt-in telemetry fields
-      - id: browser-info
-        type: textarea
-        attributes:
-          label: "Browser Info"
-          autofill: browserInfo
-        validations:
-          required: false
-      - id: console-logs
-        type: textarea
-        attributes:
-          label: "Console Logs"
-          autofill: consoleLog
-        validations:
-          required: false
-      - id: screenshot
-        type: textarea
-        attributes:
-          label: "Screenshot"
-          autofill: screenshot
-        validations:
-          required: false
-
-  - id: question
-    label: ❓Question
-    targets: []
-    body:
-      - id: info
-        type: markdown
-        attributes:
-          value: "Please ask your question in our GitHub Discussions forum: https://github.com/BPS-Consulting/wafir/discussions"
+          label: Code of Conduct
+          description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/HHS/simpler-grants-gov/blob/main/CODE_OF_CONDUCT.md)
+          options:
+            - label: I agree to follow this project's Code of Conduct
+              required: true

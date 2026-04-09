@@ -14,9 +14,10 @@ forms:
   - id: suggestion
     label: Suggest
     icon: lightbulb
-    labels:
-      - enhancement
-      - feature-request
+    meta:
+      labels:
+        - enhancement
+        - feature-request
     body:
       - id: title
         type: input
