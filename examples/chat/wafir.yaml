@@ -1,0 +1,25 @@
+# WAFIR Configuration Example - Chat
+
+title: "Submit Feedback"
+
+targets:
+  - id: default
+    type: github/project
+    target: your-username/1
+    authRef: "YOUR_INSTALLATION_ID" # Replace with your installation ID
+
+forms:
+  - id: question
+    label: Question
+    icon: "❓"
+    targets: []
+    body:
+      - id: info
+        type: markdown
+        attributes:
+          value: "Please ask your question in our [GitHub Discussions forum](https://github.com/BPS-Consulting/wafir/discussions)."
+      - id: chat
+        type: chat
+        attributes:
+          label: "Chat with us"
+          placeholder: "Type your message here..."
