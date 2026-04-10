@@ -3,6 +3,8 @@ import { LitElement, html, unsafeCSS } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import chatFieldStyles from "./styles/wafir-chat-field.css?inline";
 import { sendChatMessage } from "./api/client.js";
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
+import { parseMarkdown } from "./utils/markdown.js";
 
 interface ChatMessage {
   role: "user" | "assistant" | "error";
@@ -158,7 +160,9 @@ export class WafirChatField extends LitElement {
     return html`
       ${this._messages.map(
         (msg) => html`
-          <div class="chat-message ${msg.role}">${msg.content}</div>
+          <div class="chat-message ${msg.role}">
+            ${unsafeHTML(parseMarkdown(msg.content))}
+          </div>
         `,
       )}
       ${this._isLoading
