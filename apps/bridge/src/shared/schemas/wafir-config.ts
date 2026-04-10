@@ -13,6 +13,7 @@ const fieldSchema = {
         "markdown",
         "rating",
         "date",
+        "chat",
       ],
       description:
         "Field input type. Matches GitHub Form Schema types plus Wafir extensions.",

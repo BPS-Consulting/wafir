@@ -138,11 +138,6 @@ export function getDefaultConfig(): WafirConfig {
         authRef: "0",
       },
     ],
-    telemetry: {
-      screenshot: true,
-      browserInfo: true,
-      consoleLog: false,
-    },
     forms: DEFAULT_FORMS,
   };
 }

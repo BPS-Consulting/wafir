@@ -167,6 +167,67 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/chat/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Send a chat message
+     * @description Sends a message to the AI chat service and returns a response. Only authorized origins can use this endpoint.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          "application/json": {
+            /** @description The user's message to send to the chat service */
+            message: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              /** @description The AI's response */
+              reply?: string;
+            };
+          };
+        };
+        /** @description Default Response */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              /** @description Error message for unauthorized access */
+              error?: string;
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/config/": {
     parameters: {
       query?: never;
@@ -216,24 +277,6 @@ export interface paths {
                 /** @description Authentication reference used to authorize communication with the target. For GitHub types, this is the installation ID. */
                 authRef: string;
               }[];
-              /** @description Automatic data collection settings */
-              telemetry?: {
-                /**
-                 * @description Enable screenshot capture
-                 * @default true
-                 */
-                screenshot: boolean;
-                /**
-                 * @description Collect URL, user agent, viewport, language
-                 * @default true
-                 */
-                browserInfo: boolean;
-                /**
-                 * @description Capture console messages
-                 * @default false
-                 */
-                consoleLog: boolean;
-              };
               /** @description Widget forms configuration. Forms are displayed as tabs in the UI. Defaults to feedback, suggestion, issue if omitted. */
               forms?: {
                 /** @description Unique form identifier */
@@ -256,7 +299,8 @@ export interface paths {
                     | "checkboxes"
                     | "markdown"
                     | "rating"
-                    | "date";
+                    | "date"
+                    | "chat";
                   /** @description Unique identifier for the field (used as key in JSON output/issue body). */
                   id?: string;
                   /**

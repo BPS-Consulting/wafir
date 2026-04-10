@@ -1,6 +1,7 @@
 import "./wafir-widget.js";
 import "./wafir-form.js";
 import "./wafir-highlighter.js";
+import "./wafir-chat-field.js";
 import type { WafirWidget } from "./wafir-widget.js";
 import type {
   WafirWidgetAPI,
@@ -13,6 +14,7 @@ export type {
   WafirWidgetOpenOptions,
 } from "./api-interface.js";
 export type { WafirWidget } from "./wafir-widget.js";
+export type { WafirChatField } from "./wafir-chat-field.js";
 
 /**
  * Queue for open requests that occur before the widget is ready
