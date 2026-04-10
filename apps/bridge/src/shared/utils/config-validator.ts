@@ -14,11 +14,6 @@ const DEFAULT_CONFIG: WafirConfig = {
       authRef: "",
     },
   ],
-  telemetry: {
-    screenshot: true,
-    browserInfo: true,
-    consoleLog: false,
-  },
   forms: [
     {
       id: "feedback",
@@ -772,8 +767,25 @@ export function validateFormFields(
 }
 
 /**
- * Validates that the configUrl is from the same origin as the request.
- * This prevents SSRF attacks and ensures config integrity.
+ * Extracts the base domain from a hostname.
+ * For example: "api.example.com" -> "example.com"
+ * Note: This is a simple implementation for common cases.
+ * For production use with complex TLDs, consider using a library like psl (Public Suffix List).
+ */
+function getBaseDomain(hostname: string): string {
+  const parts = hostname.split(".");
+  if (parts.length <= 2) {
+    // Already a base domain (e.g., "example.com" or "localhost")
+    return hostname;
+  }
+  // Return the last two parts (e.g., "example.com" from "api.example.com")
+  return parts.slice(-2).join(".");
+}
+
+/**
+ * Validates that the configUrl is from the same base domain as the request.
+ * Allows all subdomains of the same base domain (e.g., api.example.com can fetch config from www.example.com).
+ * This prevents SSRF attacks while allowing flexibility across subdomains.
  */
 export function validateSameOrigin(
   configUrl: string,
@@ -783,18 +795,44 @@ export function validateSameOrigin(
     const configUrlObj = new URL(configUrl);
     const requestOriginObj = new URL(requestOrigin);
 
-    // Compare protocol, hostname, and port
-    if (
-      configUrlObj.protocol !== requestOriginObj.protocol ||
-      configUrlObj.hostname !== requestOriginObj.hostname ||
-      configUrlObj.port !== requestOriginObj.port
-    ) {
+    // Protocol must match exactly
+    if (configUrlObj.protocol !== requestOriginObj.protocol) {
       return {
         valid: false,
         errors: [
           {
             code: "ORIGIN_MISMATCH",
-            message: `Config URL origin (${configUrlObj.origin}) does not match request origin (${requestOriginObj.origin}). For security, config must be hosted on the same domain as the form.`,
+            message: `Config URL protocol (${configUrlObj.protocol}) does not match request origin protocol (${requestOriginObj.protocol}). For security, config must use the same protocol.`,
+          },
+        ],
+      };
+    }
+
+    // Port must match exactly
+    if (configUrlObj.port !== requestOriginObj.port) {
+      return {
+        valid: false,
+        errors: [
+          {
+            code: "ORIGIN_MISMATCH",
+            message: `Config URL port (${configUrlObj.port || "default"}) does not match request origin port (${requestOriginObj.port || "default"}). For security, config must use the same port.`,
+          },
+        ],
+      };
+    }
+
+    // Extract base domains
+    const configBaseDomain = getBaseDomain(configUrlObj.hostname);
+    const requestBaseDomain = getBaseDomain(requestOriginObj.hostname);
+
+    // Base domains must match (allows subdomains)
+    if (configBaseDomain !== requestBaseDomain) {
+      return {
+        valid: false,
+        errors: [
+          {
+            code: "ORIGIN_MISMATCH",
+            message: `Config URL base domain (${configBaseDomain}) does not match request origin base domain (${requestBaseDomain}). For security, config must be hosted on the same domain or subdomain.`,
           },
         ],
       };

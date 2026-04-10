@@ -185,15 +185,93 @@ button[part="button"] svg {
   color: var(--wafir-text-color, #111827);
 }
 
+/* Mode tabs wrapper (for scrollable tabs with fade edges) */
+.mode-tabs-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
 /* Mode tabs */
 .mode-tabs {
   display: flex;
   gap: 0;
   border-bottom: 1px solid var(--wafir-border-color, #e5e7eb);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  /* Hide scrollbar for aesthetics while maintaining functionality */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.mode-tabs::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Fade edge overlays */
+.fade-edge {
+  position: absolute;
+  top: 0;
+  bottom: 1px; /* Account for border-bottom */
+  width: 48px;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.fade-edge.visible {
+  opacity: 1;
+}
+
+.fade-edge.fade-left {
+  left: 0;
+  justify-content: flex-start;
+  padding-left: 4px;
+  background: linear-gradient(
+    to right,
+    var(--wafir-modal-bg, white) 0%,
+    var(--wafir-modal-bg, white) 30%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+.fade-edge.fade-right {
+  right: 0;
+  justify-content: flex-end;
+  padding-right: 4px;
+  background: linear-gradient(
+    to left,
+    var(--wafir-modal-bg, white) 0%,
+    var(--wafir-modal-bg, white) 30%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+/* Arrow indicators for scroll direction */
+.fade-edge .scroll-arrow {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--wafir-text-secondary, #6b7280);
+  opacity: 0.7;
+}
+
+.fade-edge .scroll-arrow svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  stroke-width: 2;
 }
 
 .mode-tab {
-  flex: 1;
+  flex: 0 0 auto; /* Don't grow or shrink, use natural width */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -207,6 +285,7 @@ button[part="button"] svg {
   font-weight: 500;
   color: var(--wafir-text-secondary, #6b7280);
   transition: all 0.2s ease;
+  white-space: nowrap; /* Prevent text wrapping */
 }
 
 .mode-tab:hover {
@@ -257,6 +336,14 @@ button[part="button"] .icon-char {
   border-radius: var(--wafir-modal-border-radius, 12px);
 }
 
+/* Blocking loading overlay (standalone, not overlaying content) */
+.loading-overlay.blocking {
+  position: relative;
+  min-height: 300px;
+  background: var(--wafir-modal-bg, white);
+  backdrop-filter: none;
+}
+
 .loading-content {
   display: flex;
   flex-direction: column;
@@ -286,6 +373,34 @@ button[part="button"] .icon-char {
   }
 }
 
+/* Screenshot overlay - full page */
+.screenshot-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 2147483647;
+  pointer-events: all;
+}
+
+.screenshot-overlay .spinner {
+  width: 48px;
+  height: 48px;
+}
+
+.screenshot-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
 /* Error overlay */
 .error-overlay {
   position: absolute;
@@ -300,6 +415,14 @@ button[part="button"] .icon-char {
   z-index: 10000;
   backdrop-filter: blur(2px);
   border-radius: var(--wafir-modal-border-radius, 12px);
+}
+
+/* Blocking error overlay (standalone, not overlaying content) */
+.error-overlay.blocking {
+  position: relative;
+  min-height: 300px;
+  background: var(--wafir-modal-bg, white);
+  backdrop-filter: none;
 }
 
 .error-content {

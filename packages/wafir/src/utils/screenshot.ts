@@ -7,84 +7,86 @@ import {
 
 export async function takeFullPageScreenshot(
   highlightEl: HTMLElement | null = null,
-) {
+): Promise<void> {
+  if (isCapturing.get()) return;
   isCapturing.set(true);
-
-  // Give time for UI to hide if needed (though Lit reactive update should handle it if we wait a tick)
-  await new Promise((resolve) => setTimeout(resolve, 50));
 
   let highlight: HTMLDivElement | null = null;
 
   try {
+    const htmlEl = document.documentElement;
+
     if (highlightEl) {
       const rect = highlightEl.getBoundingClientRect();
-      const scrollX = window.scrollX;
-      const scrollY = window.scrollY;
-
+      const borderWidth = 4;
       highlight = document.createElement("div");
       highlight.className = "wafir-temp-highlight";
       Object.assign(highlight.style, {
         position: "absolute",
-        top: `${rect.top + scrollY}px`,
-        left: `${rect.left + scrollX}px`,
-        width: `${rect.width}px`,
-        height: `${rect.height}px`,
-        border: "4px solid #2563eb",
+        top: `${rect.top + window.scrollY - borderWidth}px`,
+        left: `${rect.left + window.scrollX - borderWidth}px`,
+        width: `${rect.width + borderWidth * 2}px`,
+        height: `${rect.height + borderWidth * 2}px`,
+        border: `${borderWidth}px solid #2563eb`,
+        boxSizing: "border-box",
         backgroundColor: "rgba(37, 99, 235, 0.1)",
         zIndex: "2147483647",
-        boxSizing: "border-box",
         pointerEvents: "none",
       });
-      document.body.appendChild(highlight);
+      htmlEl.appendChild(highlight);
+
+      // Chromium: Ensure paint
+      await new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)),
+      );
     }
 
-    const width = Math.max(
-      document.documentElement.scrollWidth,
-      document.body.scrollWidth,
-      window.innerWidth,
-    );
-    const height = Math.max(
-      document.documentElement.scrollHeight,
-      document.body.scrollHeight,
-      window.innerHeight,
-    );
+    const width = window.innerWidth;
+    const height = window.innerHeight;
 
-    const computedStyle = window.getComputedStyle(document.body);
-    const bgColor = computedStyle.backgroundColor;
-    const backgroundColor =
-      bgColor === "rgba(0, 0, 0, 0)" || bgColor === "transparent"
-        ? "#ffffff"
-        : bgColor;
+    const computedBgColor = (() => {
+      const htmlBg = window.getComputedStyle(htmlEl).backgroundColor;
+      if (htmlBg && htmlBg !== "rgba(0, 0, 0, 0)" && htmlBg !== "transparent")
+        return htmlBg;
 
-    // Lazy load modern-screenshot only when actually taking a screenshot
+      const bodyBg = window.getComputedStyle(document.body).backgroundColor;
+      if (bodyBg && bodyBg !== "rgba(0, 0, 0, 0)" && bodyBg !== "transparent")
+        return bodyBg;
+
+      return "#ffffff";
+    })();
+
     const { domToDataUrl } = await import("modern-screenshot");
 
-    const dataUrl = await domToDataUrl(document.documentElement, {
+    const dataUrl = await domToDataUrl(htmlEl, {
       width,
       height,
-      backgroundColor,
+      type: "image/webp",
+      quality: 0.8,
+      backgroundColor: computedBgColor,
+      style: {
+        transform: `translate(${-window.scrollX}px, ${-window.scrollY}px)`,
+        backgroundColor: computedBgColor,
+        minHeight: `${Math.max(document.documentElement.scrollHeight, height)}px`,
+      },
+      scale: 1,
       filter: (node: Node) => {
         if (node instanceof HTMLElement) {
           const tagName = node.tagName.toLowerCase();
-          if (tagName.startsWith("wafir-")) {
-            if (node.className === "wafir-temp-highlight") return true;
-            return false;
-          }
+          if (node.classList.contains("wafir-temp-highlight")) return true;
+          if (tagName.startsWith("wafir-")) return false;
+          if (["script"].includes(tagName)) return false;
         }
         return true;
       },
     });
 
-    // Store screenshot both globally (for backward compatibility) and per-form
     setCapturedImage(dataUrl);
-    const formId = getCurrentFormId();
-    setFormScreenshot(formId, dataUrl);
+    setFormScreenshot(getCurrentFormId(), dataUrl);
   } catch (err) {
-    console.error("Failed to capture full page screenshot", err);
+    console.error("Failed to capture screenshot", err);
   } finally {
-    if (highlight && highlight.parentElement) {
-      document.body.removeChild(highlight);
-    }
+    highlight?.remove();
     isCapturing.set(false);
   }
 }

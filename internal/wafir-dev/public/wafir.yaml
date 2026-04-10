@@ -1,4 +1,4 @@
-# Wafir config for internal testing.  Targets Wafir repo.
+# Wafir widget configuration for the public Wafir GitHub Pages site
 
 title: "Contact Us"
 
@@ -15,13 +15,21 @@ targets:
 forms:
   - id: feedback
     label: Feedback
-    icon: 👍
+    icon: "👍"
+    labels:
+      - feedback
     targets: [project]
     body:
       - id: rating
         type: rating
         attributes:
-          label: "How satisfied are you with our website?"
+          label: "How satisfied are you with Wafir?"
+          options:
+            - "Very Unsatisfied"
+            - "Unsatisfied"
+            - "Neutral"
+            - "Satisfied"
+            - "Excellent"
         validations:
           required: true
       - id: description
@@ -30,17 +38,12 @@ forms:
           label: "What is the main reason for this rating?"
         validations:
           required: false
-      - id: submitted
-        type: date
-        display: none
-        attributes:
-          value: "today"
-        validations:
-          required: true
 
-  - id: feature
+  - id: suggestion
     label: Suggestion
-    icon: 💡
+    icon: "💡"
+    labels:
+      - enhancement
     targets: [project]
     body:
       - id: title
@@ -61,12 +64,9 @@ forms:
         attributes:
           label: "Business value"
           options:
-            - label: "Low"
-              value: "Low"
-            - label: "Medium"
-              value: "Medium"
-            - label: "High"
-              value: "High"
+            - "Low"
+            - "Medium"
+            - "High"
         validations:
           required: false
       - id: needed
@@ -74,45 +74,37 @@ forms:
         attributes:
           label: "Needed"
           options:
-            - label: "Later"
-              value: "Later"
-            - label: "Soon"
-              value: "Soon"
-            - label: "Now"
-              value: "Now"
+            - "Later"
+            - "Soon"
+            - "Now"
         validations:
           required: false
 
-  - id: bug
+  - id: issue
     label: Issue
-    icon: 🐛
+    icon: "🐞"
+    labels:
+      - bug
     targets: [default]
     body:
       - id: title
         type: input
         attributes:
-          label: "Issue Title"
+          label: "What issue did you encounter?"
         validations:
           required: true
       - id: description
         type: textarea
         attributes:
-          label: "Describe the issue"
+          label: "Additional information:"
+          placeholder: "Please include steps to reproduce and expected vs actual behavior"
         validations:
           required: true
-      # Opt-in telemetry fields
       - id: browser-info
         type: textarea
         attributes:
           label: "Browser Info"
           autofill: browserInfo
-        validations:
-          required: false
-      - id: console-logs
-        type: textarea
-        attributes:
-          label: "Console Logs"
-          autofill: consoleLog
         validations:
           required: false
       - id: screenshot
@@ -124,10 +116,16 @@ forms:
           required: false
 
   - id: question
-    label: ❓Question
+    label: Question
+    icon: "❓"
     targets: []
     body:
       - id: info
         type: markdown
         attributes:
-          value: "Please ask your question in our GitHub Discussions forum: https://github.com/BPS-Consulting/wafir/discussions"
+          value: "Please ask your question in our [GitHub Discussions forum](https://github.com/BPS-Consulting/wafir/discussions)."
+      - id: chat
+        type: chat
+        attributes:
+          label: "Chat with us"
+          placeholder: "Type your message here..."

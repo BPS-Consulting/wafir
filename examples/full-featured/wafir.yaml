@@ -10,13 +10,6 @@ targets:
     target: your-username/your-repo
     authRef: "YOUR_INSTALLATION_ID" # Replace with your installation ID
 
-# Note: The telemetry section is deprecated. Use autofill fields instead for user opt-in.
-# Legacy telemetry config is still supported for backward compatibility.
-# telemetry:
-#   screenshot: true
-#   browserInfo: true
-#   consoleLog: true
-
 forms:
   - id: feedback
     label: "Product Feedback"

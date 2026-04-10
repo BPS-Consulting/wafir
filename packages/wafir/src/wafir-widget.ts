@@ -36,6 +36,9 @@ type WidgetPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 // Module-level in-memory storage for last active tab (session only, not persisted across reloads)
 let lastActiveTabId: string | null = null;
 
+// Module-level cache for loaded configs (keyed by resolved configUrl)
+const configCache = new Map<string, WafirConfig>();
+
 @customElement("wafir-widget")
 export class WafirWidget extends LitElement {
   @property({ type: String, attribute: "button-text" })
@@ -81,20 +84,42 @@ export class WafirWidget extends LitElement {
   private _hasCustomTrigger = false;
 
   @state()
-  private _forms: FormConfig[] = getDefaultForms();
+  private _forms: FormConfig[] = [];
 
   @state()
   private _activeFormId: string = "feedback";
 
+  @state()
+  private _showLeftFade = false;
+
+  @state()
+  private _showRightFade = false;
+
   // Requested tab from programmatic open() call, to be applied after config loads
   private _requestedTabId: string | null = null;
+
+  // Track which configUrl was used for the current cached config
+  private _cachedConfigUrl: string | null = null;
 
   static styles = [unsafeCSS(widgetStyles)];
 
   connectedCallback() {
     super.connectedCallback();
     this._checkCustomTrigger();
-    this._mergeInlineForms();
+    // Only initialize forms if no configUrl is set
+    // When configUrl is present, forms will be loaded from remote config
+    if (!this.configUrl) {
+      // Check for inline forms first, otherwise use defaults
+      if (this.forms && this.forms.length > 0) {
+        this._mergeInlineForms();
+      } else {
+        this._forms = getDefaultForms();
+        if (this._forms.length > 0) {
+          this._activeFormId = this._forms[0].id;
+          setCurrentFormId(this._forms[0].id);
+        }
+      }
+    }
   }
 
   private _checkCustomTrigger() {
@@ -201,6 +226,14 @@ export class WafirWidget extends LitElement {
   }
 
   private async _openModal(prefillData?: Record<string, any>) {
+    // If configUrl is set and config is not yet cached, show loading state immediately
+    if (this.configUrl) {
+      const resolvedUrl = this._resolveConfigUrl(this.configUrl);
+      if (!configCache.has(resolvedUrl)) {
+        this.isConfigLoading = true;
+      }
+    }
+
     this.isModalOpen = true;
     setBrowserInfo(getBrowserInfo());
     setConsoleLogs(consoleInterceptor.getLogs());
@@ -391,13 +424,22 @@ export class WafirWidget extends LitElement {
       return;
     }
 
+    // Resolve the configUrl once
+    const resolvedUrl = this._resolveConfigUrl(this.configUrl);
+
+    // Check if we have a cached config for this URL
+    const cachedConfig = configCache.get(resolvedUrl);
+    if (cachedConfig && this._cachedConfigUrl === resolvedUrl) {
+      // Use cached config, no loading needed
+      this._config = cachedConfig;
+      await this._applyConfig(cachedConfig, resolvedUrl);
+      return;
+    }
+
     this.isConfigLoading = true;
     this.configFetchError = null;
 
     try {
-      // Resolve relative URLs to same origin
-      const resolvedUrl = this._resolveConfigUrl(this.configUrl);
-
       // Fetch and parse config via the backend
       const { getWafirConfig } = await import("./api/client.js");
       const config = await getWafirConfig(
@@ -417,12 +459,15 @@ export class WafirWidget extends LitElement {
         );
         this.configFetchError =
           "Configuration missing required fields (targets)";
-        this._config = getDefaultConfig();
-        await this._applyConfig(this._config);
+        // Don't apply default forms when configUrl is set - just show error
         return;
       }
 
+      // Cache the successfully loaded config
       this._config = config as WafirConfig;
+      this._cachedConfigUrl = resolvedUrl;
+      configCache.set(resolvedUrl, config as WafirConfig);
+
       await this._applyConfig(config as WafirConfig, resolvedUrl);
     } catch (error) {
       console.error("Wafir: Failed to fetch remote config", {
@@ -431,8 +476,7 @@ export class WafirWidget extends LitElement {
       });
       this.configFetchError =
         error instanceof Error ? error.message : "Failed to load configuration";
-      this._config = getDefaultConfig();
-      await this._applyConfig(this._config);
+      // Don't apply default forms when configUrl is set - just show error
     } finally {
       this.isConfigLoading = false;
     }
@@ -479,6 +523,13 @@ export class WafirWidget extends LitElement {
 
   private async _retryFetchConfig() {
     this.configFetchError = null;
+    // Clear cached config for retry
+    if (this.configUrl) {
+      const resolvedUrl = this._resolveConfigUrl(this.configUrl);
+      configCache.delete(resolvedUrl);
+      this._cachedConfigUrl = null;
+    }
+    this.isConfigLoading = true;
     await this._fetchConfig();
   }
 
@@ -497,6 +548,95 @@ export class WafirWidget extends LitElement {
     setCurrentFormId(formId);
     // Save the active tab to in-memory storage for session persistence
     lastActiveTabId = formId;
+  }
+
+  private _resizeObserver: ResizeObserver | null = null;
+
+  private _updateTabFades() {
+    const tabsContainer = this.renderRoot?.querySelector(
+      ".mode-tabs",
+    ) as HTMLElement | null;
+    if (!tabsContainer) {
+      this._showLeftFade = false;
+      this._showRightFade = false;
+      return;
+    }
+
+    const { scrollLeft, scrollWidth, clientWidth } = tabsContainer;
+    // Show left fade if scrolled away from start
+    this._showLeftFade = scrollLeft > 0;
+    // Show right fade if there's more content to scroll (with 1px tolerance)
+    this._showRightFade = scrollLeft + clientWidth < scrollWidth - 1;
+  }
+
+  private _onTabScroll = () => {
+    this._updateTabFades();
+  };
+
+  private _onTabWheel = (event: WheelEvent) => {
+    const tabsContainer = this.renderRoot?.querySelector(
+      ".mode-tabs",
+    ) as HTMLElement | null;
+    if (!tabsContainer) return;
+
+    // Check if there's horizontal overflow
+    const hasOverflow = tabsContainer.scrollWidth > tabsContainer.clientWidth;
+    if (!hasOverflow) return;
+
+    // Convert vertical scroll to horizontal scroll (without needing shift key)
+    if (event.deltaY !== 0 && !event.shiftKey) {
+      event.preventDefault();
+      tabsContainer.scrollLeft += event.deltaY;
+    }
+  };
+
+  private _setupTabFadeObserver() {
+    // Clean up any existing observer
+    this._cleanupTabFadeObserver();
+
+    const tabsContainer = this.renderRoot?.querySelector(
+      ".mode-tabs",
+    ) as HTMLElement | null;
+    if (!tabsContainer) return;
+
+    // Use ResizeObserver to detect container size changes
+    this._resizeObserver = new ResizeObserver(() => {
+      this._updateTabFades();
+    });
+    this._resizeObserver.observe(tabsContainer);
+
+    // Initial check
+    this._updateTabFades();
+  }
+
+  private _cleanupTabFadeObserver() {
+    if (this._resizeObserver) {
+      this._resizeObserver.disconnect();
+      this._resizeObserver = null;
+    }
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this._cleanupTabFadeObserver();
+  }
+
+  updated(changedProperties: Map<string, unknown>) {
+    super.updated(changedProperties);
+    // Set up fade observer when modal opens or forms change
+    if (
+      changedProperties.has("isModalOpen") ||
+      changedProperties.has("_forms")
+    ) {
+      if (this.isModalOpen && this._forms.length > 0) {
+        // Use requestAnimationFrame to ensure DOM is fully rendered
+        requestAnimationFrame(() => {
+          this._setupTabFadeObserver();
+        });
+      } else {
+        this._cleanupTabFadeObserver();
+      }
+    }
   }
 
   private _formHasValidTarget(): boolean {
@@ -670,11 +810,27 @@ export class WafirWidget extends LitElement {
     // This preserves component state (like autofill checkbox state)
     const isCapturing = this._isCapturingController.value;
 
+    // Always show screenshot overlay when capturing, even during selection
+    const screenshotOverlay = isCapturing
+      ? html`
+          <div
+            class="screenshot-overlay"
+            role="status"
+            aria-live="polite"
+            aria-busy="true"
+          >
+            <div class="spinner" aria-hidden="true"></div>
+            <span class="screenshot-text">Screenshotting</span>
+          </div>
+        `
+      : null;
+
     if (this._isSelectingController.value) {
-      return html`<wafir-highlighter></wafir-highlighter>`;
+      return html`${screenshotOverlay}<wafir-highlighter></wafir-highlighter>`;
     }
 
     return html`
+      ${screenshotOverlay}
       <div style="${isCapturing ? "display: none;" : ""}">
         ${this._hasCustomTrigger
           ? html`<div
@@ -707,58 +863,10 @@ export class WafirWidget extends LitElement {
                   class="modal-content"
                   @click="${(e: Event) => e.stopPropagation()}"
                 >
-                  <div class="modal-header">
-                    <h3 id="modal-title">${this.modalTitle}</h3>
-                    <button
-                      class="close-button"
-                      @click="${this._closeModal}"
-                      aria-label="Close modal"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="lucide lucide-x-icon lucide-x"
-                      >
-                        <path d="M18 6 6 18" />
-                        <path d="m6 6 12 12" />
-                      </svg>
-                    </button>
-                  </div>
-
-                  <div class="mode-tabs">
-                    ${(() => {
-                      return this._forms.map(
-                        (form) => html`
-                          <button
-                            class="mode-tab ${this._activeFormId === form.id
-                              ? "active"
-                              : ""}"
-                            @click="${() => this._switchForm(form.id)}"
-                          >
-                            ${this._renderFormIcon(form.icon)} ${form.label}
-                          </button>
-                        `,
-                      );
-                    })()}
-                  </div>
-                  <wafir-form
-                    .tabId="${this._activeFormId}"
-                    .fields="${this._getActiveFormConfig()}"
-                    .formLabel="${this._getActiveForm()?.label || ""}"
-                    .hasValidTarget="${this._formHasValidTarget()}"
-                    @form-submit="${this._handleSubmit}"
-                  ></wafir-form>
                   ${this.isConfigLoading
                     ? html`
                         <div
-                          class="loading-overlay"
+                          class="loading-overlay blocking"
                           role="status"
                           aria-live="polite"
                           aria-busy="true"
@@ -769,48 +877,140 @@ export class WafirWidget extends LitElement {
                           </div>
                         </div>
                       `
-                    : ""}
-                  ${this.configFetchError && !this.isConfigLoading
-                    ? html`
-                        <div
-                          class="error-overlay"
-                          role="alert"
-                          aria-live="assertive"
-                        >
-                          <div class="error-content">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="48"
-                              height="48"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              class="error-icon"
-                              aria-hidden="true"
-                            >
-                              <circle cx="12" cy="12" r="10" />
-                              <line x1="12" y1="8" x2="12" y2="12" />
-                              <line x1="12" y1="16" x2="12.01" y2="16" />
-                            </svg>
-                            <span class="error-title"
-                              >Failed to load configuration</span
-                            >
-                            <span class="error-message"
-                              >${this.configFetchError}</span
-                            >
+                    : this.configFetchError
+                      ? html`
+                          <div
+                            class="error-overlay blocking"
+                            role="alert"
+                            aria-live="assertive"
+                          >
+                            <div class="error-content">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="48"
+                                height="48"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="error-icon"
+                                aria-hidden="true"
+                              >
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" />
+                                <line x1="12" y1="16" x2="12.01" y2="16" />
+                              </svg>
+                              <span class="error-title"
+                                >Failed to load configuration</span
+                              >
+                              <span class="error-message"
+                                >${this.configFetchError}</span
+                              >
+                              <button
+                                class="retry-button"
+                                @click="${this._retryFetchConfig}"
+                              >
+                                Retry
+                              </button>
+                            </div>
+                          </div>
+                        `
+                      : html`
+                          <div class="modal-header">
+                            <h3 id="modal-title">${this.modalTitle}</h3>
                             <button
-                              class="retry-button"
-                              @click="${this._retryFetchConfig}"
+                              class="close-button"
+                              @click="${this._closeModal}"
+                              aria-label="Close modal"
                             >
-                              Retry
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="lucide lucide-x-icon lucide-x"
+                              >
+                                <path d="M18 6 6 18" />
+                                <path d="m6 6 12 12" />
+                              </svg>
                             </button>
                           </div>
-                        </div>
-                      `
-                    : ""}
+
+                          <div class="mode-tabs-wrapper">
+                            <div
+                              class="fade-edge fade-left ${this._showLeftFade
+                                ? "visible"
+                                : ""}"
+                              aria-hidden="true"
+                            >
+                              <span class="scroll-arrow">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                >
+                                  <path d="m15 18-6-6 6-6" />
+                                </svg>
+                              </span>
+                            </div>
+                            <div
+                              class="fade-edge fade-right ${this._showRightFade
+                                ? "visible"
+                                : ""}"
+                              aria-hidden="true"
+                            >
+                              <span class="scroll-arrow">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                >
+                                  <path d="m9 18 6-6-6-6" />
+                                </svg>
+                              </span>
+                            </div>
+                            <div
+                              class="mode-tabs"
+                              @scroll="${this._onTabScroll}"
+                              @wheel="${this._onTabWheel}"
+                            >
+                              ${this._forms.map(
+                                (form) => html`
+                                  <button
+                                    class="mode-tab ${this._activeFormId ===
+                                    form.id
+                                      ? "active"
+                                      : ""}"
+                                    @click="${() => this._switchForm(form.id)}"
+                                  >
+                                    ${this._renderFormIcon(form.icon)}
+                                    ${form.label}
+                                  </button>
+                                `,
+                              )}
+                            </div>
+                          </div>
+                          <wafir-form
+                            .tabId="${this._activeFormId}"
+                            .fields="${this._getActiveFormConfig()}"
+                            .formLabel="${this._getActiveForm()?.label || ""}"
+                            .hasValidTarget="${this._formHasValidTarget()}"
+                            @form-submit="${this._handleSubmit}"
+                          ></wafir-form>
+                        `}
                 </div>
               </div>
             `

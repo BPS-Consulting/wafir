@@ -32,7 +32,37 @@ describe("validateSameOrigin", () => {
     expect(result.errors).toHaveLength(0);
   });
 
-  it("rejects config URL from different hostname", () => {
+  it("accepts config URL from subdomain of same base domain", () => {
+    const configUrl = "https://api.example.com/config.yaml";
+    const requestOrigin = "https://www.example.com";
+
+    const result = validateSameOrigin(configUrl, requestOrigin);
+
+    expect(result.valid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it("accepts config URL when request is from subdomain", () => {
+    const configUrl = "https://example.com/config.yaml";
+    const requestOrigin = "https://app.example.com";
+
+    const result = validateSameOrigin(configUrl, requestOrigin);
+
+    expect(result.valid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it("accepts config URL from deeply nested subdomain", () => {
+    const configUrl = "https://api.staging.example.com/config.yaml";
+    const requestOrigin = "https://app.prod.example.com";
+
+    const result = validateSameOrigin(configUrl, requestOrigin);
+
+    expect(result.valid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it("rejects config URL from different base domain", () => {
     const configUrl = "https://evil.com/config.yaml";
     const requestOrigin = "https://example.com";
 
@@ -43,6 +73,17 @@ describe("validateSameOrigin", () => {
     expect(result.errors[0].code).toBe("ORIGIN_MISMATCH");
     expect(result.errors[0].message).toContain("evil.com");
     expect(result.errors[0].message).toContain("example.com");
+  });
+
+  it("rejects config URL from similar but different domain", () => {
+    const configUrl = "https://evilexample.com/config.yaml";
+    const requestOrigin = "https://example.com";
+
+    const result = validateSameOrigin(configUrl, requestOrigin);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].code).toBe("ORIGIN_MISMATCH");
   });
 
   it("rejects config URL with different protocol", () => {
