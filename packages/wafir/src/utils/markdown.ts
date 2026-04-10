@@ -35,7 +35,7 @@ export function parseMarkdown(markdown: string): string {
   html = html.replace(/^[\*\-]\s+(.+)$/gm, "<ul><li>$1</li></ul>");
 
   // Process Ordered Lists: capture the number and wrap in <ol start="x"><li>...</li></ol>
-  html = html.replace(/^(\d+)\.\s+(.+)$/gm, (match, num, content) => {
+  html = html.replace(/^(\d+)\.\s+(.+)$/gm, (_match, num, content) => {
     return `<ol start="${num}"><li>${content}</li></ol>`;
   });
 
