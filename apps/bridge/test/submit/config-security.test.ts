@@ -120,6 +120,47 @@ describe("POST /submit - config validation - security", () => {
     expect(body.success).toBe(true);
   });
 
+  it("accepts submission when configUrl is on different subdomain of same base domain", async () => {
+    const { app, mockOctokit } = getContext();
+
+    mockFetch.mockResolvedValue(
+      createMockConfigResponse(sampleConfigs.minimal),
+    );
+
+    mockOctokit.rest.issues.create.mockResolvedValue({
+      data: {
+        number: 1000,
+        html_url: "https://github.com/testowner/testrepo/issues/1000",
+        node_id: "I_subdomain",
+      },
+    });
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/submit",
+      headers: {
+        referer: "https://app.example.com/form",
+      },
+      payload: {
+        configUrl: "https://cdn.example.com/config/wafir.yaml",
+        installationId: 123,
+        targetType: "github/issues",
+        target: "testowner/testrepo",
+        authRef: "123",
+        title: "Test Issue",
+        formId: "issue",
+        formFields: {
+          title: "Test Issue",
+          message: "Valid cross-subdomain submission",
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(201);
+    const body = JSON.parse(response.body);
+    expect(body.success).toBe(true);
+  });
+
   it("accepts submission when no referer header is present (allows testing)", async () => {
     const { app, mockOctokit } = getContext();
 
