@@ -140,7 +140,7 @@ export class WafirForm extends LitElement {
   /**
    * Renders the screenshot field with opt-in checkbox and capture controls.
    */
-  private _renderScreenshotField(_field: FieldConfig, isEnabled: boolean) {
+  private _renderScreenshotField(field: FieldConfig, isEnabled: boolean) {
     // Get screenshot for current form only (no fallback to global)
     const formScreenshot =
       this._formScreenshotsController.value[this.tabId] || null;
@@ -199,9 +199,10 @@ export class WafirForm extends LitElement {
                       "Wafir: Failed to load screenshot for form:",
                       this.tabId,
                     );
-                    // Clear invalid screenshot
+                    // Clear invalid screenshot and reset checkbox state
                     setCapturedImage(null);
                     setFormScreenshot(this.tabId, null);
+                    setFormAutofillEnabled(this.tabId, String(field.id), false);
                     this.requestUpdate();
                   }}"
                 />
@@ -211,6 +212,7 @@ export class WafirForm extends LitElement {
                   @click="${() => {
                     setCapturedImage(null);
                     setFormScreenshot(this.tabId, null);
+                    setFormAutofillEnabled(this.tabId, String(field.id), false);
                   }}"
                 >
                   &times;

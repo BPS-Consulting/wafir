@@ -83,6 +83,17 @@ export const DEFAULT_ISSUE_FIELDS: FieldConfig[] = [
       required: true,
     },
   },
+  {
+    id: "screenshot",
+    type: "textarea",
+    attributes: {
+      label: "Screenshot",
+      autofill: "screenshot",
+    },
+    validations: {
+      required: false,
+    },
+  },
 ];
 
 export const DEFAULT_FORMS: FormConfig[] = [
