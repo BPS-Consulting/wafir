@@ -5,11 +5,18 @@ import {
   getCurrentFormId,
 } from "../store";
 
+const CAPTURE_TIMEOUT_MS = 15000;
+
 export async function takeFullPageScreenshot(
   highlightEl: HTMLElement | null = null,
 ): Promise<void> {
   if (isCapturing.get()) return;
   isCapturing.set(true);
+
+  const safetyTimeout = setTimeout(() => {
+    console.error("Wafir: Screenshot capture timed out, resetting isCapturing");
+    isCapturing.set(false);
+  }, CAPTURE_TIMEOUT_MS);
 
   let highlight: HTMLDivElement | null = null;
 
@@ -67,7 +74,6 @@ export async function takeFullPageScreenshot(
       style: {
         transform: `translate(${-window.scrollX}px, ${-window.scrollY}px)`,
         backgroundColor: computedBgColor,
-        minHeight: `${Math.max(document.documentElement.scrollHeight, height)}px`,
       },
       scale: 1,
       filter: (node: Node) => {
@@ -86,6 +92,7 @@ export async function takeFullPageScreenshot(
   } catch (err) {
     console.error("Failed to capture screenshot", err);
   } finally {
+    clearTimeout(safetyTimeout);
     highlight?.remove();
     isCapturing.set(false);
   }
