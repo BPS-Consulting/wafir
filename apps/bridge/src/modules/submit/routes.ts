@@ -237,6 +237,65 @@ const submitRoute: FastifyPluginAsync = async (
           }
         }
 
+        // Extract milestone and assignees from fields with map attribute
+        let issueMilestone: number | undefined;
+        let issueAssignees: string[] | undefined;
+
+        if (form?.body && input.formFields) {
+          for (const fieldConfig of form.body) {
+            if (!fieldConfig.id) continue;
+            const mapTo = fieldConfig.attributes?.map;
+            if (!mapTo) continue;
+
+            const fieldValue = input.formFields[fieldConfig.id];
+            if (
+              fieldValue === undefined ||
+              fieldValue === null ||
+              fieldValue === ""
+            )
+              continue;
+
+            // Exclude this field from the issue body since it maps to a GitHub property
+            excludeFieldsFromBody.add(fieldConfig.id);
+
+            if (mapTo === "milestone") {
+              // Look up milestone number by title
+              try {
+                const milestonesResponse =
+                  await appOctokit.rest.issues.listMilestones({
+                    owner,
+                    repo,
+                    state: "all",
+                    per_page: 100,
+                  });
+                const matched = milestonesResponse.data.find(
+                  (m: { title: string; number: number }) =>
+                    m.title.toLowerCase() ===
+                    String(fieldValue).toLowerCase(),
+                );
+                if (matched) {
+                  issueMilestone = matched.number;
+                } else {
+                  request.log.warn(
+                    { title: fieldValue },
+                    "No milestone found with the specified title",
+                  );
+                }
+              } catch (e) {
+                request.log.warn(
+                  { error: e instanceof Error ? e.message : "Unknown error" },
+                  "Failed to look up milestone, submitting without milestone",
+                );
+              }
+            } else if (mapTo === "assignees") {
+              const values = Array.isArray(fieldValue)
+                ? fieldValue
+                : [fieldValue];
+              issueAssignees = values.map((v) => String(v));
+            }
+          }
+        }
+
         // Build markdown body from validated form fields, excluding project-mapped fields
         let finalBody = submitService.buildMarkdownFromFields(
           input.formFields || {},
@@ -281,6 +340,8 @@ const submitRoute: FastifyPluginAsync = async (
           projectNodeId,
           projectUseUserToken,
           storageType,
+          milestone: issueMilestone,
+          assignees: issueAssignees,
         } as GithubSubmissionContext);
 
         if (!submissionResult.success) {

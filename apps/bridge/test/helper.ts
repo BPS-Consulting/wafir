@@ -26,6 +26,7 @@ export interface MockOctokit {
     issues: {
       create: Mock;
       listLabelsForRepo: Mock;
+      listMilestones: Mock;
     };
     users: {
       getByUsername: Mock;
@@ -45,6 +46,7 @@ export function createMockOctokit(): MockOctokit {
       issues: {
         create: vi.fn(),
         listLabelsForRepo: vi.fn(),
+        listMilestones: vi.fn().mockResolvedValue({ data: [] }),
       },
       users: {
         getByUsername: vi.fn(),

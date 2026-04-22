@@ -52,10 +52,6 @@ export abstract class SubmissionBase {
       errors.push("Title is required");
     }
 
-    if (!context.body || context.body.trim() === "") {
-      errors.push("Body is required");
-    }
-
     return errors;
   }
 
